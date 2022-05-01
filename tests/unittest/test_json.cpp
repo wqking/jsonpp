@@ -18,6 +18,12 @@
 
 #include "jsonpp/jsonparser.h"
 #include "jsonpp/jsondumper.h"
+#include "metapp/interfaces/metaindexable.h"
+#include "metapp/allmetatypes.h"
+
+#include <deque>
+#include <unordered_map>
+#include <iostream>
 
 TEST_CASE("Test json, 1")
 {
@@ -63,10 +69,10 @@ TEST_CASE("Test JsonDumper, 1")
 					{ "second", nullptr }
 	});
 	const std::string text = dumper.dump(value);
-	std::cout << text << std::endl;
+	//std::cout << text << std::endl;
 
 	jsonpp::JsonParser parser;
 	metapp::Variant parsed = parser.parse(text);
 	const std::string text2 = dumper.dump(value);
-	std::cout << text2 << std::endl;
+	//std::cout << text2 << std::endl;
 }

@@ -15,10 +15,10 @@
 // limitations under the License.
 
 #include "jsonpp/jsonparser.h"
-#include "metapp/metatypes/metatypes.h"
+#include "metapp/allmetatypes.h"
 #include "metapp/interfaces/metaclass.h"
 #include "metapp/interfaces/metaindexable.h"
-#include "metapp/interfaces/metamap.h"
+#include "metapp/interfaces/metamappable.h"
 #include "metapp/compiler.h"
 
 #if defined(METAPP_COMPILER_VC)
@@ -96,6 +96,10 @@ metapp::Variant Implement::parse(const char * jsonText, const size_t length, con
 
 metapp::Variant Implement::doConvertValue(json_value * jsonValue, const metapp::MetaType * proto)
 {
+	if(proto != nullptr) {
+		proto = metapp::getNonReferenceMetaType(proto);
+	}
+
 	switch(jsonValue->type) {
 	case json_object:
 		return doConvertObject(jsonValue, proto);
@@ -219,16 +223,16 @@ metapp::Variant Implement::doConvertObject(json_value * jsonValue, const metapp:
 	if(type == nullptr) {
 		type = metapp::getMetaType<std::map<std::string, metapp::Variant> >();
 	}
-	const metapp::MetaMap * metaMap = nullptr;
+	const metapp::MetaMappable * metaMappable = nullptr;
 	const metapp::MetaIndexable * metaIndexable = nullptr;
 	metapp::Variant result = metapp::Variant(type);
 
-	if(metaMap != nullptr) {
-		auto valueType = metaMap->getValueType(result);
+	if(metaMappable != nullptr) {
+		auto valueType = metaMappable->getValueType(result);
 		for(size_t i = 0; i < size_t(jsonValue->u.object.length); ++i) {
 			const auto & objectValue = jsonValue->u.object.values[i];
-			const metapp::Variant value(doConvertObject(objectValue.value, valueType.second));
-			metaMap->set(result, objectValue.name, value);
+			const metapp::Variant value(doConvertValue(objectValue.value, valueType.second));
+			metaMappable->set(result, objectValue.name, value);
 		}
 	}
 	else if(metaIndexable != nullptr) {
@@ -240,7 +244,7 @@ metapp::Variant Implement::doConvertObject(json_value * jsonValue, const metapp:
 			if(valueIndexable != nullptr) {
 				valueIndexable->resize(value, 2);
 				valueIndexable->set(value, 0, objectValue.name);
-				const metapp::Variant convertedValue(doConvertObject(objectValue.value, valueIndexable->getValueType(value, 1)));
+				const metapp::Variant convertedValue(doConvertValue(objectValue.value, valueIndexable->getValueType(value, 1)));
 				valueIndexable->set(convertedValue, 1, value);
 			}
 		}
@@ -249,14 +253,14 @@ metapp::Variant Implement::doConvertObject(json_value * jsonValue, const metapp:
 		for(size_t i = 0; i < size_t(jsonValue->u.object.length); ++i) {
 			const auto & objectValue = jsonValue->u.object.values[i];
 			std::string name(objectValue.name);
-			auto field = metaClass->getField(name);
+			auto field = metaClass->getAccessible(name);
 			if(! field.isEmpty()) {
-				const metapp::Variant value(doConvertObject(objectValue.value, field.getValueType()));
-				field.set(result.getAddress(), value);
+				const metapp::Variant value(doConvertValue(objectValue.value, metapp::accessibleGetValueType(field)));
+				metapp::accessibleSet(field, result.getAddress(), value);
 			}
 		}
 	}
-	return metapp::Variant();
+	return result;
 }
 
 } // namespace jsonparser_internal_

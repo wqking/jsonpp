@@ -17,6 +17,12 @@
 #include "test.h"
 
 #include "jsonpp/jsonparser.h"
+#include "metapp/interfaces/metaindexable.h"
+#include "metapp/allmetatypes.h"
+
+#include <deque>
+#include <unordered_map>
+#include <iostream>
 
 TEST_CASE("Test JsonParser, 1")
 {

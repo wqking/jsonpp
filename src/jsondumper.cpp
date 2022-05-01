@@ -15,10 +15,10 @@
 // limitations under the License.
 
 #include "jsonpp/jsondumper.h"
-#include "metapp/metatypes/metatypes.h"
+#include "metapp/allmetatypes.h"
 #include "metapp/interfaces/metaclass.h"
 #include "metapp/interfaces/metaindexable.h"
-#include "metapp/interfaces/metamap.h"
+#include "metapp/interfaces/metamappable.h"
 #include "metapp/compiler.h"
 
 #include <sstream>
@@ -123,8 +123,8 @@ bool Implement::doDumpObject(const metapp::Variant & value, const size_t level)
 	constexpr int asIndexable = 2;
 	constexpr int asClass = 3;
 	int as = asNone;
-	
-	const metapp::MetaMap * metaMap = metaType->getMetaMap();
+
+	const metapp::MetaMappable * metaMappable = metaType->getMetaMappable();
 	const metapp::MetaIterable * metaIterable = metaType->getMetaIterable();
 	const metapp::MetaIndexable * metaIndexable = nullptr;
 	if(config.isObjectType(metaType)) {
@@ -132,7 +132,7 @@ bool Implement::doDumpObject(const metapp::Variant & value, const size_t level)
 	}
 	const metapp::MetaClass * metaClass = nullptr;
 	
-	if(metaMap != nullptr && metaIterable != nullptr) {
+	if(metaMappable != nullptr && metaIterable != nullptr) {
 		as = asMap;
 	}
 	else if(metaIndexable != nullptr) {
@@ -183,7 +183,7 @@ bool Implement::doDumpObject(const metapp::Variant & value, const size_t level)
 		}
 	}
 	else {
-		const auto fieldList = metaClass->getFieldList();
+		const auto fieldList = metaClass->getAccessibleList();
 		for(const auto field : fieldList) {
 			if(! firstItem) {
 				getStream() << ",";
@@ -194,7 +194,7 @@ bool Implement::doDumpObject(const metapp::Variant & value, const size_t level)
 			doDumpString(field.getName());
 			getStream() << ":";
 			doDumpSpace();
-			doDumpValue(field.getField(), level + 1);
+			doDumpValue(metapp::accessibleGet(field, value.getAddress()), level + 1);
 		}
 	}
 
