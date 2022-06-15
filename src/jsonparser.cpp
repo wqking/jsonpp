@@ -197,7 +197,7 @@ metapp::Variant Implement::doConvertArray(json_value * jsonValue, const metapp::
 	if(type == nullptr) {
 		type = metapp::getMetaType<std::vector<metapp::Variant> >();
 	}
-	metapp::Variant result = metapp::Variant(type);
+	metapp::Variant result = metapp::Variant(type, nullptr);
 	auto metaIndexable = result.getMetaType()->getMetaIndexable();
 	metaIndexable->resize(result, jsonValue->u.array.length);
 	for(size_t i = 0; i < size_t(jsonValue->u.array.length); ++i) {
@@ -225,13 +225,13 @@ metapp::Variant Implement::doConvertObject(json_value * jsonValue, const metapp:
 	}
 	const metapp::MetaMappable * metaMappable = nullptr;
 	const metapp::MetaIndexable * metaIndexable = nullptr;
-	metapp::Variant result = metapp::Variant(type);
+	metapp::Variant result = metapp::Variant(type, nullptr);
 
 	if(metaMappable != nullptr) {
 		auto valueType = metaMappable->getValueType(result);
 		for(size_t i = 0; i < size_t(jsonValue->u.object.length); ++i) {
 			const auto & objectValue = jsonValue->u.object.values[i];
-			const metapp::Variant value(doConvertValue(objectValue.value, valueType.second));
+			const metapp::Variant value(doConvertValue(objectValue.value, valueType->getUpType(1)));
 			metaMappable->set(result, objectValue.name, value);
 		}
 	}

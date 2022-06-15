@@ -19,6 +19,7 @@
 #include "metapp/interfaces/metaclass.h"
 #include "metapp/interfaces/metaindexable.h"
 #include "metapp/interfaces/metamappable.h"
+#include "metapp/utilities/utility.h"
 #include "metapp/compiler.h"
 
 #include <sstream>
@@ -86,7 +87,7 @@ void Implement::doDumpValue(const metapp::Variant & value, const size_t level)
 		doDumpValue(value.get<metapp::Variant &>(), level);
 		return;
 	}
-	if(metapp::typeKindIsInteger(typeKind)) {
+	if(metapp::typeKindIsIntegral(typeKind)) {
 		getStream() << value.cast<long long>();
 		return;
 	}
@@ -151,8 +152,8 @@ bool Implement::doDumpObject(const metapp::Variant & value, const size_t level)
 	
 	bool firstItem = true;
 	auto itemDumper = [this, &firstItem, level](const metapp::Variant & item) -> bool {
-		auto indexable = metapp::getReferredMetaType(item.getMetaType())->getMetaIndexable();
-		if(indexable == nullptr || indexable->getSize(item) < 2) {
+		auto indexable = metapp::getNonReferenceMetaType(item)->getMetaIndexable();
+		if(indexable == nullptr || indexable->getSizeInfo(item).getSize() < 2) {
 			return true;
 		}
 		if(! firstItem) {
@@ -176,15 +177,15 @@ bool Implement::doDumpObject(const metapp::Variant & value, const size_t level)
 		metaIterable->forEach(value, itemDumper);
 	}
 	else if(as == asIndexable) {
-		const size_t size = metaIndexable->getSize(value);
+		const size_t size = metaIndexable->getSizeInfo(value).getSize();
 		for(size_t i = 0; i < size; ++i) {
 			const metapp::Variant item = metaIndexable->get(value, i);
 			itemDumper(item);
 		}
 	}
 	else {
-		const auto fieldList = metaClass->getAccessibleList();
-		for(const auto field : fieldList) {
+		const auto fieldView = metaClass->getAccessibleView();
+		for(const auto & field : fieldView) {
 			if(! firstItem) {
 				getStream() << ",";
 				doDumpLineBreak();
@@ -236,7 +237,7 @@ bool Implement::doDumpArray(const metapp::Variant & value, const size_t level)
 		metaIterable->forEach(value, itemDumper);
 	}
 	else {
-		const size_t size = metaIndexable->getSize(value);
+		const size_t size = metaIndexable->getSizeInfo(value).getSize();
 		for(size_t i = 0; i < size; ++i) {
 			const metapp::Variant item = metaIndexable->get(value, i);
 			itemDumper(item);
