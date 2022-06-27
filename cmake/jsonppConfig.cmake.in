@@ -1,0 +1,6 @@
+get_filename_component(jsonpp_CMAKE_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
+if (NOT TARGET jsonpp::jsonpp)
+  include("${jsonpp_CMAKE_DIR}/jsonppTargets.cmake")
+endif ()
+
+set(jsonpp_LIBRARIES jsonpp::jsonpp)
