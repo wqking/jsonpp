@@ -30,12 +30,14 @@ struct TestClass1
 {
 	std::string s;
 	std::list<std::deque<long> > listDequeLong;
+	std::tuple<int, std::string, std::vector<int>, char> tuple;
 };
 
 bool operator == (const TestClass1 & a, const TestClass1 & b)
 {
 	return a.s == b.s
 		&& a.listDequeLong == b.listDequeLong
+		&& a.tuple == b.tuple
 	;
 }
 
@@ -74,6 +76,7 @@ struct metapp::DeclareMetaType <TestClass1> : metapp::DeclareMetaTypeBase <TestC
 			[](metapp::MetaClass & mc) {
 				mc.registerAccessible("s", &TestClass1::s);
 				mc.registerAccessible("listDequeLong", &TestClass1::listDequeLong);
+				mc.registerAccessible("tuple", &TestClass1::tuple);
 			}
 		);
 		return &metaClass;
@@ -91,7 +94,7 @@ struct metapp::DeclareMetaType <TestClass2> : metapp::DeclareMetaTypeBase <TestC
 				mc.registerAccessible("vectorString", &TestClass2::vectorString);
 				mc.registerAccessible("obj1", &TestClass2::obj1);
 				mc.registerAccessible("mapStringInt",
-					metapp::createAccessor<const std::map<std::string, int> &>(&TestClass2::getMapStringInt, &TestClass2::setMapStringInt));
+					metapp::createAccessor(&TestClass2::getMapStringInt, &TestClass2::setMapStringInt));
 			}
 		);
 		return &metaClass;
@@ -107,6 +110,7 @@ TEST_CASE("Test class, TestClass2")
 	obj.obj1.s = "Good";
 	obj.obj1.listDequeLong.push_back({ 5, 6, 1999 });
 	obj.obj1.listDequeLong.push_back({ 12356789, -38, 98765, 0, -10000 });
+	obj.obj1.tuple = { 96, "This is tuple", { 9, 8, 7 }, 'w' };
 	obj.setMapStringInt({ { "a", 1 }, { "b", 2 } });
 
 	jsonpp::DumperConfig config;

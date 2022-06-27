@@ -25,28 +25,6 @@
 #include <unordered_map>
 #include <iostream>
 
-TEST_CASE("Test json, 1")
-{
-	std::string jsonText = R"(
-		[ 5, "abc" ]
-	)";
-	jsonpp::JsonParser parser;
-	metapp::Variant var = parser.parse(jsonText.c_str(), jsonText.size());
-	REQUIRE(metapp::indexableGet(var, 0).cast<int>().get<int>() == 5);
-	REQUIRE(metapp::indexableGet(var, 1).get<std::string &>() == "abc");
-}
-
-TEST_CASE("Test json, 2")
-{
-	std::string jsonText = R"(
-		[ 5, 6 ]
-	)";
-	jsonpp::JsonParser parser;
-	metapp::Variant var = parser.parse(jsonText.c_str(), jsonText.size(), metapp::getMetaType<std::deque<long> >());
-	REQUIRE(metapp::indexableGet(var, 0).cast<int>().get<int>() == 5);
-	REQUIRE(var.getMetaType()->getTypeKind() == metapp::tkStdDeque);
-}
-
 TEST_CASE("Test JsonDumper, 1")
 {
 	jsonpp::DumperConfig config;

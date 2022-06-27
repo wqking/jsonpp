@@ -52,6 +52,9 @@ public:
 	explicit Implement(const ParserConfig & config);
 	~Implement();
 
+	bool hasError() const;
+	std::string getError() const;
+
 	metapp::Variant parse(const char * jsonText, const size_t length, const metapp::MetaType * proto);
 
 private:
@@ -85,6 +88,16 @@ Implement::~Implement()
 	}
 }
 
+bool Implement::hasError() const
+{
+	return error[0] != 0;
+}
+
+std::string Implement::getError() const
+{
+	return error.data();
+}
+
 metapp::Variant Implement::parse(const char * jsonText, const size_t length, const metapp::MetaType * proto)
 {
 	root = json_parse_ex(&settings, jsonText, length, error.data());
@@ -98,6 +111,9 @@ metapp::Variant Implement::doConvertValue(json_value * jsonValue, const metapp::
 {
 	if(proto != nullptr) {
 		proto = metapp::getNonReferenceMetaType(proto);
+		if(proto->getTypeKind() == metapp::tkVariant) {
+			proto = nullptr;
+		}
 	}
 
 	switch(jsonValue->type) {
@@ -185,7 +201,7 @@ metapp::Variant Implement::doConvertString(json_value * jsonValue, const metapp:
 	if(type == nullptr) {
 		return metapp::Variant(std::string(jsonValue->u.string.ptr));
 	}
-	return metapp::Variant(jsonValue->u.string.ptr).cast(type);
+	return metapp::Variant(std::string(jsonValue->u.string.ptr)).cast(type);
 }
 
 metapp::Variant Implement::doConvertArray(json_value * jsonValue, const metapp::MetaType * proto)
@@ -198,7 +214,7 @@ metapp::Variant Implement::doConvertArray(json_value * jsonValue, const metapp::
 		type = metapp::getMetaType<std::vector<metapp::Variant> >();
 	}
 	metapp::Variant result = metapp::Variant(type, nullptr);
-	auto metaIndexable = result.getMetaType()->getMetaIndexable();
+	auto metaIndexable = metapp::getNonReferenceMetaType(result)->getMetaIndexable();
 	metaIndexable->resize(result, jsonValue->u.array.length);
 	for(size_t i = 0; i < size_t(jsonValue->u.array.length); ++i) {
 		const metapp::MetaType * elementProto = nullptr;
@@ -223,8 +239,8 @@ metapp::Variant Implement::doConvertObject(json_value * jsonValue, const metapp:
 	if(type == nullptr) {
 		type = metapp::getMetaType<std::map<std::string, metapp::Variant> >();
 	}
-	const metapp::MetaMappable * metaMappable = nullptr;
-	const metapp::MetaIndexable * metaIndexable = nullptr;
+	const metapp::MetaMappable * metaMappable = type->getMetaMappable();
+	const metapp::MetaIndexable * metaIndexable = type->getMetaIndexable();
 	metapp::Variant result = metapp::Variant(type, nullptr);
 
 	if(metaMappable != nullptr) {
@@ -240,7 +256,7 @@ metapp::Variant Implement::doConvertObject(json_value * jsonValue, const metapp:
 		for(size_t i = 0; i < size_t(jsonValue->u.object.length); ++i) {
 			const auto & objectValue = jsonValue->u.object.values[i];
 			const auto value = metaIndexable->get(result, i);
-			auto valueIndexable = metapp::getNonReferenceMetaType(value.getMetaType())->getMetaIndexable();
+			auto valueIndexable = metapp::getNonReferenceMetaType(value)->getMetaIndexable();
 			if(valueIndexable != nullptr) {
 				valueIndexable->resize(value, 2);
 				valueIndexable->set(value, 0, objectValue.name);
@@ -278,6 +294,16 @@ JsonParser::JsonParser(const ParserConfig & config)
 
 JsonParser::~JsonParser()
 {
+}
+
+bool JsonParser::hasError() const
+{
+	return implement->hasError();
+}
+
+std::string JsonParser::getError() const
+{
+	return implement->getError();
 }
 
 metapp::Variant JsonParser::parse(const char * jsonText, const size_t length, const metapp::MetaType * proto)

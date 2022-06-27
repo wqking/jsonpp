@@ -88,11 +88,11 @@ void Implement::doDumpValue(const metapp::Variant & value, const size_t level)
 		return;
 	}
 	if(metapp::typeKindIsIntegral(typeKind)) {
-		getStream() << value.cast<long long>();
+		getStream() << value.cast<long long>().template get<long long>();
 		return;
 	}
 	if(metapp::typeKindIsReal(typeKind)) {
-		getStream() << value.cast<long double>();
+		getStream() << value.cast<long double>().template get<long double>();
 		return;
 	}
 	{
