@@ -62,8 +62,9 @@ TEST_CASE("Test JsonParser, array")
 	)";
 	jsonpp::JsonParser parser;
 	metapp::Variant var = parser.parse(jsonText.c_str(), jsonText.size());
-	REQUIRE(metapp::indexableGet(var, 0).cast<int>().get<int>() == 5);
-	REQUIRE(metapp::indexableGet(var, 1).get<std::string &>() == "abc");
+	const jsonpp::JsonArray & array = var.get<const jsonpp::JsonArray &>();
+	REQUIRE(array[0].cast<int>().get<int>() == 5);
+	REQUIRE(array[1].get<std::string &>() == "abc");
 }
 
 TEST_CASE("Test JsonParser, array, proto")
@@ -73,8 +74,9 @@ TEST_CASE("Test JsonParser, array, proto")
 	)";
 	jsonpp::JsonParser parser;
 	metapp::Variant var = parser.parse(jsonText.c_str(), jsonText.size(), metapp::getMetaType<std::deque<long> >());
-	REQUIRE(metapp::indexableGet(var, 0).cast<int>().get<int>() == 5);
-	REQUIRE(metapp::indexableGet(var, 1).cast<int>().get<int>() == 6);
+	const std::deque<long> & array = var.get<const std::deque<long> &>();
+	REQUIRE(array[0] == 5);
+	REQUIRE(array[1] == 6);
 	REQUIRE(var.getMetaType()->getTypeKind() == metapp::tkStdDeque);
 }
 
@@ -85,8 +87,9 @@ TEST_CASE("Test JsonParser, object")
 	)";
 	jsonpp::JsonParser parser;
 	metapp::Variant var = parser.parse(jsonText.c_str(), jsonText.size());
-	REQUIRE(metapp::mappableGet(var, "a").get<std::string &>() == "hello");
-	REQUIRE(metapp::mappableGet(var, "b").cast<int>().get<int>() == 5);
+	const jsonpp::JsonObject & object = var.get<const jsonpp::JsonObject &>();
+	REQUIRE(object.at("a").get<std::string &>() == "hello");
+	REQUIRE(object.at("b").cast<int>().get<int>() == 5);
 }
 
 TEST_CASE("Test JsonParser, array in object")
@@ -96,10 +99,11 @@ TEST_CASE("Test JsonParser, array in object")
 	)";
 	jsonpp::JsonParser parser;
 	metapp::Variant var = parser.parse(jsonText.c_str(), jsonText.size());
-	REQUIRE(metapp::mappableGet(var, "b").cast<int>().get<int>() == 5);
-	metapp::Variant a = metapp::mappableGet(var, "a").get<metapp::Variant>();
-	REQUIRE(metapp::indexableGet(a, 0).get<std::string &>() == "hello");
-	REQUIRE(metapp::indexableGet(a, 1).cast<int>().template get<int>() == 38);
+	const jsonpp::JsonObject & object = var.get<const jsonpp::JsonObject &>();
+	REQUIRE(object.at("b").cast<int>().get<int>() == 5);
+	const jsonpp::JsonArray & array = object.at("a").get<const jsonpp::JsonArray &>();
+	REQUIRE(array[0].get<std::string &>() == "hello");
+	REQUIRE(array[1].cast<int>().template get<int>() == 38);
 }
 
 TEST_CASE("Test JsonParser, object in array")
@@ -109,9 +113,10 @@ TEST_CASE("Test JsonParser, object in array")
 	)";
 	jsonpp::JsonParser parser;
 	metapp::Variant var = parser.parse(jsonText.c_str(), jsonText.size());
-	REQUIRE(metapp::indexableGet(var, 0).cast<int>().get<int>() == 5);
-	metapp::Variant second = metapp::indexableGet(var, 1).get<metapp::Variant>();
-	REQUIRE(metapp::mappableGet(second, "a").get<std::string &>() == "hello");
-	REQUIRE(metapp::mappableGet(second, "b").cast<int>().get<int>() == 38);
+	const jsonpp::JsonArray & array = var.get<const jsonpp::JsonArray &>();
+	REQUIRE(array[0].cast<int>().get<int>() == 5);
+	const jsonpp::JsonObject & object = array[1].get<const jsonpp::JsonObject &>();
+	REQUIRE(object.at("a").get<std::string &>() == "hello");
+	REQUIRE(object.at("b").cast<int>().get<int>() == 38);
 }
 
