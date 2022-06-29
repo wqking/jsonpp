@@ -20,6 +20,9 @@
 #include "metapp/variant.h"
 
 #include <memory>
+#include <string>
+#include <vector>
+#include <map>
 
 namespace jsonpp {
 
@@ -27,44 +30,18 @@ namespace jsonparser_internal_ {
 class Implement;
 } // namespace jsonparser_internal_
 
+using JsonString = std::string;
+using JsonArray = std::vector<metapp::Variant>;
+using JsonObject = std::map<std::string, metapp::Variant>;
+
 class ParserConfig
 {
 public:
 	ParserConfig()
 		:
-			nullType(),
-			booleanType(),
-			integerType(),
-			doubleType(),
-			stringType(),
 			arrayType(),
 			objectType()
 	{
-	}
-
-	ParserConfig & setNullType(const metapp::MetaType * nullType_) {
-		nullType = nullType_;
-		return *this;
-	}
-
-	ParserConfig & setBooleanType(const metapp::MetaType * booleanType_) {
-		booleanType = booleanType_;
-		return *this;
-	}
-
-	ParserConfig & setIntegerType(const metapp::MetaType * integerType_) {
-		integerType = integerType_;
-		return *this;
-	}
-
-	ParserConfig & setDoubleType(const metapp::MetaType * doubleType_) {
-		doubleType = doubleType_;
-		return *this;
-	}
-
-	ParserConfig & setStringType(const metapp::MetaType * stringType_) {
-		stringType = stringType_;
-		return *this;
 	}
 
 	ParserConfig & setArrayType(const metapp::MetaType * arrayType_) {
@@ -77,26 +54,6 @@ public:
 		return *this;
 	}
 
-	const metapp::MetaType * getNullType() const {
-		return nullType;
-	}
-
-	const metapp::MetaType * getBooleanType() const {
-		return booleanType;
-	}
-
-	const metapp::MetaType * getIntegerType() const {
-		return integerType;
-	}
-
-	const metapp::MetaType * getDoubleType() const {
-		return doubleType;
-	}
-
-	const metapp::MetaType * getStringType() const {
-		return stringType;
-	}
-
 	const metapp::MetaType * getArrayType() const {
 		return arrayType;
 	}
@@ -106,11 +63,6 @@ public:
 	}
 
 private:
-	const metapp::MetaType * nullType;
-	const metapp::MetaType * booleanType;
-	const metapp::MetaType * integerType;
-	const metapp::MetaType * doubleType;
-	const metapp::MetaType * stringType;
 	const metapp::MetaType * arrayType;
 	const metapp::MetaType * objectType;
 };

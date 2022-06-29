@@ -146,62 +146,42 @@ metapp::Variant Implement::doConvertValue(json_value * jsonValue, const metapp::
 
 metapp::Variant Implement::doConvertNull(json_value * /*jsonValue*/, const metapp::MetaType * proto)
 {
-	const metapp::MetaType * type = proto;
-	if(type == nullptr) {
-		type = config.getNullType();
-	}
-	if(type == nullptr) {
+	if(proto == nullptr) {
 		return metapp::Variant(nullptr);
 	}
-	return metapp::Variant(nullptr).cast(type);
+	return metapp::Variant(nullptr).cast(proto);
 }
 
 metapp::Variant Implement::doConvertBoolean(json_value * jsonValue, const metapp::MetaType * proto)
 {
-	const metapp::MetaType * type = proto;
-	if(type == nullptr) {
-		type = config.getBooleanType();
-	}
-	if(type == nullptr) {
+	if(proto == nullptr) {
 		return metapp::Variant((bool)(jsonValue->u.boolean));
 	}
-	return metapp::Variant((bool)(jsonValue->u.boolean)).cast(type);
+	return metapp::Variant((bool)(jsonValue->u.boolean)).cast(proto);
 }
 
 metapp::Variant Implement::doConvertInteger(json_value * jsonValue, const metapp::MetaType * proto)
 {
-	const metapp::MetaType * type = proto;
-	if(type == nullptr) {
-		type = config.getIntegerType();
-	}
-	if(type == nullptr) {
+	if(proto == nullptr) {
 		return metapp::Variant((long long)(jsonValue->u.integer));
 	}
-	return metapp::Variant((long long)(jsonValue->u.integer)).cast(type);
+	return metapp::Variant((long long)(jsonValue->u.integer)).cast(proto);
 }
 
 metapp::Variant Implement::doConvertDouble(json_value * jsonValue, const metapp::MetaType * proto)
 {
-	const metapp::MetaType * type = proto;
-	if(type == nullptr) {
-		type = config.getDoubleType();
-	}
-	if(type == nullptr) {
+	if(proto == nullptr) {
 		return metapp::Variant((double)(jsonValue->u.dbl));
 	}
-	return metapp::Variant((double)(jsonValue->u.dbl)).cast(type);
+	return metapp::Variant((double)(jsonValue->u.dbl)).cast(proto);
 }
 
 metapp::Variant Implement::doConvertString(json_value * jsonValue, const metapp::MetaType * proto)
 {
-	const metapp::MetaType * type = proto;
-	if(type == nullptr) {
-		type = config.getStringType();
+	if(proto == nullptr) {
+		return metapp::Variant(JsonString(jsonValue->u.string.ptr));
 	}
-	if(type == nullptr) {
-		return metapp::Variant(std::string(jsonValue->u.string.ptr));
-	}
-	return metapp::Variant(std::string(jsonValue->u.string.ptr)).cast(type);
+	return metapp::Variant(std::string(jsonValue->u.string.ptr)).cast(proto);
 }
 
 metapp::Variant Implement::doConvertArray(json_value * jsonValue, const metapp::MetaType * proto)
@@ -211,7 +191,7 @@ metapp::Variant Implement::doConvertArray(json_value * jsonValue, const metapp::
 		type = config.getArrayType();
 	}
 	if(type == nullptr) {
-		type = metapp::getMetaType<std::vector<metapp::Variant> >();
+		type = metapp::getMetaType<JsonArray>();
 	}
 	metapp::Variant result = metapp::Variant(type, nullptr);
 	auto metaIndexable = metapp::getNonReferenceMetaType(result)->getMetaIndexable();
@@ -237,7 +217,7 @@ metapp::Variant Implement::doConvertObject(json_value * jsonValue, const metapp:
 		type = config.getObjectType();
 	}
 	if(type == nullptr) {
-		type = metapp::getMetaType<std::map<std::string, metapp::Variant> >();
+		type = metapp::getMetaType<JsonObject>();
 	}
 	const metapp::MetaMappable * metaMappable = type->getMetaMappable();
 	const metapp::MetaIndexable * metaIndexable = type->getMetaIndexable();
