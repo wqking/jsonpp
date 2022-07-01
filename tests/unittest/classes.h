@@ -1,4 +1,4 @@
-// jsonpp library
+// metapp library
 // 
 // Copyright (C) 2022 Wang Qi (wqking)
 // 
@@ -14,17 +14,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "test.h"
+#ifndef CLASSES_H
+#define CLASSES_H
 
-#include "jsonpp/jsonparser.h"
-#include "jsonpp/jsondumper.h"
-#include "metapp/interfaces/metaindexable.h"
-#include "metapp/interfaces/metaclass.h"
 #include "metapp/allmetatypes.h"
-
-#include <deque>
-#include <unordered_map>
-#include <iostream>
+#include "metapp/interfaces/metaclass.h"
 
 struct TestClass1
 {
@@ -33,16 +27,55 @@ struct TestClass1
 	std::tuple<int, std::string, std::vector<int>, char> tuple;
 };
 
-bool operator == (const TestClass1 & a, const TestClass1 & b)
+inline bool operator == (const TestClass1 & a, const TestClass1 & b)
 {
 	return a.s == b.s
 		&& a.listDequeLong == b.listDequeLong
 		&& a.tuple == b.tuple
-	;
+		;
+}
+
+inline TestClass1 makeTestClass1(const int seed)
+{
+	static TestClass1 objectList[] = {
+		{
+			"Hello",
+			{ { 37065102, -976038618 }, { -1876835186, 516005336, 444334793 }, { 3872225, -1629858 } },
+			{ -8, "this", { -16601837, 654321, 0, 2653196, -113703022, 3577582 }, 'w' }
+		},
+
+		{
+			"This is a full sentence, though it's meaningless.",
+			{ { 1309825622, -170511008 }, { -3211966, -6, -7 }, { 9 } },
+			{ -8, "this", { -123456, 654321, 0, 78, -9, 13579 }, 'q' }
+		},
+
+	};
+
+	return objectList[seed % (sizeof(objectList) / sizeof(objectList[0]))];
 }
 
 struct TestClass2
 {
+	TestClass2() :
+		i(),
+		vectorString(),
+		obj1(),
+		mapStringInt()
+	{}
+
+	TestClass2(
+		const int i,
+		const std::vector<std::string> & vectorString,
+		const TestClass1 & obj1,
+		const std::map<std::string, int> & mapStringInt
+	) :
+		i(i),
+		vectorString(vectorString),
+		obj1(obj1),
+		mapStringInt(mapStringInt)
+	{}
+
 	int i;
 	std::vector<std::string> vectorString;
 	TestClass1 obj1;
@@ -59,12 +92,35 @@ private:
 	std::map<std::string, int> mapStringInt;
 };
 
-bool operator == (const TestClass2 & a, const TestClass2 & b)
+inline bool operator == (const TestClass2 & a, const TestClass2 & b)
 {
 	return a.i == b.i
 		&& a.vectorString == b.vectorString
 		&& a.obj1 == b.obj1
+		&& a.getMapStringInt() == b.getMapStringInt()
 	;
+}
+
+inline TestClass2 makeTestClass2(const int seed)
+{
+	static TestClass2 objectList[] = {
+		{
+			1,
+			{ "hello", "world" },
+			makeTestClass1(seed),
+			{ { "abc", 1 }, { "def", 2 } }
+		},
+
+		{
+			-921398,
+			{ "this is", "a very long", "sentence, splited in", "several parts." },
+			makeTestClass1(seed),
+			{ { "dog", 123 }, { "cat", -5 } }
+		}
+
+	};
+
+	return objectList[seed % (sizeof(objectList) / sizeof(objectList[0]))];
 }
 
 template <>
@@ -101,26 +157,5 @@ struct metapp::DeclareMetaType <TestClass2> : metapp::DeclareMetaTypeBase <TestC
 	}
 };
 
-TEST_CASE("Test class, TestClass2")
-{
-	TestClass2 obj;
-	obj.i = 38;
-	obj.vectorString.push_back("Hello");
-	obj.vectorString.push_back("world");
-	obj.obj1.s = "Good";
-	obj.obj1.listDequeLong.push_back({ 5, 6, 1999 });
-	obj.obj1.listDequeLong.push_back({ 12356789, -38, 98765, 0, -10000 });
-	obj.obj1.tuple = { 96, "This is tuple", { 9, 8, 7 }, 'w' };
-	obj.setMapStringInt({ { "a", 1 }, { "b", 2 } });
 
-	jsonpp::DumperConfig config;
-	config.setBeautify(true);
-	jsonpp::JsonDumper dumper(config);
-	const std::string jsonText = dumper.dump(metapp::Variant::create<TestClass2 &>(obj));
-//std::cout << jsonText << std::endl;
-	jsonpp::JsonParser parser;
-	metapp::Variant var = parser.parse(jsonText, metapp::getMetaType<TestClass2>());
-	const TestClass2 & parsed = var.get<const TestClass2 &>();
-	REQUIRE(obj == parsed);
-}
-
+#endif

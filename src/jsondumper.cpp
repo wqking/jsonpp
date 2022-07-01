@@ -87,6 +87,10 @@ void Implement::doDumpValue(const metapp::Variant & value, const size_t level)
 		doDumpValue(value.get<metapp::Variant &>(), level);
 		return;
 	}
+	if(typeKind == metapp::tkBool) {
+		getStream() << (value.get<bool>() ? "true" : "false");
+		return;
+	}
 	if(metapp::typeKindIsIntegral(typeKind)) {
 		getStream() << value.cast<long long>().template get<long long>();
 		return;
@@ -99,6 +103,7 @@ void Implement::doDumpValue(const metapp::Variant & value, const size_t level)
 		metapp::Variant casted = value.castSilently<std::string>();
 		if(! casted.isEmpty()) {
 			doDumpString(casted.get<std::string>());
+			return;
 		}
 	}
 	if(doDumpObject(value, level)) {

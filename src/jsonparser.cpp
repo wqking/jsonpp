@@ -155,25 +155,25 @@ metapp::Variant Implement::doConvertNull(json_value * /*jsonValue*/, const metap
 metapp::Variant Implement::doConvertBoolean(json_value * jsonValue, const metapp::MetaType * proto)
 {
 	if(proto == nullptr) {
-		return metapp::Variant((bool)(jsonValue->u.boolean));
+		return metapp::Variant((JsonBool)(jsonValue->u.boolean));
 	}
-	return metapp::Variant((bool)(jsonValue->u.boolean)).cast(proto);
+	return metapp::Variant((JsonBool)(jsonValue->u.boolean)).cast(proto);
 }
 
 metapp::Variant Implement::doConvertInteger(json_value * jsonValue, const metapp::MetaType * proto)
 {
 	if(proto == nullptr) {
-		return metapp::Variant((long long)(jsonValue->u.integer));
+		return metapp::Variant((JsonInt)(jsonValue->u.integer));
 	}
-	return metapp::Variant((long long)(jsonValue->u.integer)).cast(proto);
+	return metapp::Variant((JsonInt)(jsonValue->u.integer)).cast(proto);
 }
 
 metapp::Variant Implement::doConvertDouble(json_value * jsonValue, const metapp::MetaType * proto)
 {
 	if(proto == nullptr) {
-		return metapp::Variant((double)(jsonValue->u.dbl));
+		return metapp::Variant((JsonReal)(jsonValue->u.dbl));
 	}
-	return metapp::Variant((double)(jsonValue->u.dbl)).cast(proto);
+	return metapp::Variant((JsonReal)(jsonValue->u.dbl)).cast(proto);
 }
 
 metapp::Variant Implement::doConvertString(json_value * jsonValue, const metapp::MetaType * proto)

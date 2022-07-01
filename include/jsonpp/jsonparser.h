@@ -30,6 +30,10 @@ namespace jsonparser_internal_ {
 class Implement;
 } // namespace jsonparser_internal_
 
+using JsonNull = void *;
+using JsonBool = bool;
+using JsonInt = long long;
+using JsonReal = double;
 using JsonString = std::string;
 using JsonArray = std::vector<metapp::Variant>;
 using JsonObject = std::map<std::string, metapp::Variant>;

@@ -24,7 +24,7 @@
 #include <unordered_map>
 #include <iostream>
 
-TEST_CASE("Test JsonParser, error")
+TEST_CASE("JsonParser, error")
 {
 	std::string jsonText = R"(
 		5, 6
@@ -35,17 +35,17 @@ TEST_CASE("Test JsonParser, error")
 	REQUIRE(parser.hasError());
 }
 
-TEST_CASE("Test JsonParser, int")
+TEST_CASE("JsonParser, int")
 {
 	std::string jsonText = R"(
 		5
 	)";
 	jsonpp::JsonParser parser;
 	metapp::Variant var = parser.parse(jsonText.c_str(), jsonText.size());
-	REQUIRE(var.cast<int>().get<int>() == 5);
+	REQUIRE(var.get<jsonpp::JsonInt>() == 5);
 }
 
-TEST_CASE("Test JsonParser, string")
+TEST_CASE("JsonParser, string")
 {
 	std::string jsonText = R"(
 		"abc"
@@ -55,7 +55,7 @@ TEST_CASE("Test JsonParser, string")
 	REQUIRE(var.get<std::string &>() == "abc");
 }
 
-TEST_CASE("Test JsonParser, array")
+TEST_CASE("JsonParser, array")
 {
 	std::string jsonText = R"(
 		[ 5, "abc" ]
@@ -63,11 +63,11 @@ TEST_CASE("Test JsonParser, array")
 	jsonpp::JsonParser parser;
 	metapp::Variant var = parser.parse(jsonText.c_str(), jsonText.size());
 	const jsonpp::JsonArray & array = var.get<const jsonpp::JsonArray &>();
-	REQUIRE(array[0].cast<int>().get<int>() == 5);
+	REQUIRE(array[0].get<jsonpp::JsonInt>() == 5);
 	REQUIRE(array[1].get<std::string &>() == "abc");
 }
 
-TEST_CASE("Test JsonParser, array, proto")
+TEST_CASE("JsonParser, array, proto")
 {
 	std::string jsonText = R"(
 		[ 5, 6 ]
@@ -80,7 +80,7 @@ TEST_CASE("Test JsonParser, array, proto")
 	REQUIRE(var.getMetaType()->getTypeKind() == metapp::tkStdDeque);
 }
 
-TEST_CASE("Test JsonParser, object")
+TEST_CASE("JsonParser, object")
 {
 	std::string jsonText = R"(
 		{ "b" : 5, "a" : "hello" }
@@ -89,10 +89,10 @@ TEST_CASE("Test JsonParser, object")
 	metapp::Variant var = parser.parse(jsonText.c_str(), jsonText.size());
 	const jsonpp::JsonObject & object = var.get<const jsonpp::JsonObject &>();
 	REQUIRE(object.at("a").get<std::string &>() == "hello");
-	REQUIRE(object.at("b").cast<int>().get<int>() == 5);
+	REQUIRE(object.at("b").get<jsonpp::JsonInt>() == 5);
 }
 
-TEST_CASE("Test JsonParser, array in object")
+TEST_CASE("JsonParser, array in object")
 {
 	std::string jsonText = R"(
 		{ "b" : 5, "a" : [ "hello", 38 ] }
@@ -100,13 +100,13 @@ TEST_CASE("Test JsonParser, array in object")
 	jsonpp::JsonParser parser;
 	metapp::Variant var = parser.parse(jsonText.c_str(), jsonText.size());
 	const jsonpp::JsonObject & object = var.get<const jsonpp::JsonObject &>();
-	REQUIRE(object.at("b").cast<int>().get<int>() == 5);
+	REQUIRE(object.at("b").get<jsonpp::JsonInt>() == 5);
 	const jsonpp::JsonArray & array = object.at("a").get<const jsonpp::JsonArray &>();
 	REQUIRE(array[0].get<std::string &>() == "hello");
 	REQUIRE(array[1].cast<int>().template get<int>() == 38);
 }
 
-TEST_CASE("Test JsonParser, object in array")
+TEST_CASE("JsonParser, object in array")
 {
 	std::string jsonText = R"(
 		[ 5, { "b" : 38, "a" : "hello" } ]
@@ -114,9 +114,9 @@ TEST_CASE("Test JsonParser, object in array")
 	jsonpp::JsonParser parser;
 	metapp::Variant var = parser.parse(jsonText.c_str(), jsonText.size());
 	const jsonpp::JsonArray & array = var.get<const jsonpp::JsonArray &>();
-	REQUIRE(array[0].cast<int>().get<int>() == 5);
+	REQUIRE(array[0].get<jsonpp::JsonInt>() == 5);
 	const jsonpp::JsonObject & object = array[1].get<const jsonpp::JsonObject &>();
 	REQUIRE(object.at("a").get<std::string &>() == "hello");
-	REQUIRE(object.at("b").cast<int>().get<int>() == 38);
+	REQUIRE(object.at("b").get<jsonpp::JsonInt>() == 38);
 }
 
