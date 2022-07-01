@@ -3,6 +3,7 @@ set(TARGET_TEST unittest)
 file(GLOB_RECURSE SRC_TEST "./*.cpp")
 file(GLOB_RECURSE HEADERS "../../include/jsonpp/*.h")
 file(GLOB_RECURSE SRC_LIB "../../src/*.cpp")
+file(GLOB_RECURSE SRC_THIRDPARTY "../../thirdparty/*.cpp")
 file(GLOB_RECURSE METAPP_HEADERS "/projects/metapp/include/*.h")
 file(GLOB_RECURSE METAPP_SRC "/projects/metapp/src/*.cpp")
 
@@ -13,6 +14,7 @@ add_executable(
 	${HEADERS}
 	${METAPP_HEADERS}
 	${METAPP_SRC}
+	${SRC_THIRDPARTY}
 )
 
 set(THREADS_PREFER_PTHREAD_FLAG ON)

@@ -24,6 +24,7 @@
 #include <unordered_map>
 #include <iostream>
 
+/*
 TEST_CASE("JsonParser, error")
 {
 	std::string jsonText = R"(
@@ -34,6 +35,7 @@ TEST_CASE("JsonParser, error")
 	REQUIRE(var.isEmpty());
 	REQUIRE(parser.hasError());
 }
+*/
 
 TEST_CASE("JsonParser, int")
 {

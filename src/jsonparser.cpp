@@ -23,7 +23,7 @@
 
 #if defined(METAPP_COMPILER_VC)
 #pragma warning(push)
-#pragma warning(disable: 4244 4996 4706)
+#pragma warning(disable: 4245 4100 4459         4244 4996 4706)
 #endif
 #if defined(METAPP_COMPILER_GCC)
 #pragma GCC diagnostic push
@@ -31,6 +31,7 @@
 //#pragma GCC diagnostic ignored "-Wunused-parameter"
 #endif
 
+#include "simdjson.h"
 #include "rawparser_i.inc"
 
 #if defined(METAPP_COMPILER_GCC)
@@ -58,6 +59,17 @@ public:
 	metapp::Variant parse(const char * jsonText, const size_t length, const metapp::MetaType * proto);
 
 private:
+	metapp::Variant doConvertValue(const simdjson::dom::element & element, const metapp::MetaType * proto);
+
+	metapp::Variant doConvertNull(const simdjson::dom::element & element, const metapp::MetaType * proto);
+	metapp::Variant doConvertBoolean(const simdjson::dom::element & element, const metapp::MetaType * proto);
+	metapp::Variant doConvertInteger(const simdjson::dom::element & element, const metapp::MetaType * proto);
+	metapp::Variant doConvertUnsignedInteger(const simdjson::dom::element & element, const metapp::MetaType * proto);
+	metapp::Variant doConvertDouble(const simdjson::dom::element & element, const metapp::MetaType * proto);
+	metapp::Variant doConvertString(const simdjson::dom::element & element, const metapp::MetaType * proto);
+	metapp::Variant doConvertArray(const simdjson::dom::element & element, const metapp::MetaType * proto);
+	metapp::Variant doConvertObject(const simdjson::dom::element & element, const metapp::MetaType * proto);
+
 	metapp::Variant doConvertValue(json_value * jsonValue, const metapp::MetaType * proto);
 
 	metapp::Variant doConvertNull(json_value * jsonValue, const metapp::MetaType * proto);
@@ -70,13 +82,17 @@ private:
 
 private:
 	ParserConfig config;
+	simdjson::dom::parser parser;
+
+	std::string errorString;
+
 	json_settings settings;
 	json_value * root;
 	std::array<char, json_error_max> error;
 };
 
 Implement::Implement(const ParserConfig & config)
-	: config(config), settings(), root(nullptr), error()
+	: config(config), parser(), settings(), root(nullptr), error()
 {
 	settings.settings |= json_enable_comments;
 }
@@ -90,21 +106,199 @@ Implement::~Implement()
 
 bool Implement::hasError() const
 {
+	return ! errorString.empty();
 	return error[0] != 0;
 }
 
 std::string Implement::getError() const
 {
+	return errorString;
 	return error.data();
 }
 
 metapp::Variant Implement::parse(const char * jsonText, const size_t length, const metapp::MetaType * proto)
 {
+#if 0
+	simdjson::padded_string json(jsonText, length);
+	simdjson::dom::element element;
+	auto r = parser.parse(json).get(element);
+	if(r != simdjson::SUCCESS) {
+		errorString = simdjson::error_message(r);
+		return metapp::Variant();
+	}
+	return doConvertValue(element, proto);
+#else
 	root = json_parse_ex(&settings, jsonText, length, error.data());
 	if(error[0] != 0) {
 		return metapp::Variant();
 	}
 	return doConvertValue(root, proto);
+#endif
+}
+
+metapp::Variant Implement::doConvertValue(const simdjson::dom::element & element, const metapp::MetaType * proto)
+{
+	if(proto != nullptr) {
+		proto = metapp::getNonReferenceMetaType(proto);
+		if(proto->getTypeKind() == metapp::tkVariant) {
+			proto = nullptr;
+		}
+	}
+
+	switch(element.type()) {
+	case simdjson::dom::element_type::NULL_VALUE:
+		return doConvertNull(element, proto);
+
+	case simdjson::dom::element_type::BOOL:
+		return doConvertBoolean(element, proto);
+
+	case simdjson::dom::element_type::INT64:
+		return doConvertInteger(element, proto);
+
+	case simdjson::dom::element_type::UINT64:
+		return doConvertUnsignedInteger(element, proto);
+
+	case simdjson::dom::element_type::DOUBLE:
+		return doConvertDouble(element, proto);
+
+	case simdjson::dom::element_type::STRING:
+		return doConvertString(element, proto);
+
+	case simdjson::dom::element_type::ARRAY:
+		return doConvertArray(element, proto);
+
+	case simdjson::dom::element_type::OBJECT:
+		return doConvertObject(element, proto);
+
+	}
+
+	return metapp::Variant();
+}
+
+metapp::Variant Implement::doConvertNull(const simdjson::dom::element & /*element*/, const metapp::MetaType * proto)
+{
+	if(proto == nullptr) {
+		return metapp::Variant(nullptr);
+	}
+	return metapp::Variant(nullptr).cast(proto);
+}
+
+metapp::Variant Implement::doConvertBoolean(const simdjson::dom::element & element, const metapp::MetaType * proto)
+{
+	if(proto == nullptr) {
+		return metapp::Variant((JsonBool)(element.get<bool>()));
+	}
+	return metapp::Variant((JsonBool)(element.get<bool>())).cast(proto);
+}
+
+metapp::Variant Implement::doConvertInteger(const simdjson::dom::element & element, const metapp::MetaType * proto)
+{
+	if(proto == nullptr) {
+		return metapp::Variant((JsonInt)(element.get<int64_t>()));
+	}
+	return metapp::Variant((JsonInt)(element.get<int64_t>())).cast(proto);
+}
+
+metapp::Variant Implement::doConvertUnsignedInteger(const simdjson::dom::element & element, const metapp::MetaType * proto)
+{
+	if(proto == nullptr) {
+		return metapp::Variant((JsonInt)(element.get<uint64_t>()));
+	}
+	return metapp::Variant((JsonInt)(element.get<uint64_t>())).cast(proto);
+}
+
+metapp::Variant Implement::doConvertDouble(const simdjson::dom::element & element, const metapp::MetaType * proto)
+{
+	if(proto == nullptr) {
+		return metapp::Variant((JsonReal)(element.get<double>()));
+	}
+	return metapp::Variant((JsonReal)(element.get<double>())).cast(proto);
+}
+
+metapp::Variant Implement::doConvertString(const simdjson::dom::element & element, const metapp::MetaType * proto)
+{
+	if(proto == nullptr) {
+		return metapp::Variant((JsonString)(element.get<const char *>()));
+	}
+	return metapp::Variant((JsonString)(element.get<const char *>())).cast(proto);
+}
+
+metapp::Variant Implement::doConvertArray(const simdjson::dom::element & element, const metapp::MetaType * proto)
+{
+	const metapp::MetaType * type = proto;
+	if(type == nullptr) {
+		type = config.getArrayType();
+	}
+	if(type == nullptr) {
+		type = metapp::getMetaType<JsonArray>();
+	}
+	metapp::Variant result = metapp::Variant(type, nullptr);
+	auto metaIndexable = metapp::getNonReferenceMetaType(result)->getMetaIndexable();
+	simdjson::dom::array array = element.get<simdjson::dom::array>();
+	metaIndexable->resize(result, array.size());
+	int index = 0;
+	for(const auto & item : array) {
+		const metapp::MetaType * elementProto = nullptr;
+		if(proto != nullptr) {
+			elementProto = metapp::getNonReferenceMetaType(metaIndexable->getValueType(result, index));
+		}
+		metaIndexable->set(result, index, doConvertValue(item, elementProto));
+		++index;
+	}
+	return result;
+}
+
+metapp::Variant Implement::doConvertObject(const simdjson::dom::element & element, const metapp::MetaType * proto)
+{
+	const metapp::MetaType * type = proto;
+	const metapp::MetaClass * metaClass = nullptr;
+	if(proto != nullptr) {
+		metaClass = proto->getMetaClass();
+	}
+	if(type == nullptr) {
+		type = config.getObjectType();
+	}
+	if(type == nullptr) {
+		type = metapp::getMetaType<JsonObject>();
+	}
+	const metapp::MetaMappable * metaMappable = type->getMetaMappable();
+	const metapp::MetaIndexable * metaIndexable = type->getMetaIndexable();
+	metapp::Variant result = metapp::Variant(type, nullptr);
+	simdjson::dom::object object = element.get<simdjson::dom::object>();
+
+	if(metaMappable != nullptr) {
+		auto valueType = metaMappable->getValueType(result);
+		for(auto it = object.begin(); it != object.end(); ++it) {
+			const metapp::Variant value(doConvertValue(it.value(), valueType->getUpType(1)));
+			metaMappable->set(result, it.key_c_str(), value);
+		}
+	}
+	else if(metaIndexable != nullptr) {
+		metaIndexable->resize(result, object.size());
+		int index = 0;
+		for(auto it = object.begin(); it != object.end(); ++it) {
+			const auto value = metaIndexable->get(result, index);
+			auto valueIndexable = metapp::getNonReferenceMetaType(value)->getMetaIndexable();
+			if(valueIndexable != nullptr) {
+				valueIndexable->resize(value, 2);
+				valueIndexable->set(value, 0, it.key_c_str());
+				const metapp::Variant convertedValue(doConvertValue(it.value(), valueIndexable->getValueType(value, 1)));
+				valueIndexable->set(convertedValue, 1, value);
+			}
+			++index;
+		}
+	}
+	else if(metaClass != nullptr) {
+		for(auto it = object.begin(); it != object.end(); ++it) {
+			std::string name(it.key_c_str());
+			auto field = metaClass->getAccessible(name);
+			if(! field.isEmpty()) {
+				const metapp::Variant value(doConvertValue(it.value(), metapp::accessibleGetValueType(field)));
+				metapp::accessibleSet(field, result.getAddress(), value);
+			}
+		}
+	}
+	return result;
 }
 
 metapp::Variant Implement::doConvertValue(json_value * jsonValue, const metapp::MetaType * proto)
