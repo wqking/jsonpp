@@ -24,10 +24,18 @@
 #include <vector>
 #include <map>
 
+#ifndef JSONPP_BACKEND_CPARSER
+#define JSONPP_BACKEND_CPARSER 1
+#endif
+
+#ifndef JSONPP_BACKEND_SIMDJSON
+#define JSONPP_BACKEND_SIMDJSON 1
+#endif
+
 namespace jsonpp {
 
 namespace jsonparser_internal_ {
-class Implement;
+class ParserBackend;
 } // namespace jsonparser_internal_
 
 using JsonNull = void *;
@@ -71,11 +79,18 @@ private:
 	const metapp::MetaType * objectType;
 };
 
+enum class ParserType
+{
+	cparser,
+	simdjson
+};
+
 class JsonParser
 {
 public:
 	JsonParser();
-	explicit JsonParser(const ParserConfig & config);
+	explicit JsonParser(const ParserType parserType);
+	explicit JsonParser(const ParserConfig & config, const ParserType parserType);
 	~JsonParser();
 
 	bool hasError() const;
@@ -85,7 +100,7 @@ public:
 	metapp::Variant parse(const std::string & jsonText, const metapp::MetaType * proto = nullptr);
 
 private:
-	std::unique_ptr<jsonparser_internal_::Implement> implement;
+	std::unique_ptr<jsonparser_internal_::ParserBackend> backend;
 };
 
 } // namespace jsonpp

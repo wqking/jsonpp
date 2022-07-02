@@ -16,6 +16,7 @@
 
 #include "test.h"
 #include "classes.h"
+#include "test_parser.h"
 
 #include "jsonpp/jsondumper.h"
 #include "jsonpp/jsonparser.h"
@@ -28,65 +29,71 @@
 
 TEST_CASE("JsonDumper, dump/parse, null")
 {
+	auto parserType = PARSER_TYPES();
 	std::string jsonText = jsonpp::JsonDumper().dump(nullptr);
-	metapp::Variant var = jsonpp::JsonParser().parse(jsonText);
+	metapp::Variant var = jsonpp::JsonParser(parserType).parse(jsonText);
 	REQUIRE(var.get<jsonpp::JsonNull>() == nullptr);
 }
 
 TEST_CASE("JsonDumper, dump/parse, bool")
 {
+	auto parserType = PARSER_TYPES();
 	SECTION("true") {
 		std::string jsonText = jsonpp::JsonDumper().dump(true);
-		metapp::Variant var = jsonpp::JsonParser().parse(jsonText);
+		metapp::Variant var = jsonpp::JsonParser(parserType).parse(jsonText);
 		REQUIRE(var.get<jsonpp::JsonBool>());
 	}
 
 	SECTION("false") {
 		std::string jsonText = jsonpp::JsonDumper().dump(false);
-		metapp::Variant var = jsonpp::JsonParser().parse(jsonText);
+		metapp::Variant var = jsonpp::JsonParser(parserType).parse(jsonText);
 		REQUIRE(! var.get<jsonpp::JsonBool>());
 	}
 }
 
 TEST_CASE("JsonDumper, dump/parse, int")
 {
+	auto parserType = PARSER_TYPES();
 	SECTION("38") {
 		std::string jsonText = jsonpp::JsonDumper().dump(38);
-		metapp::Variant var = jsonpp::JsonParser().parse(jsonText);
+		metapp::Variant var = jsonpp::JsonParser(parserType).parse(jsonText);
 		REQUIRE(var.get<jsonpp::JsonInt>() == 38);
 	}
 	SECTION("-98765") {
 		std::string jsonText = jsonpp::JsonDumper().dump(-98765);
-		metapp::Variant var = jsonpp::JsonParser().parse(jsonText);
+		metapp::Variant var = jsonpp::JsonParser(parserType).parse(jsonText);
 		REQUIRE(var.get<jsonpp::JsonInt>() == -98765);
 	}
 }
 
 TEST_CASE("JsonDumper, dump/parse, double")
 {
+	auto parserType = PARSER_TYPES();
 	SECTION("9.1") {
 		std::string jsonText = jsonpp::JsonDumper().dump(9.1);
-		metapp::Variant var = jsonpp::JsonParser().parse(jsonText);
+		metapp::Variant var = jsonpp::JsonParser(parserType).parse(jsonText);
 		REQUIRE(var.get<jsonpp::JsonReal>() == 9.1);
 	}
 	SECTION("-3.14") {
 		std::string jsonText = jsonpp::JsonDumper().dump(-3.14);
-		metapp::Variant var = jsonpp::JsonParser().parse(jsonText);
+		metapp::Variant var = jsonpp::JsonParser(parserType).parse(jsonText);
 		REQUIRE(var.get<jsonpp::JsonReal>() == -3.14);
 	}
 }
 
 TEST_CASE("JsonDumper, dump/parse, string")
 {
+	auto parserType = PARSER_TYPES();
 	std::string jsonText = jsonpp::JsonDumper().dump("Hello world");
-	metapp::Variant var = jsonpp::JsonParser().parse(jsonText);
+	metapp::Variant var = jsonpp::JsonParser(parserType).parse(jsonText);
 	REQUIRE(var.get<const std::string &>() == "Hello world");
 }
 
 TEST_CASE("JsonDumper, dump/parse, array")
 {
+	auto parserType = PARSER_TYPES();
 	std::string jsonText = jsonpp::JsonDumper().dump(std::make_tuple("Hello world", 5, -9, "good"));
-	metapp::Variant var = jsonpp::JsonParser().parse(jsonText);
+	metapp::Variant var = jsonpp::JsonParser(parserType).parse(jsonText);
 	const jsonpp::JsonArray & array = var.get<const jsonpp::JsonArray &>();
 	REQUIRE(array[0].get<const std::string &>() == "Hello world");
 	REQUIRE(array[1].get<jsonpp::JsonInt>() == 5);
@@ -96,20 +103,22 @@ TEST_CASE("JsonDumper, dump/parse, array")
 
 TEST_CASE("JsonDumper, dump/parse, TestClass2")
 {
+	auto parserType = PARSER_TYPES();
 	std::string jsonText = jsonpp::JsonDumper(jsonpp::DumperConfig().setBeautify(true)).dump(makeTestClass2(0));
-	metapp::Variant var = jsonpp::JsonParser().parse(jsonText, metapp::getMetaType<TestClass2>());
+	metapp::Variant var = jsonpp::JsonParser(parserType).parse(jsonText, metapp::getMetaType<TestClass2>());
 	REQUIRE(var.get<const TestClass2 &>() == makeTestClass2(0));
 }
 
 TEST_CASE("JsonDumper, dump/parse, std::vector<TestClass2>")
 {
+	auto parserType = PARSER_TYPES();
 	std::string jsonText = jsonpp::JsonDumper(jsonpp::DumperConfig().setBeautify(true)).dump(
 		std::vector<TestClass2> {
 			makeTestClass2(0),
 			makeTestClass2(1),
 		}
 	);
-	metapp::Variant var = jsonpp::JsonParser().parse(jsonText, metapp::getMetaType<std::vector<TestClass2> >());
+	metapp::Variant var = jsonpp::JsonParser(parserType).parse(jsonText, metapp::getMetaType<std::vector<TestClass2> >());
 	REQUIRE(var.get<const std::vector<TestClass2> &>()[0] == makeTestClass2(0));
 	REQUIRE(var.get<const std::vector<TestClass2> &>()[1] == makeTestClass2(1));
 }
