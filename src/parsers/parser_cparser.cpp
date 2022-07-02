@@ -63,12 +63,6 @@ public:
 
 private:
 	metapp::Variant doConvertValue(json_value * jsonValue, const metapp::MetaType * proto);
-
-	metapp::Variant doConvertNull(json_value * jsonValue, const metapp::MetaType * proto);
-	metapp::Variant doConvertBoolean(json_value * jsonValue, const metapp::MetaType * proto);
-	metapp::Variant doConvertInteger(json_value * jsonValue, const metapp::MetaType * proto);
-	metapp::Variant doConvertDouble(json_value * jsonValue, const metapp::MetaType * proto);
-	metapp::Variant doConvertString(json_value * jsonValue, const metapp::MetaType * proto);
 	metapp::Variant doConvertArray(json_value * jsonValue, const metapp::MetaType * proto);
 	metapp::Variant doConvertObject(json_value * jsonValue, const metapp::MetaType * proto);
 
@@ -122,71 +116,46 @@ metapp::Variant BackendCParser::doConvertValue(json_value * jsonValue, const met
 	}
 
 	switch(jsonValue->type) {
-	case json_object:
-		return doConvertObject(jsonValue, proto);
+	case json_null:
+		if(proto == nullptr) {
+			return metapp::Variant(nullptr);
+		}
+		return metapp::Variant(nullptr).cast(proto);
+
+	case json_boolean:
+		if(proto == nullptr) {
+			return metapp::Variant((JsonBool)(jsonValue->u.boolean));
+		}
+		return metapp::Variant((JsonBool)(jsonValue->u.boolean)).cast(proto);
+
+	case json_integer:
+		if(proto == nullptr) {
+			return metapp::Variant((JsonInt)(jsonValue->u.integer));
+		}
+		return metapp::Variant((JsonInt)(jsonValue->u.integer)).cast(proto);
+
+	case json_double:
+		if(proto == nullptr) {
+			return metapp::Variant((JsonReal)(jsonValue->u.dbl));
+		}
+		return metapp::Variant((JsonReal)(jsonValue->u.dbl)).cast(proto);
+
+	case json_string:
+		if(proto == nullptr) {
+			return metapp::Variant(JsonString(jsonValue->u.string.ptr));
+		}
+		return metapp::Variant(std::string(jsonValue->u.string.ptr)).cast(proto);
 
 	case json_array:
 		return doConvertArray(jsonValue, proto);
 
-	case json_integer:
-		return doConvertInteger(jsonValue, proto);
-
-	case json_double:
-		return doConvertDouble(jsonValue, proto);
-
-	case json_string:
-		return doConvertString(jsonValue, proto);
-
-	case json_boolean:
-		return doConvertBoolean(jsonValue, proto);
-
-	case json_null:
-		return doConvertNull(jsonValue, proto);
+	case json_object:
+		return doConvertObject(jsonValue, proto);
 
 	default:
 		break;
 	}
 	return metapp::Variant();
-}
-
-metapp::Variant BackendCParser::doConvertNull(json_value * /*jsonValue*/, const metapp::MetaType * proto)
-{
-	if(proto == nullptr) {
-		return metapp::Variant(nullptr);
-	}
-	return metapp::Variant(nullptr).cast(proto);
-}
-
-metapp::Variant BackendCParser::doConvertBoolean(json_value * jsonValue, const metapp::MetaType * proto)
-{
-	if(proto == nullptr) {
-		return metapp::Variant((JsonBool)(jsonValue->u.boolean));
-	}
-	return metapp::Variant((JsonBool)(jsonValue->u.boolean)).cast(proto);
-}
-
-metapp::Variant BackendCParser::doConvertInteger(json_value * jsonValue, const metapp::MetaType * proto)
-{
-	if(proto == nullptr) {
-		return metapp::Variant((JsonInt)(jsonValue->u.integer));
-	}
-	return metapp::Variant((JsonInt)(jsonValue->u.integer)).cast(proto);
-}
-
-metapp::Variant BackendCParser::doConvertDouble(json_value * jsonValue, const metapp::MetaType * proto)
-{
-	if(proto == nullptr) {
-		return metapp::Variant((JsonReal)(jsonValue->u.dbl));
-	}
-	return metapp::Variant((JsonReal)(jsonValue->u.dbl)).cast(proto);
-}
-
-metapp::Variant BackendCParser::doConvertString(json_value * jsonValue, const metapp::MetaType * proto)
-{
-	if(proto == nullptr) {
-		return metapp::Variant(JsonString(jsonValue->u.string.ptr));
-	}
-	return metapp::Variant(std::string(jsonValue->u.string.ptr)).cast(proto);
 }
 
 metapp::Variant BackendCParser::doConvertArray(json_value * jsonValue, const metapp::MetaType * proto)
