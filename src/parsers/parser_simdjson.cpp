@@ -115,40 +115,22 @@ metapp::Variant BackendSimdjson::doConvertValue(const simdjson::dom::element & e
 
 	switch(element.type()) {
 	case simdjson::dom::element_type::NULL_VALUE:
-		if(proto == nullptr) {
-			return metapp::Variant(nullptr);
-		}
-		return metapp::Variant(nullptr).cast(proto);
+		return metapp::Variant(nullptr);
 
 	case simdjson::dom::element_type::BOOL:
-		if(proto == nullptr) {
-			return metapp::Variant((JsonBool)(element.get<bool>()));
-		}
-		return metapp::Variant((JsonBool)(element.get<bool>())).cast(proto);
+		return metapp::Variant((JsonBool)(element.get<bool>()));
 
 	case simdjson::dom::element_type::INT64:
-		if(proto == nullptr) {
-			return metapp::Variant((JsonInt)(element.get<int64_t>()));
-		}
-		return metapp::Variant((JsonInt)(element.get<int64_t>())).cast(proto);
+		return metapp::Variant((JsonInt)(element.get<int64_t>()));
 
 	case simdjson::dom::element_type::UINT64:
-		if(proto == nullptr) {
-			return metapp::Variant((JsonInt)(element.get<uint64_t>()));
-		}
-		return metapp::Variant((JsonInt)(element.get<uint64_t>())).cast(proto);
+		return metapp::Variant((JsonInt)(element.get<uint64_t>()));
 
 	case simdjson::dom::element_type::DOUBLE:
-		if(proto == nullptr) {
-			return metapp::Variant((JsonReal)(element.get<double>()));
-		}
-		return metapp::Variant((JsonReal)(element.get<double>())).cast(proto);
+		return metapp::Variant((JsonReal)(element.get<double>()));
 
 	case simdjson::dom::element_type::STRING:
-		if(proto == nullptr) {
-			return metapp::Variant((JsonString)(element.get<const char *>()));
-		}
-		return metapp::Variant((JsonString)(element.get<const char *>())).cast(proto);
+		return metapp::Variant((JsonString)(element.get<const char *>()));
 
 	case simdjson::dom::element_type::ARRAY:
 		return doConvertArray(element, proto);

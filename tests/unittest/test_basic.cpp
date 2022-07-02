@@ -14,7 +14,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "test.h"
+#include "test_parser.h"
+#include "classes.h"
 
 #include "jsonpp/jsonparser.h"
 #include "jsonpp/jsondumper.h"

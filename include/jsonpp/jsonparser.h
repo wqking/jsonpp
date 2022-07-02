@@ -103,6 +103,8 @@ private:
 	std::unique_ptr<jsonparser_internal_::ParserBackend> backend;
 };
 
+std::string getParserTypeName(const ParserType type);
+
 } // namespace jsonpp
 
 #endif

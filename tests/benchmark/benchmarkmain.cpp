@@ -1,4 +1,4 @@
-// metapp library
+// jsonpp library
 // 
 // Copyright (C) 2022 Wang Qi (wqking)
 // 
@@ -14,22 +14,5 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef TEST_H
-#define TEST_H
-
-#include "../catch.hpp"
-
-#include <fstream>
-#include <sstream>
-#include <string>
-
-inline std::string readFile(const std::string & fileName)
-{
-	std::ifstream f(fileName);
-	std::ostringstream ss;
-	ss << f.rdbuf();
-	return ss.str();
-}
-
-
-#endif
+#define CATCH_CONFIG_MAIN  // This tells Catch to provide a main() - only do this in one cpp file
+#include "benchmark.h"

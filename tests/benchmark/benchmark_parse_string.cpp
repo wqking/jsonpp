@@ -1,4 +1,4 @@
-// metapp library
+// jsonpp library
 // 
 // Copyright (C) 2022 Wang Qi (wqking)
 // 
@@ -14,22 +14,27 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef TEST_H
-#define TEST_H
+#include "benchmark.h"
 
-#include "../catch.hpp"
+#include "jsonpp/jsonparser.h"
+#include "jsonpp/jsondumper.h"
 
-#include <fstream>
-#include <sstream>
-#include <string>
+namespace {
 
-inline std::string readFile(const std::string & fileName)
+BenchmarkFunc
 {
-	std::ifstream f(fileName);
-	std::ostringstream ss;
-	ss << f.rdbuf();
-	return ss.str();
+	auto parserType = PARSER_TYPES();
+	constexpr int iterations = 1000 * 100;
+	const std::string jsonText = R"([ 5, { "b" : 38, "a" : "hello" } ])";
+	const auto t = measureElapsedTime([iterations, jsonText, parserType]() {
+		jsonpp::JsonParser parser(parserType);
+		for(int i = 0; i < iterations; ++i) {
+			parser.parse(jsonText);
+		}
+	});
+	printResult(t, iterations, jsonpp::getParserTypeName(parserType) + " Parse string");
 }
 
 
-#endif
+
+} //namespace

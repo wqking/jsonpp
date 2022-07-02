@@ -52,6 +52,19 @@ std::unique_ptr<ParserBackend> createBackend(const ParserConfig & config, const 
 } // namespace jsonparser_internal_
 
 
+std::string getParserTypeName(const ParserType type)
+{
+	switch(type) {
+	case ParserType::cparser:
+		return "json-parser";
+
+	case ParserType::simdjson:
+		return "simdjson";
+	}
+
+	return "Unknown";
+}
+
 JsonParser::JsonParser()
 	: JsonParser(ParserConfig(), ParserType::simdjson)
 {
