@@ -100,6 +100,9 @@ void dontOptimizeAway(T && )
 inline std::string readFile(const std::string & fileName)
 {
 	std::ifstream f(fileName);
+	if(! f) {
+		return "";
+	}
 	std::ostringstream ss;
 	ss << f.rdbuf();
 	return ss.str();

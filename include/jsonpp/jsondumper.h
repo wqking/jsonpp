@@ -87,6 +87,60 @@ struct StreamOutputter
 	std::ostream & stream;
 };
 
+struct StringOutputter
+{
+	StringOutputter()
+		: str()
+	{
+	}
+
+	void operator() (const char c) const {
+		str.push_back(c);
+	}
+
+	void operator() (const char * s, const std::size_t length) const {
+		str.append(s, length);
+		return;
+		const auto size = str.size();
+		str.resize(size + length);
+		memmove(&str[size], s, length);
+	}
+
+	const std::string & getString() const {
+		return str;
+	}
+
+	mutable std::string str;
+};
+
+struct VectorOutputter
+{
+	VectorOutputter()
+		: charList()
+	{
+	}
+
+	void operator() (const char c) const {
+		charList.push_back(c);
+	}
+
+	void operator() (const char * s, const std::size_t length) const {
+		const auto size = charList.size();
+		charList.resize(size + length);
+		memmove(charList.data() + size, s, length);
+	}
+
+	const char * getString() const {
+		return charList.data();
+	}
+
+	std::size_t getLength() const {
+		return charList.size();
+	}
+
+	mutable std::vector<char> charList;
+};
+
 class JsonDumper
 {
 public:
@@ -106,10 +160,9 @@ public:
 	//void dump(const metapp::Variant & value, std::ostream & stream);
 	
 	std::string dump(const metapp::Variant & value) {
-		std::stringstream ss;
-		StreamOutputter outputter(ss);
+		StringOutputter outputter;
 		dump(value, outputter);
-		return ss.str();
+		return outputter.getString();
 	}
 
 	template <typename Outputter>

@@ -45,21 +45,14 @@ void doBenchmarkParseFile(const FileInfo & fileInfo, const jsonpp::ParserType pa
 	const std::string & fullFileName = fileInfo.fileName;
 	const int iterations = fileInfo.iterations;
 
-	std::string jsonText;
-	{
-		std::ifstream f(fullFileName);
-		if(! f) {
-			std::cerr << fullFileName << " doesn't exist or can't be read." << std::endl;
-			return;
-		}
-		std::ostringstream ss;
-		ss << f.rdbuf();
-		jsonText = ss.str();
+	const std::string jsonText = readFile(fullFileName);
+	if(jsonText.empty()) {
+		std::cerr << fullFileName << " doesn't exist or can't be read." << std::endl;
+		return;
 	}
 
 	const std::string pureFileName = fs::path(fullFileName).filename().string();
 
-	jsonpp::JsonParser parser(parserType);
 	metapp::Variant var;
 	const auto t = measureElapsedTime([&var, iterations, jsonText, parserType]() {
 		jsonpp::JsonParser parser(parserType);
@@ -70,9 +63,9 @@ void doBenchmarkParseFile(const FileInfo & fileInfo, const jsonpp::ParserType pa
 
 	printResult(t, iterations, jsonpp::getParserTypeName(parserType) + " Parse file " + pureFileName);
 
-	jsonpp::JsonDumper dumper(jsonpp::DumperConfig().setBeautify(true));
-	std::ofstream f(fullFileName + ".output");
-	dumper.dump(var, f);
+	//jsonpp::JsonDumper dumper(jsonpp::DumperConfig().setBeautify(true));
+	//std::ofstream f(fullFileName + ".output");
+	//dumper.dump(var, f);
 }
 
 BenchmarkFunc
@@ -82,5 +75,44 @@ BenchmarkFunc
 		doBenchmarkParseFile(fileInfoList[i], parserType);
 	}
 }
+
+void doBenchmarkDumpJson(const FileInfo & fileInfo, const bool beaufify)
+{
+	namespace fs = std::filesystem;
+
+	const std::string & fullFileName = fileInfo.fileName;
+	const int iterations = fileInfo.iterations;
+
+	const std::string jsonText = readFile(fullFileName);
+	if(jsonText.empty()) {
+		std::cerr << fullFileName << " doesn't exist or can't be read." << std::endl;
+		return;
+	}
+
+	const std::string pureFileName = fs::path(fullFileName).filename().string();
+
+	metapp::Variant var = jsonpp::JsonParser().parse(jsonText);
+	const auto t = measureElapsedTime([&var, iterations, beaufify]() {
+		jsonpp::JsonDumper dumper(jsonpp::DumperConfig().setBeautify(beaufify));
+		for(int i = 0; i < iterations; ++i) {
+			dumper.dump(var);
+		}
+	});
+
+	printResult(t, iterations, std::string(beaufify ? "Beautify" : "Minify") + " Dump file " + pureFileName);
+
+	const std::string dumpedText = jsonpp::JsonDumper(jsonpp::DumperConfig().setBeautify(beaufify)).dump(var);
+	metapp::Variant newVar = jsonpp::JsonParser().parse(dumpedText);
+	REQUIRE(! newVar.isEmpty());
+}
+
+BenchmarkFunc
+{
+	for(std::size_t i = 0; i < sizeof(fileInfoList) / sizeof(fileInfoList[0]); ++i) {
+		doBenchmarkDumpJson(fileInfoList[i], true);
+		doBenchmarkDumpJson(fileInfoList[i], false);
+	}
+}
+
 
 } //namespace
