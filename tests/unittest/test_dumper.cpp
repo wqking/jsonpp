@@ -89,6 +89,15 @@ TEST_CASE("JsonDumper, dump/parse, string")
 	REQUIRE(var.get<const std::string &>() == "Hello world");
 }
 
+TEST_CASE("JsonDumper, dump/parse, string, escape/unescape")
+{
+	auto parserType = PARSER_TYPES();
+	const std::string text = "\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1a\x1b\x1c\x1d\x1e\x1f";
+	std::string jsonText = jsonpp::JsonDumper().dump(text);
+	metapp::Variant var = jsonpp::JsonParser(parserType).parse(jsonText);
+	REQUIRE(var.get<const std::string &>() == text);
+}
+
 TEST_CASE("JsonDumper, dump/parse, array")
 {
 	auto parserType = PARSER_TYPES();

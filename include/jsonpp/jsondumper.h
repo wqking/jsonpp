@@ -18,14 +18,25 @@
 #define JSONPP_JSONDUMPER_H_821598293712
 
 #include "metapp/variant.h"
+#include "metapp/allmetatypes.h"
+#include "metapp/interfaces/metaclass.h"
+#include "metapp/interfaces/metaindexable.h"
+#include "metapp/interfaces/metamappable.h"
+#include "metapp/utilities/utility.h"
+#include "metapp/compiler.h"
 
 #include <memory>
+#include <vector>
 #include <ostream>
+#include <sstream>
 
 namespace jsonpp {
 
 namespace jsondumper_internal_ {
-class Implement;
+
+template <typename Outputter>
+class JsonDumperImplement;
+
 } // namespace jsondumper_internal_
 
 class DumperConfig
@@ -58,20 +69,60 @@ private:
 	bool beautify;
 };
 
+struct StreamOutputter
+{
+	StreamOutputter(std::ostream & stream)
+		: stream(stream)
+	{
+	}
+
+	void operator() (const char c) const {
+		stream.put(c);
+	}
+
+	void operator() (const char * s, const std::size_t length) const {
+		stream.write(s, static_cast<std::streamsize>(length));
+	}
+
+	std::ostream & stream;
+};
+
 class JsonDumper
 {
 public:
-	JsonDumper();
-	explicit JsonDumper(const DumperConfig & config);
-	~JsonDumper();
+	JsonDumper()
+		: JsonDumper(DumperConfig())
+	{
+	}
 
-	void dump(const metapp::Variant & value, std::ostream & stream);
-	std::string dump(const metapp::Variant & value);
+	explicit JsonDumper(const DumperConfig & config)
+		: config(config)
+	{
+	}
+
+	~JsonDumper() {
+	}
+
+	//void dump(const metapp::Variant & value, std::ostream & stream);
+	
+	std::string dump(const metapp::Variant & value) {
+		std::stringstream ss;
+		StreamOutputter outputter(ss);
+		dump(value, outputter);
+		return ss.str();
+	}
+
+	template <typename Outputter>
+	void dump(const metapp::Variant & value, const Outputter & outputter) {
+		jsondumper_internal_::JsonDumperImplement<Outputter>(config, outputter).dump(value);
+	}
 
 private:
-	std::unique_ptr<jsondumper_internal_::Implement> implement;
+	DumperConfig config;
 };
 
 } // namespace jsonpp
+
+#include "implement/jsondumper_impl.h"
 
 #endif
