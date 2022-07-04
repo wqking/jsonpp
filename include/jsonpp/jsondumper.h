@@ -17,6 +17,9 @@
 #ifndef JSONPP_JSONDUMPER_H_821598293712
 #define JSONPP_JSONDUMPER_H_821598293712
 
+#include "implement/algorithms_i.h"
+#include "drachennest/dragonbox.h"
+
 #include "metapp/variant.h"
 #include "metapp/allmetatypes.h"
 #include "metapp/interfaces/metaclass.h"
@@ -169,6 +172,33 @@ public:
 private:
 	DumperConfig config;
 };
+
+constexpr int numberToStringBufferSize = 64;
+
+struct NumberToStringResult
+{
+	char * start;
+	int length;
+};
+
+template <typename T>
+NumberToStringResult integerToString(const T value, char * buffer)
+{
+	const int length = internal_::IntToString<T>::toString(value, &buffer[numberToStringBufferSize - 1]);
+	return {
+		&buffer[numberToStringBufferSize - length],
+		length
+	};
+}
+
+inline NumberToStringResult doubleToString(const double value, char * buffer)
+{
+	const char * end = dragonbox::Dtoa(buffer, value);
+	return {
+		buffer,
+		static_cast<int>(end - buffer)
+	};
+}
 
 } // namespace jsonpp
 

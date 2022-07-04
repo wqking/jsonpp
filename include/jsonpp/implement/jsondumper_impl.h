@@ -17,10 +17,7 @@
 #ifndef JSONPP_JSONDUMPER_IMPL_H_821598293712
 #define JSONPP_JSONDUMPER_IMPL_H_821598293712
 
-#include "algorithms_i.h"
-
 #include "metapp/variant.h"
-#include "drachennest/dragonbox.h"
 
 #include <memory>
 #include <ostream>
@@ -32,6 +29,14 @@ namespace jsonpp {
 namespace internal_ {
 
 extern std::string doubleFormatString;
+struct EscapeItem {
+	const char * str;
+	std::size_t length;
+};
+constexpr char escapeItemListSize = 32;
+extern const std::array<EscapeItem, escapeItemListSize> escapeItemList;
+extern const EscapeItem escapeItemQuoteMark;
+extern const EscapeItem escapeItemBackSlash;
 
 template <typename Outputter>
 class JsonDumperImplement
@@ -77,31 +82,21 @@ private:
 			if(metapp::typeKindIsSignedIntegral(typeKind)) {
 				using Type = long long;
 				const auto n = value.cast<Type>().template get<Type>();
-				const int length = internal_::IntToString<Type>::toString(n, &buffer[internal_::intToStringBufferSize - 1]);
-				outputter(&buffer[internal_::intToStringBufferSize - length], length);
+				const auto result = integerToString(n, buffer.data());
+				outputter(result.start, result.length);
 			}
 			else {
 				using Type = unsigned long long;
 				const auto n = value.cast<Type>().template get<Type>();
-				const int length = internal_::IntToString<Type>::toString(n, &buffer[internal_::intToStringBufferSize - 1]);
-				outputter(&buffer[internal_::intToStringBufferSize - length], length);
+				const auto result = integerToString(n, buffer.data());
+				outputter(result.start, result.length);
 			}
 			return;
 		}
 		if(metapp::typeKindIsReal(typeKind)) {
-#if 1
 			const auto d = value.cast<double>().template get<double>();
-			const char * end = dragonbox::Dtoa(buffer.data(), d);
-			outputter(buffer.data(), end - buffer.data());
-#else
-			const auto len = std::snprintf(
-				buffer.data(),
-				buffer.size(),
-				doubleFormatString.c_str(),
-				value.cast<double>().template get<double>()
-			);
-			outputter(buffer.data(), len);
-#endif
+			const auto result = doubleToString(d, buffer.data());
+			outputter(result.start, result.length);
 			return;
 		}
 		{
@@ -118,48 +113,6 @@ private:
 	}
 
 	void doDumpString(const std::string & s) {
-		struct EscapeItem {
-			const char * str;
-			std::size_t length;
-		};
-		constexpr char escapeItemListSize = 32;
-		static const std::array<EscapeItem, escapeItemListSize> escapeItemList {{
-			{ "\\0", 2 }, // 0
-			{ "\\u0001", 6 }, // 1
-			{ "\\u0002", 6 }, // 2
-			{ "\\u0003", 6 }, // 3
-			{ "\\u0004", 6 }, // 4
-			{ "\\u0005", 6 }, // 5
-			{ "\\u0006", 6 }, // 6
-			{ "\\u0007", 6 }, // 7
-			{ "\\b", 2 }, // 8 \b
-			{ "\\t", 2 }, // 9 \t
-			{ "\\n", 2 }, // 10 \n
-			{ "\\u000b", 6 }, // 11
-			{ "\\f", 2 }, // 12 \f
-			{ "\\r", 2 }, // 13 \r
-			{ "\\u000e", 6 }, // 14
-			{ "\\u000f", 6 }, // 15
-			{ "\\u0010", 6 }, // 16
-			{ "\\u0011", 6 }, // 17
-			{ "\\u0012", 6 }, // 18
-			{ "\\u0013", 6 }, // 19
-			{ "\\u0014", 6 }, // 20
-			{ "\\u0015", 6 }, // 21
-			{ "\\u0016", 6 }, // 22
-			{ "\\u0017", 6 }, // 23
-			{ "\\u0018", 6 }, // 24
-			{ "\\u0019", 6 }, // 25
-			{ "\\u001a", 6 }, // 26
-			{ "\\u001b", 6 }, // 27
-			{ "\\u001c", 6 }, // 28
-			{ "\\u001d", 6 }, // 29
-			{ "\\u001e", 6 }, // 30
-			{ "\\u001f", 6 }, // 31
-		}};
-		static const EscapeItem escapeItemQuoteMark = { "\\\"", 2 };
-		static const EscapeItem escapeItemBackSlash = { "\\\\", 2 };
-
 		outputter('"');
 
 		std::size_t previousIndex = 0;
