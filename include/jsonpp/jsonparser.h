@@ -34,9 +34,9 @@
 
 namespace jsonpp {
 
-namespace jsonparser_internal_ {
+namespace internal_ {
 class ParserBackend;
-} // namespace jsonparser_internal_
+} // namespace internal_
 
 using JsonNull = void *;
 using JsonBool = bool;
@@ -100,7 +100,7 @@ public:
 	metapp::Variant parse(const std::string & jsonText, const metapp::MetaType * proto = nullptr);
 
 private:
-	std::unique_ptr<jsonparser_internal_::ParserBackend> backend;
+	std::unique_ptr<internal_::ParserBackend> backend;
 };
 
 std::string getParserTypeName(const ParserType type);

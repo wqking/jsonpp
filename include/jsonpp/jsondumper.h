@@ -32,12 +32,12 @@
 
 namespace jsonpp {
 
-namespace jsondumper_internal_ {
+namespace internal_ {
 
 template <typename Outputter>
 class JsonDumperImplement;
 
-} // namespace jsondumper_internal_
+} // namespace internal_
 
 class DumperConfig
 {
@@ -100,10 +100,6 @@ struct StringOutputter
 
 	void operator() (const char * s, const std::size_t length) const {
 		str.append(s, length);
-		return;
-		const auto size = str.size();
-		str.resize(size + length);
-		memmove(&str[size], s, length);
 	}
 
 	const std::string & getString() const {
@@ -167,7 +163,7 @@ public:
 
 	template <typename Outputter>
 	void dump(const metapp::Variant & value, const Outputter & outputter) {
-		jsondumper_internal_::JsonDumperImplement<Outputter>(config, outputter).dump(value);
+		internal_::JsonDumperImplement<Outputter>(config, outputter).dump(value);
 	}
 
 private:

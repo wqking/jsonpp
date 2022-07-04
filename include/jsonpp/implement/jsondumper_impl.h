@@ -17,7 +17,10 @@
 #ifndef JSONPP_JSONDUMPER_IMPL_H_821598293712
 #define JSONPP_JSONDUMPER_IMPL_H_821598293712
 
+#include "algorithms_i.h"
+
 #include "metapp/variant.h"
+#include "drachennest/dragonbox.h"
 
 #include <memory>
 #include <ostream>
@@ -26,7 +29,9 @@
 
 namespace jsonpp {
 
-namespace jsondumper_internal_ {
+namespace internal_ {
+
+extern std::string doubleFormatString;
 
 template <typename Outputter>
 class JsonDumperImplement
@@ -38,12 +43,17 @@ public:
 	}
 
 	void dump(const metapp::Variant & value) {
-		doDumpValue(value, 0);
+		if(metapp::getNonReferenceMetaType(value)->isPointer() && value.get<void *>() == nullptr) {
+			doDumpValue(value, 0);
+		}
+		else {
+			doDumpValue(metapp::depointer(value), 0);
+		}
 	}
 
 private:
 	void doDumpValue(const metapp::Variant & value, const size_t level) {
-		auto metaType = metapp::getNonReferenceMetaType(value.getMetaType());
+		auto metaType = metapp::getNonReferenceMetaType(value);
 		if(metaType->isPointer() && value.get<void *>() == nullptr) {
 			outputter("null", 4);
 			return;
@@ -64,15 +74,34 @@ private:
 			return;
 		}
 		if(metapp::typeKindIsIntegral(typeKind)) {
-			const auto n = value.cast<long long>().template get<long long>();
-			std::snprintf(buffer.data(), buffer.size(), "%lld", n);
-			outputter(buffer.data(), strlen(buffer.data()));
+			if(metapp::typeKindIsSignedIntegral(typeKind)) {
+				using Type = long long;
+				const auto n = value.cast<Type>().template get<Type>();
+				const int length = internal_::IntToString<Type>::toString(n, &buffer[internal_::intToStringBufferSize - 1]);
+				outputter(&buffer[internal_::intToStringBufferSize - length], length);
+			}
+			else {
+				using Type = unsigned long long;
+				const auto n = value.cast<Type>().template get<Type>();
+				const int length = internal_::IntToString<Type>::toString(n, &buffer[internal_::intToStringBufferSize - 1]);
+				outputter(&buffer[internal_::intToStringBufferSize - length], length);
+			}
 			return;
 		}
 		if(metapp::typeKindIsReal(typeKind)) {
+#if 1
 			const auto d = value.cast<double>().template get<double>();
-			std::snprintf(buffer.data(), buffer.size(), "%f", d);
-			outputter(buffer.data(), strlen(buffer.data()));
+			const char * end = dragonbox::Dtoa(buffer.data(), d);
+			outputter(buffer.data(), end - buffer.data());
+#else
+			const auto len = std::snprintf(
+				buffer.data(),
+				buffer.size(),
+				doubleFormatString.c_str(),
+				value.cast<double>().template get<double>()
+			);
+			outputter(buffer.data(), len);
+#endif
 			return;
 		}
 		{
@@ -340,7 +369,7 @@ private:
 };
 
 
-} // namespace jsondumper_internal_
+} // namespace internal_
 
 } // namespace jsonpp
 

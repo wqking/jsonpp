@@ -48,7 +48,7 @@
 
 namespace jsonpp {
 
-namespace jsonparser_internal_ {
+namespace internal_ {
 
 class BackendCParser : public ParserBackend
 {
@@ -224,7 +224,7 @@ std::unique_ptr<ParserBackend> createBackend_cparser(const ParserConfig & config
 }
 
 
-} // namespace jsonparser_internal_
+} // namespace internal_
 
 } // namespace jsonpp
 

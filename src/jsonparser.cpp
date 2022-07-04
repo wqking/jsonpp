@@ -24,10 +24,26 @@
 #include "metapp/compiler.h"
 
 #include <array>
+#include <limits>
 
 namespace jsonpp {
 
-namespace jsonparser_internal_ {
+namespace internal_ {
+
+char digitPairList[] = {
+	"00010203040506070809"
+	"10111213141516171819"
+	"20212223242526272829"
+	"30313233343536373839"
+	"40414243444546474849"
+	"50515253545556575859"
+	"60616263646566676869"
+	"70717273747576777879"
+	"80818283848586878889"
+	"90919293949596979899"
+};
+std::string doubleFormatString("%." + std::to_string(std::numeric_limits<double>::max_digits10) + "g");
+
 
 std::unique_ptr<ParserBackend> createBackend_cparser(const ParserConfig & config);
 std::unique_ptr<ParserBackend> createBackend_simdjson(const ParserConfig & config);
@@ -49,7 +65,7 @@ std::unique_ptr<ParserBackend> createBackend(const ParserConfig & config, const 
 	return std::unique_ptr<ParserBackend>();
 }
 
-} // namespace jsonparser_internal_
+} // namespace internal_
 
 
 std::string getParserTypeName(const ParserType type)
@@ -76,7 +92,7 @@ JsonParser::JsonParser(const ParserType parserType)
 }
 
 JsonParser::JsonParser(const ParserConfig & config, const ParserType parserType)
-	: backend(jsonparser_internal_::createBackend(config, parserType))
+	: backend(internal_::createBackend(config, parserType))
 {
 }
 

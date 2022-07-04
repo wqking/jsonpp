@@ -24,7 +24,7 @@
 
 namespace jsonpp {
 
-namespace jsonparser_internal_ {
+namespace internal_ {
 
 class ParserBackend
 {
@@ -39,7 +39,7 @@ public:
 private:
 };
 
-} // namespace jsonparser_internal_
+} // namespace internal_
 
 } // namespace jsonpp
 
