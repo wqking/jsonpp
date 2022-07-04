@@ -28,75 +28,57 @@ namespace jsonpp {
 
 namespace internal_ {
 
-extern std::string doubleFormatString;
-struct EscapeItem {
-	const char * str;
-	std::size_t length;
-};
-constexpr char escapeItemListSize = 32;
-extern const std::array<EscapeItem, escapeItemListSize> escapeItemList;
-extern const EscapeItem escapeItemQuoteMark;
-extern const EscapeItem escapeItemBackSlash;
-
 template <typename Outputter>
 class JsonDumperImplement
 {
 public:
-	JsonDumperImplement(const DumperConfig & config, const Outputter & outputter)
-		: config(config), outputter(outputter), indentList(), buffer()
+	JsonDumperImplement(const DumperConfig & config, const Outputter & writer)
+		: config(config), writer(writer), indentList(), buffer()
 	{
 	}
 
 	void dump(const metapp::Variant & value) {
 		if(metapp::getNonReferenceMetaType(value)->isPointer() && value.get<void *>() == nullptr) {
-			doDumpValue(value, 0);
+			doDumpValue(value);
 		}
 		else {
-			doDumpValue(metapp::depointer(value), 0);
+			doDumpValue(metapp::depointer(value));
 		}
 	}
 
 private:
-	void doDumpValue(const metapp::Variant & value, const size_t level) {
+	void doDumpValue(const metapp::Variant & value) {
 		auto metaType = metapp::getNonReferenceMetaType(value);
 		if(metaType->isPointer() && value.get<void *>() == nullptr) {
-			outputter("null", 4);
+			writer.writeNull();
 			return;
 		}
 
 		auto typeKind = metaType->getTypeKind();
 		if(typeKind == metapp::tkVariant) {
-			doDumpValue(value.get<metapp::Variant &>(), level);
+			doDumpValue(value.get<metapp::Variant &>());
 			return;
 		}
 		if(typeKind == metapp::tkBool) {
-			if(value.get<bool>()) {
-				outputter("true", 4);
-			}
-			else {
-				outputter("false", 5);
-			}
+			writer.writeBoolean(value.get<bool>());
 			return;
 		}
 		if(metapp::typeKindIsIntegral(typeKind)) {
 			if(metapp::typeKindIsSignedIntegral(typeKind)) {
 				using Type = long long;
 				const auto n = value.cast<Type>().template get<Type>();
-				const auto result = integerToString(n, buffer.data());
-				outputter(result.start, result.length);
+				writer.writeNumber(n);
 			}
 			else {
 				using Type = unsigned long long;
 				const auto n = value.cast<Type>().template get<Type>();
-				const auto result = integerToString(n, buffer.data());
-				outputter(result.start, result.length);
+				writer.writeNumber(n);
 			}
 			return;
 		}
 		if(metapp::typeKindIsReal(typeKind)) {
 			const auto d = value.cast<double>().template get<double>();
-			const auto result = doubleToString(d, buffer.data());
-			outputter(result.start, result.length);
+			writer.writeNumber(d);
 			return;
 		}
 		{
@@ -106,50 +88,17 @@ private:
 				return;
 			}
 		}
-		if(doDumpObject(value, level)) {
+		if(doDumpObject(value)) {
 			return;
 		}
-		doDumpArray(value, level);
+		doDumpArray(value);
 	}
 
 	void doDumpString(const std::string & s) {
-		outputter('"');
-
-		std::size_t previousIndex = 0;
-		std::size_t index = 0;
-		auto flush = [this, &s, &previousIndex, &index]() {
-			if(previousIndex < index) {
-				outputter(s.c_str() + previousIndex, index - previousIndex);
-				previousIndex = index;
-			}
-		};
-
-		while(index < s.size()) {
-			const char c = s[index];
-			const EscapeItem * escapeItem = nullptr;
-			if(c >= 0 && c < escapeItemListSize) {
-				escapeItem = &escapeItemList[c];
-			}
-			else if(c == '"') {
-				escapeItem = &escapeItemQuoteMark;
-			}
-			else if(c == '\\') {
-				escapeItem = &escapeItemBackSlash;
-			}
-			if(escapeItem != nullptr) {
-				flush();
-				outputter(escapeItem->str, escapeItem->length);
-				++previousIndex;
-			}
-			++index;
-		}
-
-		flush();
-
-		outputter('"');
+		writer.writeString(s);
 	}
 
-	bool doDumpObject(const metapp::Variant & value, const size_t level) {
+	bool doDumpObject(const metapp::Variant & value) {
 		auto metaType = metapp::getNonReferenceMetaType(value.getMetaType());
 		if(config.isArrayType(metaType)) {
 			return false;
@@ -186,65 +135,47 @@ private:
 			return false;
 		}
 
-		bool firstItem = true;
-		auto itemDumper = [this, &firstItem, level](const metapp::Variant & item) -> bool {
+		std::size_t index = 0;
+		auto itemDumper = [this, &index](const metapp::Variant & item) -> bool {
 			auto indexable = metapp::getNonReferenceMetaType(item)->getMetaIndexable();
 			if(indexable == nullptr || indexable->getSizeInfo(item).getSize() < 2) {
 				return true;
 			}
-			if(! firstItem) {
-				outputter(',');
-				doDumpLineBreak();
-			}
-			firstItem = false;
-			doDumpIndent(level + 1);
-			doDumpString(indexable->get(item, 0).template cast<std::string>().template get<std::string>());
-			outputter(':');
-			doDumpSpace();
-			doDumpValue(indexable->get(item, 1), level + 1);
+			writer.beginObjectItem(indexable->get(item, 0).template cast<std::string>().template get<std::string>(), index++);
+			doDumpValue(indexable->get(item, 1));
+			writer.endObjectItem();
 
 			return true;
 		};
 
-		outputter('{');
-		doDumpLineBreak();
+		writer.beginObject();
 
 		if(as == asMap) {
 			metaIterable->forEach(value, itemDumper);
 		}
 		else if(as == asIndexable) {
-			const size_t size = metaIndexable->getSizeInfo(value).getSize();
-			for(size_t i = 0; i < size; ++i) {
+			const std::size_t size = metaIndexable->getSizeInfo(value).getSize();
+			for(std::size_t i = 0; i < size; ++i) {
 				const metapp::Variant item = metaIndexable->get(value, i);
 				itemDumper(item);
 			}
 		}
 		else {
 			const auto fieldView = metaClass->getAccessibleView();
+			std::size_t i = 0;
 			for(const auto & field : fieldView) {
-				if(! firstItem) {
-					outputter(',');
-					doDumpLineBreak();
-				}
-				firstItem = false;
-				doDumpIndent(level + 1);
-				doDumpString(field.getName());
-				outputter(':');
-				doDumpSpace();
-				doDumpValue(metapp::accessibleGet(field, value.getAddress()), level + 1);
+				writer.beginObjectItem(field.getName(), i++);
+				doDumpValue(metapp::accessibleGet(field, value.getAddress()));
+				writer.endObjectItem();
 			}
 		}
 
-		if(! firstItem) {
-			doDumpLineBreak();
-		}
-		doDumpIndent(level);
-		outputter('}');
+		writer.endObject();
 
 		return true;
 	}
 
-	bool doDumpArray(const metapp::Variant & value, const size_t level) {
+	bool doDumpArray(const metapp::Variant & value) {
 		auto metaType = metapp::getNonReferenceMetaType(value.getMetaType());
 		const metapp::MetaIterable * metaIterable = metaType->getMetaIterable();
 		const metapp::MetaIndexable * metaIndexable = nullptr;
@@ -254,17 +185,12 @@ private:
 				return false;
 			}
 		}
-		outputter('[');
-		doDumpLineBreak();
-		bool firstItem = true;
-		auto itemDumper = [this, &firstItem, level](const metapp::Variant & item) -> bool {
-			if(! firstItem) {
-				outputter(',');
-				doDumpLineBreak();
-			}
-			firstItem = false;
-			doDumpIndent(level + 1);
-			doDumpValue(item, level + 1);
+		writer.beginArray();
+		std::size_t index = 0;
+		auto itemDumper = [this, &index](const metapp::Variant & item) -> bool {
+			writer.beginArrayItem(index++);
+			doDumpValue(item);
+			writer.endArrayItem();
 
 			return true;
 		};
@@ -272,51 +198,19 @@ private:
 			metaIterable->forEach(value, itemDumper);
 		}
 		else {
-			const size_t size = metaIndexable->getSizeInfo(value).getSize();
-			for(size_t i = 0; i < size; ++i) {
+			const std::size_t size = metaIndexable->getSizeInfo(value).getSize();
+			for(std::size_t i = 0; i < size; ++i) {
 				const metapp::Variant item = metaIndexable->get(value, i);
 				itemDumper(item);
 			}
 		}
-		if(! firstItem) {
-			doDumpLineBreak();
-		}
-		doDumpIndent(level);
-		outputter(']');
+		writer.endArray();
 		return true;
-	}
-
-	void doDumpSpace() {
-		if(! config.allowBeautify()) {
-			return;
-		}
-		outputter(' ');
-	}
-
-	void doDumpLineBreak() {
-		if(! config.allowBeautify()) {
-			return;
-		}
-		outputter('\n');
-	}
-
-	void doDumpIndent(const size_t level) {
-		if(! config.allowBeautify()) {
-			return;
-		}
-		if(indentList.size() <= level) {
-			indentList.resize(level + 4);
-		}
-		std::string & indent = indentList[level];
-		if(indent.empty()) {
-			indent.resize(level * 4, ' ');
-		}
-		outputter(indent.c_str(), indent.size());
 	}
 
 private:
 	DumperConfig config;
-	const Outputter & outputter;
+	const Outputter & writer;
 	std::vector<std::string> indentList;
 	std::array<char, 128> buffer;
 };

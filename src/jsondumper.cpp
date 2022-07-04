@@ -41,7 +41,8 @@ char digitPairList[] = {
 	"80818283848586878889"
 	"90919293949596979899"
 };
-std::string doubleFormatString("%." + std::to_string(std::numeric_limits<double>::max_digits10) + "g");
+
+} // namespace internal_
 
 const std::array<EscapeItem, escapeItemListSize> escapeItemList {{
 	{ "\\0", 2 }, // 0
@@ -80,8 +81,13 @@ const std::array<EscapeItem, escapeItemListSize> escapeItemList {{
 const EscapeItem escapeItemQuoteMark = { "\\\"", 2 };
 const EscapeItem escapeItemBackSlash = { "\\\\", 2 };
 
-} // namespace internal_
-
+std::string JsonDumper::dump(const metapp::Variant & value)
+{
+	StringOutputter outputter;
+	TextWriter<StringOutputter> writer(config, outputter);
+	dump(value, writer);
+	return outputter.getString();
+}
 
 } // namespace jsonpp
 

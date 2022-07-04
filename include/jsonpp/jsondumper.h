@@ -156,13 +156,7 @@ public:
 	~JsonDumper() {
 	}
 
-	//void dump(const metapp::Variant & value, std::ostream & stream);
-	
-	std::string dump(const metapp::Variant & value) {
-		StringOutputter outputter;
-		dump(value, outputter);
-		return outputter.getString();
-	}
+	std::string dump(const metapp::Variant & value);
 
 	template <typename Outputter>
 	void dump(const metapp::Variant & value, const Outputter & outputter) {
@@ -199,6 +193,197 @@ inline NumberToStringResult doubleToString(const double value, char * buffer)
 		static_cast<int>(end - buffer)
 	};
 }
+
+struct EscapeItem {
+	const char * str;
+	std::size_t length;
+};
+constexpr char escapeItemListSize = 32;
+extern const std::array<EscapeItem, escapeItemListSize> escapeItemList;
+extern const EscapeItem escapeItemQuoteMark;
+extern const EscapeItem escapeItemBackSlash;
+
+template <typename Outputter>
+struct TextWriter
+{
+	TextWriter(const DumperConfig & config, const Outputter & outputter)
+		:
+		config(config),
+		outputter(outputter),
+		indentLevel(0),
+		indentList(),
+		buffer()
+	{
+	}
+
+	const Outputter & getOutputter() const {
+		return outputter;
+	}
+
+	void writeNull() const {
+		outputter("null", 4);
+	}
+
+	void writeBoolean(const bool value) const {
+		if(value) {
+			outputter("true", 4);
+		}
+		else {
+			outputter("false", 5);
+		}
+	}
+
+	void writeNumber(const long long value) const {
+		const auto result = integerToString(value, buffer.data());
+		outputter(result.start, result.length);
+	}
+
+	void writeNumber(const unsigned long long value) const {
+		const auto result = integerToString(value, buffer.data());
+		outputter(result.start, result.length);
+	}
+
+	void writeNumber(const double value) const {
+		const auto result = doubleToString(value, buffer.data());
+		outputter(result.start, result.length);
+	}
+
+	void writeString(const std::string & s) const {
+		outputter('"');
+
+		std::size_t previousIndex = 0;
+		std::size_t index = 0;
+		auto flush = [this, &s, &previousIndex, &index]() {
+			if(previousIndex < index) {
+				outputter(s.c_str() + previousIndex, index - previousIndex);
+				previousIndex = index;
+			}
+		};
+
+		while(index < s.size()) {
+			const char c = s[index];
+			const EscapeItem * escapeItem = nullptr;
+			if(c >= 0 && c < escapeItemListSize) {
+				escapeItem = &escapeItemList[c];
+			}
+			else if(c == '"') {
+				escapeItem = &escapeItemQuoteMark;
+			}
+			else if(c == '\\') {
+				escapeItem = &escapeItemBackSlash;
+			}
+			if(escapeItem != nullptr) {
+				flush();
+				outputter(escapeItem->str, escapeItem->length);
+				++previousIndex;
+			}
+			++index;
+		}
+
+		flush();
+
+		outputter('"');
+	}
+
+	void beginArray() const {
+		outputter('[');
+		writeLineBreak();
+		increaseIndent();
+	}
+
+	void endArray() const {
+		writeLineBreak();
+		decreaseIndent();
+		writeIndent();
+		outputter(']');
+	}
+
+	void beginObject() const {
+		outputter('{');
+		writeLineBreak();
+		increaseIndent();
+	}
+
+	void endObject() const {
+		writeLineBreak();
+		decreaseIndent();
+		writeIndent();
+		outputter('}');
+	}
+
+	void beginObjectItem(const std::string & key, const std::size_t index) const {
+		checkWriteComma(index);
+		writeIndent();
+
+		writeString(key);
+		outputter(':');
+		writeSpace();
+	}
+
+	void endObjectItem() const {
+	}
+
+	void beginArrayItem(const std::size_t index) const {
+		checkWriteComma(index);
+		writeIndent();
+	}
+
+	void endArrayItem() const {
+	}
+
+private:
+	void checkWriteComma(const std::size_t index) const {
+		if(index > 0) {
+			outputter(',');
+			writeLineBreak();
+		}
+	}
+
+	void writeSpace() const {
+		if(! config.allowBeautify()) {
+			return;
+		}
+		outputter(' ');
+	}
+
+	void writeLineBreak() const {
+		if(! config.allowBeautify()) {
+			return;
+		}
+		outputter('\n');
+	}
+
+	void increaseIndent() const {
+		++indentLevel;
+	}
+
+	void decreaseIndent() const {
+		assert(indentLevel > 0);
+		--indentLevel;
+	}
+
+	void writeIndent() const {
+		if(! config.allowBeautify()) {
+			return;
+		}
+		if(indentList.size() <= indentLevel) {
+			indentList.resize(indentLevel + 4);
+		}
+		std::string & indent = indentList[indentLevel];
+		if(indent.empty()) {
+			indent.resize(indentLevel * 4, ' ');
+		}
+		outputter(indent.c_str(), indent.size());
+	}
+
+private:
+	DumperConfig config;
+	const Outputter & outputter;
+	mutable std::size_t indentLevel;
+	mutable std::vector<std::string> indentList;
+	mutable std::array<char, 128> buffer;
+};
+
 
 } // namespace jsonpp
 

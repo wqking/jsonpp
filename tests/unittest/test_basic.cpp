@@ -26,7 +26,7 @@
 #include <unordered_map>
 #include <iostream>
 
-TEST_CASE("Test JsonDumper, 1")
+TEST_CASE("Test basic")
 {
 	jsonpp::DumperConfig config;
 	config.setBeautify(true);
@@ -48,7 +48,7 @@ TEST_CASE("Test JsonDumper, 1")
 					{ "second", nullptr }
 	});
 	const std::string text = dumper.dump(value);
-	//std::cout << text << std::endl;
+	std::cout << text << std::endl;
 
 	jsonpp::JsonParser parser;
 	metapp::Variant parsed = parser.parse(text);

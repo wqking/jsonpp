@@ -59,7 +59,7 @@ public:
 	bool hasError() const override;
 	std::string getError() const override;
 
-	metapp::Variant parse(const char * jsonText, const size_t length, const metapp::MetaType * proto) override;
+	metapp::Variant parse(const char * jsonText, const std::size_t length, const metapp::MetaType * proto) override;
 
 private:
 	metapp::Variant doConvertValue(json_value * jsonValue, const metapp::MetaType * proto);
@@ -97,7 +97,7 @@ std::string BackendCParser::getError() const
 	return error.data();
 }
 
-metapp::Variant BackendCParser::parse(const char * jsonText, const size_t length, const metapp::MetaType * proto)
+metapp::Variant BackendCParser::parse(const char * jsonText, const std::size_t length, const metapp::MetaType * proto)
 {
 	root = json_parse_ex(&settings, jsonText, length, error.data());
 	if(error[0] != 0) {
@@ -155,7 +155,7 @@ metapp::Variant BackendCParser::doConvertArray(json_value * jsonValue, const met
 	metapp::Variant result = metapp::Variant(type, nullptr);
 	auto metaIndexable = metapp::getNonReferenceMetaType(result)->getMetaIndexable();
 	metaIndexable->resize(result, jsonValue->u.array.length);
-	for(size_t i = 0; i < size_t(jsonValue->u.array.length); ++i) {
+	for(std::size_t i = 0; i < std::size_t(jsonValue->u.array.length); ++i) {
 		const metapp::MetaType * elementProto = nullptr;
 		if(proto != nullptr) {
 			elementProto = metapp::getNonReferenceMetaType(metaIndexable->getValueType(result, i));
@@ -184,7 +184,7 @@ metapp::Variant BackendCParser::doConvertObject(json_value * jsonValue, const me
 
 	if(metaMappable != nullptr) {
 		auto valueType = metaMappable->getValueType(result);
-		for(size_t i = 0; i < size_t(jsonValue->u.object.length); ++i) {
+		for(std::size_t i = 0; i < std::size_t(jsonValue->u.object.length); ++i) {
 			const auto & objectValue = jsonValue->u.object.values[i];
 			const metapp::Variant value(doConvertValue(objectValue.value, valueType->getUpType(1)));
 			metaMappable->set(result, objectValue.name, value);
@@ -192,7 +192,7 @@ metapp::Variant BackendCParser::doConvertObject(json_value * jsonValue, const me
 	}
 	else if(metaIndexable != nullptr) {
 		metaIndexable->resize(result, jsonValue->u.object.length);
-		for(size_t i = 0; i < size_t(jsonValue->u.object.length); ++i) {
+		for(std::size_t i = 0; i < std::size_t(jsonValue->u.object.length); ++i) {
 			const auto & objectValue = jsonValue->u.object.values[i];
 			const auto value = metaIndexable->get(result, i);
 			auto valueIndexable = metapp::getNonReferenceMetaType(value)->getMetaIndexable();
@@ -205,7 +205,7 @@ metapp::Variant BackendCParser::doConvertObject(json_value * jsonValue, const me
 		}
 	}
 	else if(metaClass != nullptr) {
-		for(size_t i = 0; i < size_t(jsonValue->u.object.length); ++i) {
+		for(std::size_t i = 0; i < std::size_t(jsonValue->u.object.length); ++i) {
 			const auto & objectValue = jsonValue->u.object.values[i];
 			std::string name(objectValue.name);
 			auto field = metaClass->getAccessible(name);

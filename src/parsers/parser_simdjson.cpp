@@ -59,7 +59,7 @@ public:
 	bool hasError() const override;
 	std::string getError() const override;
 
-	metapp::Variant parse(const char * jsonText, const size_t length, const metapp::MetaType * proto) override;
+	metapp::Variant parse(const char * jsonText, const std::size_t length, const metapp::MetaType * proto) override;
 
 private:
 	metapp::Variant doConvertValue(const simdjson::dom::element & element, const metapp::MetaType * proto);
@@ -92,7 +92,7 @@ std::string BackendSimdjson::getError() const
 	return errorString;
 }
 
-metapp::Variant BackendSimdjson::parse(const char * jsonText, const size_t length, const metapp::MetaType * proto)
+metapp::Variant BackendSimdjson::parse(const char * jsonText, const std::size_t length, const metapp::MetaType * proto)
 {
 	simdjson::padded_string json(jsonText, length);
 	simdjson::dom::element element;

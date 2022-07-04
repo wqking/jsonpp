@@ -95,7 +95,7 @@ std::string JsonParser::getError() const
 	return backend->getError();
 }
 
-metapp::Variant JsonParser::parse(const char * jsonText, const size_t length, const metapp::MetaType * proto)
+metapp::Variant JsonParser::parse(const char * jsonText, const std::size_t length, const metapp::MetaType * proto)
 {
 	return backend->parse(jsonText, length, proto);
 }
