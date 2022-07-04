@@ -27,6 +27,7 @@
 #include <string>
 #include <fstream>
 #include <sstream>
+#include <array>
 
 constexpr int generalIterations = 10 * 1000 * 1000;
 
@@ -53,17 +54,28 @@ inline std::string intToString(const T n)
 	}
 	std::reverse(result.begin(), result.end());
 	return result;
+}
 
-	/* Below code doesn't work on some system
-	std::ostringstream ss;
-	try {
-		ss.imbue(std::locale("en_US.UTF-8"));
+inline std::string sizeToStorage(const uint64_t size)
+{
+	struct Item {
+		uint64_t size;
+		const char * postfix;
+	};
+	static std::array<Item, 4> itemList {{
+		{ 1024 * 1024 * 1024, "GB" },
+		{ 1024 * 1024, "MB" },
+		{ 1024, "KB" },
+		{ 0, "B" },
+	}};
+
+	for(const auto & item : itemList) {
+		if(size >= item.size * 10) {
+			return intToString(size / item.size) + " " + item.postfix;
+		}
 	}
-	catch(...) {
-	}
-	ss << n;
-	return ss.str();
-	*/
+
+	return "N/A";
 }
 
 inline void printResult(const uint64_t time, const int iterations, const std::string & message)
@@ -73,6 +85,19 @@ inline void printResult(const uint64_t time, const int iterations, const std::st
 		<< ": "
 		<< intToString(time) << " ms "
 		<< intToString(iterations) << " times"
+		<< std::endl
+	;
+}
+
+inline void printTps(const uint64_t time, const int iterations, const uint64_t size, const std::string & message)
+{
+	const uint64_t tps = size * iterations * 1000 / time;
+	std::cout
+		<< message
+		<< ": "
+		<< intToString(time) << " ms "
+		<< intToString(iterations) << " times"
+		<< " TPS: " << sizeToStorage(tps) << " per second"
 		<< std::endl
 	;
 }

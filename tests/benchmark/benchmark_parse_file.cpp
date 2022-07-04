@@ -53,26 +53,21 @@ void doBenchmarkParseFile(const FileInfo & fileInfo, const jsonpp::ParserType pa
 
 	const std::string pureFileName = fs::path(fullFileName).filename().string();
 
-	metapp::Variant var;
-	const auto t = measureElapsedTime([&var, iterations, jsonText, parserType]() {
-		jsonpp::JsonParser parser(parserType);
+	jsonpp::JsonParser parser(parserType);
+	const auto t = measureElapsedTime([&parser, iterations, jsonText, parserType]() {
 		for(int i = 0; i < iterations; ++i) {
-			var = parser.parse(jsonText);
+			parser.parse(jsonText);
 		}
 	});
 
-	printResult(t, iterations, jsonpp::getParserTypeName(parserType) + " Parse file " + pureFileName);
-
-	//jsonpp::JsonDumper dumper(jsonpp::DumperConfig().setBeautify(true));
-	//std::ofstream f(fullFileName + ".output");
-	//dumper.dump(var, f);
+	printTps(t, iterations, jsonText.size(), jsonpp::getParserTypeName(parserType) + " Parse file " + pureFileName);
 }
 
 BenchmarkFunc
 {
 	auto parserType = PARSER_TYPES();
-	for(std::size_t i = 0; i < sizeof(fileInfoList) / sizeof(fileInfoList[0]); ++i) {
-		doBenchmarkParseFile(fileInfoList[i], parserType);
+	for(const auto & fileInfo : fileInfoList) {
+		doBenchmarkParseFile(fileInfo, parserType);
 	}
 }
 
@@ -99,18 +94,18 @@ void doBenchmarkDumpJson(const FileInfo & fileInfo, const bool beaufify)
 		}
 	});
 
-	printResult(t, iterations, std::string(beaufify ? "Beautify" : "Minify") + " Dump file " + pureFileName);
-
 	const std::string dumpedText = jsonpp::JsonDumper(jsonpp::DumperConfig().setBeautify(beaufify)).dump(var);
 	metapp::Variant newVar = jsonpp::JsonParser().parse(dumpedText);
 	REQUIRE(! newVar.isEmpty());
+
+	printTps(t, iterations, dumpedText.size(), std::string(beaufify ? "Beautify" : "Minify") + " Dump file " + pureFileName);
 }
 
 BenchmarkFunc
 {
-	for(std::size_t i = 0; i < sizeof(fileInfoList) / sizeof(fileInfoList[0]); ++i) {
-		doBenchmarkDumpJson(fileInfoList[i], true);
-		doBenchmarkDumpJson(fileInfoList[i], false);
+	for(const auto & fileInfo : fileInfoList) {
+		doBenchmarkDumpJson(fileInfo, true);
+		doBenchmarkDumpJson(fileInfo, false);
 	}
 }
 
