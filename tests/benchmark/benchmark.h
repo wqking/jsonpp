@@ -71,7 +71,11 @@ inline std::string sizeToStorage(const uint64_t size)
 
 	for(const auto & item : itemList) {
 		if(size >= item.size * 10) {
-			return intToString(size / item.size) + " " + item.postfix;
+			auto n = item.size;
+			if(n == 0) {
+				n = 1;
+			}
+			return intToString(size / n) + " " + item.postfix;
 		}
 	}
 
@@ -97,6 +101,7 @@ inline void printTps(const uint64_t time, const int iterations, const uint64_t s
 		<< ": "
 		<< intToString(time) << " ms "
 		<< intToString(iterations) << " times"
+		<< " FileSize: " << sizeToStorage(size)
 		<< " TPS: " << sizeToStorage(tps) << " per second"
 		<< std::endl
 	;
@@ -126,6 +131,7 @@ inline std::string readFile(const std::string & fileName)
 {
 	std::ifstream f(fileName);
 	if(! f) {
+		std::cerr << fileName << " doesn't exist or can't be read." << std::endl;
 		return "";
 	}
 	std::ostringstream ss;
@@ -133,6 +139,6 @@ inline std::string readFile(const std::string & fileName)
 	return ss.str();
 }
 
-#define PARSER_TYPES() GENERATE(jsonpp::ParserType::cparser, jsonpp::ParserType::simdjson)
+#define PARSER_TYPES() GENERATE(jsonpp::ParserType::cparser, jsonpp::ParserType::simdjsonDom, jsonpp::ParserType::simdjsonOnDemand)
 
 #endif

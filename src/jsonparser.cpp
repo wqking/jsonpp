@@ -31,7 +31,8 @@ namespace jsonpp {
 namespace internal_ {
 
 std::unique_ptr<ParserBackend> createBackend_cparser(const ParserConfig & config);
-std::unique_ptr<ParserBackend> createBackend_simdjson(const ParserConfig & config);
+std::unique_ptr<ParserBackend> createBackend_simdjsonDom(const ParserConfig & config);
+std::unique_ptr<ParserBackend> createBackend_simdjsonOnDemand(const ParserConfig & config);
 
 std::unique_ptr<ParserBackend> createBackend(const ParserConfig & config, const ParserType parserType)
 {
@@ -42,8 +43,11 @@ std::unique_ptr<ParserBackend> createBackend(const ParserConfig & config, const 
 #endif
 
 #if JSONPP_BACKEND_SIMDJSON
-	if(parserType == ParserType::simdjson) {
-		return createBackend_simdjson(config);
+	if(parserType == ParserType::simdjsonDom) {
+		return createBackend_simdjsonDom(config);
+	}
+	if(parserType == ParserType::simdjsonOnDemand) {
+		return createBackend_simdjsonOnDemand(config);
 	}
 #endif
 
@@ -59,15 +63,18 @@ std::string getParserTypeName(const ParserType type)
 	case ParserType::cparser:
 		return "json-parser";
 
-	case ParserType::simdjson:
-		return "simdjson";
+	case ParserType::simdjsonDom:
+		return "simdjsonDom";
+
+	case ParserType::simdjsonOnDemand:
+		return "simdjsonOnDemand";
 	}
 
 	return "Unknown";
 }
 
 JsonParser::JsonParser()
-	: JsonParser(ParserConfig(), ParserType::simdjson)
+	: JsonParser(ParserConfig(), ParserType::simdjsonDom)
 {
 }
 

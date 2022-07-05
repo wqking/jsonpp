@@ -19,6 +19,10 @@
 #include "jsonpp/jsonparser.h"
 #include "jsonpp/jsondumper.h"
 
+#include "simdjson/simdjson.h"
+
+#include "json.hpp"
+
 #include <string>
 #include <fstream>
 #include <sstream>
@@ -36,6 +40,9 @@ FileInfo fileInfoList[] = {
 	{ "testdata/canada.json", 10 },
 	{ "testdata/citm_catalog.json", 10 },
 	{ "testdata/twitter.json", 10 },
+	{ "testdata/airlines.json", 10 },
+	{ "testdata/tiny.json", 10000 },
+	//{ "testdata/Zurich_Building_LoD2_V10.city.json", 1 },
 };
 
 void doBenchmarkParseFile(const FileInfo & fileInfo, const jsonpp::ParserType parserType)
@@ -47,7 +54,6 @@ void doBenchmarkParseFile(const FileInfo & fileInfo, const jsonpp::ParserType pa
 
 	const std::string jsonText = readFile(fullFileName);
 	if(jsonText.empty()) {
-		std::cerr << fullFileName << " doesn't exist or can't be read." << std::endl;
 		return;
 	}
 
@@ -65,6 +71,8 @@ void doBenchmarkParseFile(const FileInfo & fileInfo, const jsonpp::ParserType pa
 
 BenchmarkFunc
 {
+	std::cout << std::endl;
+
 	auto parserType = PARSER_TYPES();
 	for(const auto & fileInfo : fileInfoList) {
 		doBenchmarkParseFile(fileInfo, parserType);
@@ -80,7 +88,6 @@ void doBenchmarkDumpJson(const FileInfo & fileInfo, const bool beaufify)
 
 	const std::string jsonText = readFile(fullFileName);
 	if(jsonText.empty()) {
-		std::cerr << fullFileName << " doesn't exist or can't be read." << std::endl;
 		return;
 	}
 
@@ -103,11 +110,83 @@ void doBenchmarkDumpJson(const FileInfo & fileInfo, const bool beaufify)
 
 BenchmarkFunc
 {
+	std::cout << std::endl;
+
 	for(const auto & fileInfo : fileInfoList) {
 		doBenchmarkDumpJson(fileInfo, true);
 		doBenchmarkDumpJson(fileInfo, false);
 	}
 }
+
+BenchmarkFunc
+{
+	std::cout << std::endl;
+
+	for(const auto & fileInfo : fileInfoList) {
+		namespace fs = std::filesystem;
+
+		const std::string & fullFileName = fileInfo.fileName;
+		const int iterations = fileInfo.iterations;
+
+		const std::string jsonText = readFile(fullFileName);
+		if(jsonText.empty()) {
+			return;
+		}
+
+		const std::string pureFileName = fs::path(fullFileName).filename().string();
+
+		simdjson::dom::parser parser;
+		const auto t1 = measureElapsedTime([iterations, jsonText, &parser]() {
+			for(int i = 0; i < iterations; ++i) {
+				simdjson::padded_string json(jsonText.c_str(), jsonText.size());
+				simdjson::dom::element element;
+				auto r = parser.parse(json).get(element);
+				(void)r;
+			}
+		});
+
+		printTps(t1, iterations, jsonText.size(), "simdjson DOM Parse file " + pureFileName);
+	}
+}
+
+// Change it to #if 1 to enable benchmarking nlohmann json, the proper header must be included
+#if 1
+BenchmarkFunc
+{
+	std::cout << std::endl;
+
+	for(const auto & fileInfo : fileInfoList) {
+		namespace fs = std::filesystem;
+
+		const std::string & fullFileName = fileInfo.fileName;
+		const int iterations = fileInfo.iterations;
+
+		const std::string jsonText = readFile(fullFileName);
+		if(jsonText.empty()) {
+			return;
+		}
+
+		const std::string pureFileName = fs::path(fullFileName).filename().string();
+
+		const auto t1 = measureElapsedTime([iterations, jsonText]() {
+			for(int i = 0; i < iterations; ++i) {
+				auto result = nlohmann::json::parse(jsonText);
+			}
+		});
+
+		printTps(t1, iterations, jsonText.size(), "nlo Parse file " + pureFileName);
+
+		auto parsed = nlohmann::json::parse(jsonText);
+		const auto t2 = measureElapsedTime([iterations, &parsed]() {
+			for(int i = 0; i < iterations; ++i) {
+				parsed.dump();
+			}
+		});
+
+		printTps(t2, iterations, jsonText.size(), "nlo Dump file " + pureFileName);
+	}
+}
+#endif
 
 
 } //namespace

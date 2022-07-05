@@ -21,7 +21,7 @@
 
 #include "jsonpp/jsonparser.h"
 
-#define PARSER_TYPES() GENERATE(jsonpp::ParserType::cparser, jsonpp::ParserType::simdjson)
+#define PARSER_TYPES() GENERATE(jsonpp::ParserType::cparser, jsonpp::ParserType::simdjsonDom, jsonpp::ParserType::simdjsonOnDemand)
 
 
 #endif

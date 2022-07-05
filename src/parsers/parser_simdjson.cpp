@@ -53,8 +53,13 @@ namespace internal_ {
 class BackendSimdjson : public ParserBackend
 {
 public:
-	explicit BackendSimdjson(const ParserConfig & config);
-	~BackendSimdjson();
+
+};
+class BackendSimdjsonDom : public BackendSimdjson
+{
+public:
+	explicit BackendSimdjsonDom(const ParserConfig & config);
+	~BackendSimdjsonDom();
 
 	bool hasError() const override;
 	std::string getError() const override;
@@ -73,27 +78,29 @@ private:
 	std::string errorString;
 };
 
-BackendSimdjson::BackendSimdjson(const ParserConfig & config)
+BackendSimdjsonDom::BackendSimdjsonDom(const ParserConfig & config)
 	: config(config), parser()
 {
 }
 
-BackendSimdjson::~BackendSimdjson()
+BackendSimdjsonDom::~BackendSimdjsonDom()
 {
 }
 
-bool BackendSimdjson::hasError() const
+bool BackendSimdjsonDom::hasError() const
 {
 	return ! errorString.empty();
 }
 
-std::string BackendSimdjson::getError() const
+std::string BackendSimdjsonDom::getError() const
 {
 	return errorString;
 }
 
-metapp::Variant BackendSimdjson::parse(const char * jsonText, const std::size_t length, const metapp::MetaType * proto)
+metapp::Variant BackendSimdjsonDom::parse(const char * jsonText, const std::size_t length, const metapp::MetaType * proto)
 {
+	errorString.clear();
+
 	simdjson::padded_string json(jsonText, length);
 	simdjson::dom::element element;
 	auto r = parser.parse(json).get(element);
@@ -104,7 +111,7 @@ metapp::Variant BackendSimdjson::parse(const char * jsonText, const std::size_t 
 	return doConvertValue(element, proto);
 }
 
-metapp::Variant BackendSimdjson::doConvertValue(const simdjson::dom::element & element, const metapp::MetaType * proto)
+metapp::Variant BackendSimdjsonDom::doConvertValue(const simdjson::dom::element & element, const metapp::MetaType * proto)
 {
 	if(proto != nullptr) {
 		proto = metapp::getNonReferenceMetaType(proto);
@@ -143,7 +150,7 @@ metapp::Variant BackendSimdjson::doConvertValue(const simdjson::dom::element & e
 	return metapp::Variant();
 }
 
-metapp::Variant BackendSimdjson::doConvertArray(const simdjson::dom::element & element, const metapp::MetaType * proto)
+metapp::Variant BackendSimdjsonDom::doConvertArray(const simdjson::dom::element & element, const metapp::MetaType * proto)
 {
 	const metapp::MetaType * type = proto;
 	if(type == nullptr) {
@@ -168,7 +175,7 @@ metapp::Variant BackendSimdjson::doConvertArray(const simdjson::dom::element & e
 	return result;
 }
 
-metapp::Variant BackendSimdjson::doConvertObject(const simdjson::dom::element & element, const metapp::MetaType * proto)
+metapp::Variant BackendSimdjsonDom::doConvertObject(const simdjson::dom::element & element, const metapp::MetaType * proto)
 {
 	const metapp::MetaType * type = proto;
 	const metapp::MetaClass * metaClass = nullptr;
@@ -221,9 +228,213 @@ metapp::Variant BackendSimdjson::doConvertObject(const simdjson::dom::element & 
 	return result;
 }
 
-std::unique_ptr<ParserBackend> createBackend_simdjson(const ParserConfig & config)
+class BackendSimdjsonOnDemand : public BackendSimdjson
 {
-	return std::unique_ptr<ParserBackend>(new BackendSimdjson(config));
+public:
+	explicit BackendSimdjsonOnDemand(const ParserConfig & config);
+	~BackendSimdjsonOnDemand();
+
+	bool hasError() const override;
+	std::string getError() const override;
+
+	metapp::Variant parse(const char * jsonText, const std::size_t length, const metapp::MetaType * proto) override;
+
+private:
+	template <typename T>
+	metapp::Variant doConvertValue(T && element, const metapp::MetaType * proto);
+	metapp::Variant doConvertArray(simdjson::ondemand::value element, const metapp::MetaType * proto);
+	metapp::Variant doConvertObject(simdjson::ondemand::value element, const metapp::MetaType * proto);
+
+private:
+	ParserConfig config;
+	simdjson::ondemand::parser parser;
+
+	std::string errorString;
+};
+
+BackendSimdjsonOnDemand::BackendSimdjsonOnDemand(const ParserConfig & config)
+	: config(config), parser()
+{
+}
+
+BackendSimdjsonOnDemand::~BackendSimdjsonOnDemand()
+{
+}
+
+bool BackendSimdjsonOnDemand::hasError() const
+{
+	return ! errorString.empty();
+}
+
+std::string BackendSimdjsonOnDemand::getError() const
+{
+	return errorString;
+}
+
+metapp::Variant BackendSimdjsonOnDemand::parse(const char * jsonText, const std::size_t length, const metapp::MetaType * proto)
+{
+	errorString.clear();
+
+	try {
+		simdjson::padded_string json(jsonText, length);
+		simdjson::ondemand::document document = parser.iterate(json);
+		return doConvertValue(std::move(document), proto);
+	}
+	catch(const simdjson::simdjson_error & e) {
+		errorString = e.what();
+	}
+	catch(const std::exception & e) {
+		errorString = e.what();
+	}
+	return metapp::Variant();
+}
+
+simdjson::ondemand::value getValue(simdjson::ondemand::document && v) {
+	return v.get_value();
+}
+
+simdjson::ondemand::value getValue(simdjson::ondemand::value v) {
+	return v;
+}
+
+template <typename T>
+std::string toString(T && s)
+{
+	auto view = s.value();
+	return std::string(view.data(), view.size());
+}
+
+template <typename T>
+metapp::Variant BackendSimdjsonOnDemand::doConvertValue(T && element, const metapp::MetaType * proto)
+{
+	if(proto != nullptr) {
+		proto = metapp::getNonReferenceMetaType(proto);
+		if(proto->getTypeKind() == metapp::tkVariant) {
+			proto = nullptr;
+		}
+	}
+
+	switch(element.type()) {
+	case simdjson::ondemand::json_type::null:
+		return metapp::Variant(nullptr);
+
+	case simdjson::ondemand::json_type::boolean:
+		return metapp::Variant((JsonBool)(element.get_bool()));
+
+	case simdjson::ondemand::json_type::number: {
+		switch(element.get_number_type()) {
+		case simdjson::ondemand::number_type::signed_integer:
+			return metapp::Variant((JsonInt)(element.get_int64()));
+
+		case simdjson::ondemand::number_type::unsigned_integer:
+			return metapp::Variant((JsonUnsignedInt)(element.get_uint64()));
+
+		default:
+			return metapp::Variant((JsonReal)(element.get_double()));
+		}
+	}
+
+	case simdjson::ondemand::json_type::string: {
+		return metapp::Variant(toString(element.get_string()));
+	}
+
+	case simdjson::ondemand::json_type::array:
+		return doConvertArray(getValue(std::forward<T>(element)), proto);
+
+	case simdjson::ondemand::json_type::object:
+		return doConvertObject(getValue(std::forward<T>(element)), proto);
+
+	}
+
+	return metapp::Variant();
+}
+
+metapp::Variant BackendSimdjsonOnDemand::doConvertArray(simdjson::ondemand::value element, const metapp::MetaType * proto)
+{
+	const metapp::MetaType * type = proto;
+	if(type == nullptr) {
+		type = config.getArrayType();
+	}
+	if(type == nullptr) {
+		type = metapp::getMetaType<JsonArray>();
+	}
+	metapp::Variant result = metapp::Variant(type, nullptr);
+	auto metaIndexable = metapp::getNonReferenceMetaType(result)->getMetaIndexable();
+	simdjson::ondemand::array array = element.get_array();
+	metaIndexable->resize(result, array.count_elements());
+	int index = 0;
+	for(auto item : array) {
+		const metapp::MetaType * elementProto = nullptr;
+		if(proto != nullptr) {
+			elementProto = metapp::getNonReferenceMetaType(metaIndexable->getValueType(result, index));
+		}
+		metaIndexable->set(result, index, doConvertValue(item.value(), elementProto));
+		++index;
+	}
+	return result;
+}
+
+metapp::Variant BackendSimdjsonOnDemand::doConvertObject(simdjson::ondemand::value element, const metapp::MetaType * proto)
+{
+	const metapp::MetaType * type = proto;
+	const metapp::MetaClass * metaClass = nullptr;
+	if(proto != nullptr) {
+		metaClass = proto->getMetaClass();
+	}
+	if(type == nullptr) {
+		type = config.getObjectType();
+	}
+	if(type == nullptr) {
+		type = metapp::getMetaType<JsonObject>();
+	}
+	const metapp::MetaMappable * metaMappable = type->getMetaMappable();
+	const metapp::MetaIndexable * metaIndexable = type->getMetaIndexable();
+	metapp::Variant result = metapp::Variant(type, nullptr);
+	simdjson::ondemand::object object = element.get_object();
+
+	if(metaMappable != nullptr) {
+		auto valueType = metaMappable->getValueType(result);
+		for(auto item : object) {
+			const metapp::Variant value(doConvertValue(item.value(), valueType->getUpType(1)));
+			metaMappable->set(result, toString(item.unescaped_key()), value);
+		}
+	}
+	else if(metaIndexable != nullptr) {
+		metaIndexable->resize(result, object.count_fields());
+		int index = 0;
+		for(auto item : object) {
+			const auto value = metaIndexable->get(result, index);
+			auto valueIndexable = metapp::getNonReferenceMetaType(value)->getMetaIndexable();
+			if(valueIndexable != nullptr) {
+				valueIndexable->resize(value, 2);
+				valueIndexable->set(value, 0, toString(item.unescaped_key()));
+				const metapp::Variant convertedValue(doConvertValue(item.value(), valueIndexable->getValueType(value, 1)));
+				valueIndexable->set(convertedValue, 1, value);
+			}
+			++index;
+		}
+	}
+	else if(metaClass != nullptr) {
+		for(auto item : object) {
+			std::string name(toString(item.unescaped_key()));
+			auto field = metaClass->getAccessible(name);
+			if(! field.isEmpty()) {
+				const metapp::Variant value(doConvertValue(item.value(), metapp::accessibleGetValueType(field)));
+				metapp::accessibleSet(field, result.getAddress(), value);
+			}
+		}
+	}
+	return result;
+}
+
+std::unique_ptr<ParserBackend> createBackend_simdjsonDom(const ParserConfig & config)
+{
+	return std::unique_ptr<ParserBackend>(new BackendSimdjsonDom(config));
+}
+
+std::unique_ptr<ParserBackend> createBackend_simdjsonOnDemand(const ParserConfig & config)
+{
+	return std::unique_ptr<ParserBackend>(new BackendSimdjsonOnDemand(config));
 }
 
 } // namespace internal_

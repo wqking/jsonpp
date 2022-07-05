@@ -77,7 +77,7 @@ private:
 BackendCParser::BackendCParser(const ParserConfig & config)
 	: config(config), settings(), root(nullptr), error()
 {
-	settings.settings |= json_enable_comments;
+	//settings.settings |= json_enable_comments;
 }
 
 BackendCParser::~BackendCParser()
@@ -99,6 +99,8 @@ std::string BackendCParser::getError() const
 
 metapp::Variant BackendCParser::parse(const char * jsonText, const std::size_t length, const metapp::MetaType * proto)
 {
+	error[0] = 0;
+
 	root = json_parse_ex(&settings, jsonText, length, error.data());
 	if(error[0] != 0) {
 		return metapp::Variant();

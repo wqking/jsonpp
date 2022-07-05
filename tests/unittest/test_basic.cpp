@@ -52,6 +52,6 @@ TEST_CASE("Test basic")
 
 	jsonpp::JsonParser parser;
 	metapp::Variant parsed = parser.parse(text);
-	const std::string text2 = dumper.dump(value);
-	//std::cout << text2 << std::endl;
+	const std::string text2 = dumper.dump(parsed);
+	std::cout << text2 << std::endl;
 }

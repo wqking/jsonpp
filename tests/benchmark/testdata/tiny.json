@@ -1,0 +1,27 @@
+{
+	"Japanese" : "こんにちは",
+	"Chinese" : "吃了吗",
+	"English" : "Hello",
+	"double" : 3.14159265,
+	"integer" : 98765321,
+	"negativeDouble" : -2.178,
+	"negativeInteger" : -12345,
+	"bool" : true,
+	"null" : null,
+	"array" : [
+		"what",
+		1,
+		2,
+		3.5,
+		-7,
+		false,
+		"hello world",
+		{
+		},
+		{
+			"one" : 1,
+			"two" : 2.0
+		},
+		[]
+	]
+}
