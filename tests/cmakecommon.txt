@@ -1,0 +1,15 @@
+file(GLOB_RECURSE LIB_HEADERS "${CMAKE_SOURCE_DIR}/../include/jsonpp/*.h")
+file(GLOB_RECURSE SRC_LIB "${CMAKE_SOURCE_DIR}/../src/*.cpp")
+file(GLOB_RECURSE SRC_INC_LIB "${CMAKE_SOURCE_DIR}/../../src/*.h")
+file(GLOB_RECURSE SRC_THIRDPARTY "${CMAKE_SOURCE_DIR}/../thirdparty/*.c*")
+file(GLOB_RECURSE METAPP_HEADERS "${CMAKE_SOURCE_DIR}/../../metapp/include/*.h")
+file(GLOB_RECURSE METAPP_SRC "${CMAKE_SOURCE_DIR}/../../metapp/src/*.cpp")
+
+set(ALL_FILES
+	${SRC_LIB}
+	${SRC_INC_LIB}
+	${LIB_HEADERS}
+	${METAPP_HEADERS}
+	${METAPP_SRC}
+	${SRC_THIRDPARTY}
+)

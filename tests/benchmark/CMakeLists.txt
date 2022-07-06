@@ -2,27 +2,14 @@ set(TARGET_BENCHMARK benchmark)
 
 set(CMAKE_CXX_STANDARD 17)
 
-file(GLOB_RECURSE SRC_BENCHMARK "./*.cpp" "./*.h")
-file(GLOB_RECURSE HEADERS "../../include/jsonpp/*.h")
-file(GLOB_RECURSE SRC_LIB "../../src/*.cpp")
-file(GLOB_RECURSE SRC_INC_LIB "../../src/*.h")
-file(GLOB_RECURSE SRC_THIRDPARTY "../../thirdparty/*.c*")
-file(GLOB_RECURSE METAPP_HEADERS "/projects/metapp/include/*.h")
-file(GLOB_RECURSE METAPP_SRC "/projects/metapp/src/*.cpp")
+include(../cmakecommon.txt)
 
-set(SRC_BENCHMARK
-	${SRC_LIB}
-	${SRC_INC_LIB}
-	${SRC_BENCHMARK}
-	${HEADERS}
-	${METAPP_HEADERS}
-	${METAPP_SRC}
-	${SRC_THIRDPARTY}
-)
+file(GLOB_RECURSE SRC_BENCHMARK "./*.cpp" "./*.h")
 
 add_executable(
 	${TARGET_BENCHMARK}
 	${SRC_BENCHMARK}
+	${ALL_FILES}
 )
 
 if(CMAKE_COMPILER_IS_GNUCXX)

@@ -18,4 +18,5 @@ endif()
 
 enable_testing()
 add_subdirectory(unittest)
+add_subdirectory(docsrc)
 add_subdirectory(benchmark)

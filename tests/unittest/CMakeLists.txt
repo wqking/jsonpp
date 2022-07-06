@@ -1,20 +1,13 @@
 set(TARGET_TEST unittest)
 
+include(../cmakecommon.txt)
+
 file(GLOB_RECURSE SRC_TEST "./*.cpp")
-file(GLOB_RECURSE HEADERS "../../include/jsonpp/*.h")
-file(GLOB_RECURSE SRC_LIB "../../src/*.cpp")
-file(GLOB_RECURSE SRC_THIRDPARTY "../../thirdparty/*.c*")
-file(GLOB_RECURSE METAPP_HEADERS "/projects/metapp/include/*.h")
-file(GLOB_RECURSE METAPP_SRC "/projects/metapp/src/*.cpp")
 
 add_executable(
 	${TARGET_TEST}
-	${SRC_LIB}
 	${SRC_TEST}
-	${HEADERS}
-	${METAPP_HEADERS}
-	${METAPP_SRC}
-	${SRC_THIRDPARTY}
+	${ALL_FILES}
 )
 
 set(THREADS_PREFER_PTHREAD_FLAG ON)
