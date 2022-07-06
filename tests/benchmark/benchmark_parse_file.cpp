@@ -21,7 +21,7 @@
 
 #include "simdjson/simdjson.h"
 
-#include "json.hpp"
+//#include "json.hpp"
 
 #include <string>
 #include <fstream>
@@ -52,21 +52,24 @@ void doBenchmarkParseFile(const FileInfo & fileInfo, const jsonpp::ParserType pa
 	const std::string & fullFileName = fileInfo.fileName;
 	const int iterations = fileInfo.iterations;
 
-	const std::string jsonText = readFile(fullFileName);
+	std::string jsonText = readFile(fullFileName);
 	if(jsonText.empty()) {
 		return;
 	}
 
 	const std::string pureFileName = fs::path(fullFileName).filename().string();
 
+	const auto fileSize = jsonText.size();
 	jsonpp::JsonParser parser(parserType);
-	const auto t = measureElapsedTime([&parser, iterations, jsonText, parserType]() {
+	auto source = jsonpp::JsonParserSource(std::move(jsonText));
+	REQUIRE(jsonText.empty());
+	const auto t = measureElapsedTime([&parser, iterations, &source, parserType]() {
 		for(int i = 0; i < iterations; ++i) {
-			parser.parse(jsonText);
+			parser.parse(source);
 		}
 	});
 
-	printTps(t, iterations, jsonText.size(), jsonpp::getParserTypeName(parserType) + " Parse file " + pureFileName);
+	printTps(t, iterations, fileSize, jsonpp::getParserTypeName(parserType) + " Parse file " + pureFileName);
 }
 
 BenchmarkFunc
@@ -136,9 +139,9 @@ BenchmarkFunc
 		const std::string pureFileName = fs::path(fullFileName).filename().string();
 
 		simdjson::dom::parser parser;
-		const auto t1 = measureElapsedTime([iterations, jsonText, &parser]() {
+		simdjson::padded_string json(jsonText.c_str(), jsonText.size());
+		const auto t1 = measureElapsedTime([iterations, &json, &parser]() {
 			for(int i = 0; i < iterations; ++i) {
-				simdjson::padded_string json(jsonText.c_str(), jsonText.size());
 				simdjson::dom::element element;
 				auto r = parser.parse(json).get(element);
 				(void)r;
@@ -150,7 +153,7 @@ BenchmarkFunc
 }
 
 // Change it to #if 1 to enable benchmarking nlohmann json, the proper header must be included
-#if 1
+#if 0
 BenchmarkFunc
 {
 	std::cout << std::endl;

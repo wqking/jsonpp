@@ -2,5 +2,6 @@
 tests/build/temp*
 tests/build/project*
 tests/coverage
+tests/benchmark/json.hpp
 build
 temp
