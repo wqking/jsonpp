@@ -53,6 +53,9 @@ namespace internal_ {
 class BackendSimdjson : public ParserBackend
 {
 public:
+	void prepareSource(const JsonParserSource & source) const override {
+		source.pad(simdjson::SIMDJSON_PADDING);
+	}
 
 };
 class BackendSimdjsonDom : public BackendSimdjson
@@ -64,7 +67,7 @@ public:
 	bool hasError() const override;
 	std::string getError() const override;
 
-	metapp::Variant parse(const char * jsonText, const std::size_t length, const metapp::MetaType * proto) override;
+	metapp::Variant parse(const JsonParserSource & source, const metapp::MetaType * proto) override;
 
 private:
 	metapp::Variant doConvertValue(const simdjson::dom::element & element, const metapp::MetaType * proto);
@@ -97,13 +100,12 @@ std::string BackendSimdjsonDom::getError() const
 	return errorString;
 }
 
-metapp::Variant BackendSimdjsonDom::parse(const char * jsonText, const std::size_t length, const metapp::MetaType * proto)
+metapp::Variant BackendSimdjsonDom::parse(const JsonParserSource & source, const metapp::MetaType * proto)
 {
 	errorString.clear();
 
-	simdjson::padded_string json(jsonText, length);
 	simdjson::dom::element element;
-	auto r = parser.parse(json).get(element);
+	auto r = parser.parse(source.getText(), source.getTextLength(), false).get(element);
 	if(r != simdjson::SUCCESS) {
 		errorString = simdjson::error_message(r);
 		return metapp::Variant();
@@ -137,7 +139,7 @@ metapp::Variant BackendSimdjsonDom::doConvertValue(const simdjson::dom::element 
 		return metapp::Variant((JsonReal)(element.get<double>()));
 
 	case simdjson::dom::element_type::STRING:
-		return metapp::Variant((JsonString)(element.get<const char *>()));
+		return metapp::Variant((JsonString)(element.get<const char *>().value()));
 
 	case simdjson::dom::element_type::ARRAY:
 		return doConvertArray(element, proto);
@@ -237,7 +239,7 @@ public:
 	bool hasError() const override;
 	std::string getError() const override;
 
-	metapp::Variant parse(const char * jsonText, const std::size_t length, const metapp::MetaType * proto) override;
+	metapp::Variant parse(const JsonParserSource & source, const metapp::MetaType * proto) override;
 
 private:
 	template <typename T>
@@ -271,13 +273,12 @@ std::string BackendSimdjsonOnDemand::getError() const
 	return errorString;
 }
 
-metapp::Variant BackendSimdjsonOnDemand::parse(const char * jsonText, const std::size_t length, const metapp::MetaType * proto)
+metapp::Variant BackendSimdjsonOnDemand::parse(const JsonParserSource & source, const metapp::MetaType * proto)
 {
 	errorString.clear();
 
 	try {
-		simdjson::padded_string json(jsonText, length);
-		simdjson::ondemand::document document = parser.iterate(json);
+		simdjson::ondemand::document document = parser.iterate(source.getText(), source.getTextLength(), source.getCapacity());
 		return doConvertValue(std::move(document), proto);
 	}
 	catch(const simdjson::simdjson_error & e) {

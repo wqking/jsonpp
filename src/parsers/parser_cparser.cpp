@@ -59,7 +59,7 @@ public:
 	bool hasError() const override;
 	std::string getError() const override;
 
-	metapp::Variant parse(const char * jsonText, const std::size_t length, const metapp::MetaType * proto) override;
+	metapp::Variant parse(const JsonParserSource & source, const metapp::MetaType * proto) override;
 
 private:
 	metapp::Variant doConvertValue(json_value * jsonValue, const metapp::MetaType * proto);
@@ -97,11 +97,11 @@ std::string BackendCParser::getError() const
 	return error.data();
 }
 
-metapp::Variant BackendCParser::parse(const char * jsonText, const std::size_t length, const metapp::MetaType * proto)
+metapp::Variant BackendCParser::parse(const JsonParserSource & source, const metapp::MetaType * proto)
 {
 	error[0] = 0;
 
-	root = json_parse_ex(&settings, jsonText, length, error.data());
+	root = json_parse_ex(&settings, source.getText(), source.getTextLength(), error.data());
 	if(error[0] != 0) {
 		return metapp::Variant();
 	}

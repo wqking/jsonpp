@@ -104,12 +104,22 @@ std::string JsonParser::getError() const
 
 metapp::Variant JsonParser::parse(const char * jsonText, const std::size_t length, const metapp::MetaType * proto)
 {
-	return backend->parse(jsonText, length, proto);
+	return parse(JsonParserSource(jsonText, length), proto);
 }
 
 metapp::Variant JsonParser::parse(const std::string & jsonText, const metapp::MetaType * proto)
 {
-	return parse(jsonText.c_str(), jsonText.size(), proto);
+	return parse(JsonParserSource(jsonText), proto);
+}
+
+metapp::Variant JsonParser::parse(const JsonParserSource & source, const metapp::MetaType * proto)
+{
+	if(! source.hasPrepared()) {
+		source.setAsPrepared();
+		backend->prepareSource(source);
+	}
+
+	return backend->parse(source, proto);
 }
 
 

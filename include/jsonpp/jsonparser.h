@@ -88,6 +88,100 @@ enum class ParserType
 	simdjsonOnDemand
 };
 
+class JsonParserSource
+{
+public:
+	JsonParserSource()
+		:
+			prepared(false),
+			cstr(nullptr),
+			cstrLength(0),
+			str()
+	{
+	}
+
+	JsonParserSource(const char * cstr, const std::size_t cstrLength)
+		:
+			prepared(false),
+			cstr(cstr),
+			cstrLength(cstrLength),
+			str()
+	{
+	}
+
+	explicit JsonParserSource(const std::string & str)
+		:
+			prepared(false),
+			cstr(nullptr),
+			cstrLength(0),
+			str(str)
+	{
+	}
+
+	explicit JsonParserSource(std::string && str)
+		:
+			prepared(false),
+			cstr(nullptr),
+			cstrLength(0),
+			str(std::move(str))
+	{
+	}
+
+	const char * getText() const {
+		if(cstr != nullptr) {
+			return cstr;
+		}
+		return str.c_str();
+	}
+
+	std::size_t getTextLength() const {
+		if(cstr != nullptr) {
+			return cstrLength;
+		}
+		return str.size();
+	}
+
+	std::size_t getCapacity() const {
+		if(cstr != nullptr) {
+			return cstrLength;
+		}
+		return str.capacity();
+	}
+
+	void pad(const std::size_t size) const {
+		if(cstr != nullptr) {
+			str.resize(cstrLength);
+			str.reserve(cstrLength + size);
+			memmove(&str[0], cstr, cstrLength);
+			str[cstrLength] = 0;
+			cstr = nullptr;
+		}
+		else {
+			const auto capacity = str.capacity();
+			if(capacity < str.size() + size) {
+				str.reserve(str.size() + size);
+			}
+		}
+	}
+
+private:
+	bool hasPrepared() const {
+		return prepared;
+	}
+
+	void setAsPrepared() const {
+		prepared = true;
+	}
+
+private:
+	mutable bool prepared;
+	mutable const char * cstr;
+	mutable std::size_t cstrLength;
+	mutable std::string str;
+
+	friend class JsonParser;
+};
+
 class JsonParser
 {
 public:
@@ -101,6 +195,7 @@ public:
 
 	metapp::Variant parse(const char * jsonText, const std::size_t length, const metapp::MetaType * proto = nullptr);
 	metapp::Variant parse(const std::string & jsonText, const metapp::MetaType * proto = nullptr);
+	metapp::Variant parse(const JsonParserSource & source, const metapp::MetaType * proto = nullptr);
 
 private:
 	std::unique_ptr<internal_::ParserBackend> backend;
