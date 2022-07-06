@@ -5,3 +5,4 @@ tests/coverage
 tests/benchmark/json.hpp
 build
 temp
+__pycache__

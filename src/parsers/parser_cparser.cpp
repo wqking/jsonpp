@@ -77,7 +77,7 @@ private:
 BackendCParser::BackendCParser(const ParserConfig & config)
 	: config(config), settings(), root(nullptr), error()
 {
-	//settings.settings |= json_enable_comments;
+	settings.settings |= json_enable_comments;
 }
 
 BackendCParser::~BackendCParser()
