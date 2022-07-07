@@ -90,6 +90,13 @@ enum class ParserType
 
 class JsonParserSource
 {
+private:
+	enum class StorageType {
+		cstr,
+		ref,
+		string
+	};
+
 public:
 	JsonParserSource();
 	JsonParserSource(const char * cstr, const std::size_t cstrLength);
@@ -113,8 +120,10 @@ private:
 
 private:
 	mutable bool prepared;
+	mutable StorageType storageType;
 	mutable const char * cstr;
 	mutable std::size_t cstrLength;
+	mutable const std::string * ref;
 	mutable std::string str;
 
 	friend class JsonParser;

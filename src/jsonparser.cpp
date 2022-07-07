@@ -76,8 +76,10 @@ std::string getParserTypeName(const ParserType type)
 JsonParserSource::JsonParserSource()
 	:
 		prepared(false),
+		storageType(StorageType::string),
 		cstr(nullptr),
 		cstrLength(0),
+		ref(nullptr),
 		str()
 {
 }
@@ -85,8 +87,10 @@ JsonParserSource::JsonParserSource()
 JsonParserSource::JsonParserSource(const char * cstr, const std::size_t cstrLength)
 	:
 		prepared(false),
+		storageType(StorageType::cstr),
 		cstr(cstr),
 		cstrLength(cstrLength),
+		ref(nullptr),
 		str()
 {
 }
@@ -94,59 +98,98 @@ JsonParserSource::JsonParserSource(const char * cstr, const std::size_t cstrLeng
 JsonParserSource::JsonParserSource(const std::string & str)
 	:
 		prepared(false),
+		storageType(StorageType::ref),
 		cstr(nullptr),
 		cstrLength(0),
-		str(str)
+		ref(&str),
+		str()
 {
 }
 
 JsonParserSource::JsonParserSource(std::string && str)
 	:
 		prepared(false),
+		storageType(StorageType::string),
 		cstr(nullptr),
 		cstrLength(0),
+		ref(nullptr),
 		str(std::move(str))
 {
 }
 
 const char * JsonParserSource::getText() const
 {
-	if(cstr != nullptr) {
+	switch(storageType) {
+	case StorageType::cstr:
 		return cstr;
+
+	case StorageType::ref:
+		return ref->c_str();
+
+	default:
+		return str.c_str();
 	}
-	return str.c_str();
 }
 
 std::size_t JsonParserSource::getTextLength() const
 {
-	if(cstr != nullptr) {
+	switch(storageType) {
+	case StorageType::cstr:
 		return cstrLength;
+
+	case StorageType::ref:
+		return ref->size();
+
+	default:
+		return str.size();
 	}
-	return str.size();
 }
 
 std::size_t JsonParserSource::getCapacity() const
 {
-	if(cstr != nullptr) {
+	switch(storageType) {
+	case StorageType::cstr:
 		return cstrLength;
+
+	case StorageType::ref:
+		return ref->capacity();
+
+	default:
+		return str.capacity();
 	}
-	return str.capacity();
 }
 
 void JsonParserSource::pad(const std::size_t size) const
 {
-	if(cstr != nullptr) {
+	switch(storageType) {
+	case StorageType::cstr: {
 		str.resize(cstrLength);
 		str.reserve(cstrLength + size);
 		memmove(&str[0], cstr, cstrLength);
 		str[cstrLength] = 0;
 		cstr = nullptr;
+		storageType = StorageType::string;
+		break;
 	}
-	else {
-		const auto capacity = str.capacity();
-		if(capacity < str.size() + size) {
+
+	case StorageType::ref: {
+		if(ref->capacity() < ref->size() + size) {
+			str.resize(ref->size());
+			str.reserve(ref->size() + size);
+			memmove(&str[0], &ref->at(0), ref->size());
+			str[ref->size()] = 0;
+			ref = nullptr;
+			storageType = StorageType::string;
+		}
+		break;
+	}
+
+	default: {
+		if(str.capacity() < str.size() + size) {
 			str.reserve(str.size() + size);
 		}
+		break;
+	}
 	}
 }
 
