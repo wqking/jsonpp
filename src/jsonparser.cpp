@@ -15,7 +15,7 @@
 // limitations under the License.
 
 #include "jsonpp/jsonparser.h"
-#include "parser.h"
+#include "jsonpp/parserbackend.h"
 
 #include "metapp/allmetatypes.h"
 #include "metapp/interfaces/metaclass.h"

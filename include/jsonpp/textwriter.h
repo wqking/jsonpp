@@ -164,12 +164,12 @@ struct TextWriter
 		}
 	}
 
-	void writeNumber(const long long value) const {
+	void writeNumber(const int64_t value) const {
 		const auto result = integerToString(value, buffer.data());
 		outputter(result.start, result.length);
 	}
 
-	void writeNumber(const unsigned long long value) const {
+	void writeNumber(const uint64_t value) const {
 		const auto result = integerToString(value, buffer.data());
 		outputter(result.start, result.length);
 	}

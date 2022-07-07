@@ -15,15 +15,9 @@
 // limitations under the License.
 
 #include "jsonpp/jsonparser.h"
-#include "../parser.h"
+#include "jsonpp/parserbackend.h"
 
 #if JSONPP_BACKEND_CPARSER
-
-#include "metapp/allmetatypes.h"
-#include "metapp/interfaces/metaclass.h"
-#include "metapp/interfaces/metaindexable.h"
-#include "metapp/interfaces/metamappable.h"
-#include "metapp/compiler.h"
 
 #if defined(METAPP_COMPILER_VC)
 #pragma warning(push)
@@ -50,6 +44,79 @@ namespace jsonpp {
 
 namespace internal_ {
 
+struct CParserImplement
+{
+	using ArrayValue = json_value *;
+	using ObjectValue = json_value *;
+	using Array = json_value *;
+	using Object = json_value *;
+
+	static constexpr auto typeNull = json_type::json_null;
+	static constexpr auto typeBoolean = json_type::json_boolean;
+	static constexpr auto typeInteger = json_type::json_integer;
+	static constexpr auto typeUnsignedInteger = json_type::json_none;
+	static constexpr auto typeDouble = json_type::json_double;
+	static constexpr auto typeString = json_type::json_string;
+	static constexpr auto typeArray = json_type::json_array;
+	static constexpr auto typeObject = json_type::json_object;
+
+	json_type getNodeType(json_value * node) const {
+		return node->type;
+	}
+
+	bool getBoolean(json_value * node) const {
+		return node->u.boolean;
+	}
+
+	int64_t getInteger(json_value * node) const {
+		return node->u.integer;
+	}
+
+	uint64_t getUnsignedInteger(json_value * node) const {
+		return node->u.integer;
+	}
+
+	double getDouble(json_value * node) const {
+		return node->u.dbl;
+	}
+
+	std::string getString(json_value * node) const {
+		return std::string(node->u.string.ptr, node->u.string.length);
+	}
+
+	json_value * getArray(json_value * node) const {
+		return node;
+	}
+
+	json_value * getObject(json_value * node) const {
+		return node;
+	}
+
+	std::size_t getArraySize(json_value * node) const {
+		return node->u.array.length;
+	}
+
+	template <typename Callback>
+	void iterateArray(json_value * node, const Callback & callback) const {
+		for(std::size_t i = 0; i < std::size_t(node->u.array.length); ++i) {
+			callback(i, node->u.array.values[i]);
+		}
+	}
+
+	std::size_t getObjectSize(json_value * node) const {
+		return node->u.object.length;
+	}
+
+	template <typename Callback>
+	void iterateObject(json_value * node, const Callback & callback) const {
+		for(std::size_t i = 0; i < std::size_t(node->u.object.length); ++i) {
+			const auto & objectValue = node->u.object.values[i];
+			callback(objectValue.name, objectValue.value);
+		}
+	}
+
+};
+
 class BackendCParser : public ParserBackend
 {
 public:
@@ -60,11 +127,6 @@ public:
 	std::string getError() const override;
 
 	metapp::Variant parse(const JsonParserSource & source, const metapp::MetaType * proto) override;
-
-private:
-	metapp::Variant doConvertValue(json_value * jsonValue, const metapp::MetaType * proto);
-	metapp::Variant doConvertArray(json_value * jsonValue, const metapp::MetaType * proto);
-	metapp::Variant doConvertObject(json_value * jsonValue, const metapp::MetaType * proto);
 
 private:
 	ParserConfig config;
@@ -105,119 +167,7 @@ metapp::Variant BackendCParser::parse(const JsonParserSource & source, const met
 	if(error[0] != 0) {
 		return metapp::Variant();
 	}
-	return doConvertValue(root, proto);
-}
-
-metapp::Variant BackendCParser::doConvertValue(json_value * jsonValue, const metapp::MetaType * proto)
-{
-	if(proto != nullptr) {
-		proto = metapp::getNonReferenceMetaType(proto);
-		if(proto->getTypeKind() == metapp::tkVariant) {
-			proto = nullptr;
-		}
-	}
-
-	switch(jsonValue->type) {
-	case json_null:
-		return metapp::Variant(nullptr);
-
-	case json_boolean:
-		return metapp::Variant((JsonBool)(jsonValue->u.boolean));
-
-	case json_integer:
-		return metapp::Variant((JsonInt)(jsonValue->u.integer));
-
-	case json_double:
-		return metapp::Variant((JsonReal)(jsonValue->u.dbl));
-
-	case json_string:
-		return metapp::Variant(JsonString(jsonValue->u.string.ptr));
-
-	case json_array:
-		return doConvertArray(jsonValue, proto);
-
-	case json_object:
-		return doConvertObject(jsonValue, proto);
-
-	default:
-		break;
-	}
-	return metapp::Variant();
-}
-
-metapp::Variant BackendCParser::doConvertArray(json_value * jsonValue, const metapp::MetaType * proto)
-{
-	const metapp::MetaType * type = proto;
-	if(type == nullptr) {
-		type = config.getArrayType();
-	}
-	if(type == nullptr) {
-		type = metapp::getMetaType<JsonArray>();
-	}
-	metapp::Variant result = metapp::Variant(type, nullptr);
-	auto metaIndexable = metapp::getNonReferenceMetaType(result)->getMetaIndexable();
-	metaIndexable->resize(result, jsonValue->u.array.length);
-	for(std::size_t i = 0; i < std::size_t(jsonValue->u.array.length); ++i) {
-		const metapp::MetaType * elementProto = nullptr;
-		if(proto != nullptr) {
-			elementProto = metapp::getNonReferenceMetaType(metaIndexable->getValueType(result, i));
-		}
-		metaIndexable->set(result, i, doConvertValue(jsonValue->u.array.values[i], elementProto));
-	}
-	return result;
-}
-
-metapp::Variant BackendCParser::doConvertObject(json_value * jsonValue, const metapp::MetaType * proto)
-{
-	const metapp::MetaType * type = proto;
-	const metapp::MetaClass * metaClass = nullptr;
-	if(proto != nullptr) {
-		metaClass = proto->getMetaClass();
-	}
-	if(type == nullptr) {
-		type = config.getObjectType();
-	}
-	if(type == nullptr) {
-		type = metapp::getMetaType<JsonObject>();
-	}
-	const metapp::MetaMappable * metaMappable = type->getMetaMappable();
-	const metapp::MetaIndexable * metaIndexable = type->getMetaIndexable();
-	metapp::Variant result = metapp::Variant(type, nullptr);
-
-	if(metaMappable != nullptr) {
-		auto valueType = metaMappable->getValueType(result);
-		for(std::size_t i = 0; i < std::size_t(jsonValue->u.object.length); ++i) {
-			const auto & objectValue = jsonValue->u.object.values[i];
-			const metapp::Variant value(doConvertValue(objectValue.value, valueType->getUpType(1)));
-			metaMappable->set(result, objectValue.name, value);
-		}
-	}
-	else if(metaIndexable != nullptr) {
-		metaIndexable->resize(result, jsonValue->u.object.length);
-		for(std::size_t i = 0; i < std::size_t(jsonValue->u.object.length); ++i) {
-			const auto & objectValue = jsonValue->u.object.values[i];
-			const auto value = metaIndexable->get(result, i);
-			auto valueIndexable = metapp::getNonReferenceMetaType(value)->getMetaIndexable();
-			if(valueIndexable != nullptr) {
-				valueIndexable->resize(value, 2);
-				valueIndexable->set(value, 0, objectValue.name);
-				const metapp::Variant convertedValue(doConvertValue(objectValue.value, valueIndexable->getValueType(value, 1)));
-				valueIndexable->set(convertedValue, 1, value);
-			}
-		}
-	}
-	else if(metaClass != nullptr) {
-		for(std::size_t i = 0; i < std::size_t(jsonValue->u.object.length); ++i) {
-			const auto & objectValue = jsonValue->u.object.values[i];
-			std::string name(objectValue.name);
-			auto field = metaClass->getAccessible(name);
-			if(! field.isEmpty()) {
-				const metapp::Variant value(doConvertValue(objectValue.value, metapp::accessibleGetValueType(field)));
-				metapp::accessibleSet(field, result.getAddress(), value);
-			}
-		}
-	}
-	return result;
+	return GeneralParser<CParserImplement>(config, CParserImplement()).parse(root, proto);
 }
 
 std::unique_ptr<ParserBackend> createBackend_cparser(const ParserConfig & config)

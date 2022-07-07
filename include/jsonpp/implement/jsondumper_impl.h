@@ -65,12 +65,12 @@ private:
 		}
 		if(metapp::typeKindIsIntegral(typeKind)) {
 			if(metapp::typeKindIsSignedIntegral(typeKind)) {
-				using Type = long long;
+				using Type = int64_t;
 				const auto n = value.cast<Type>().template get<Type>();
 				writer.writeNumber(n);
 			}
 			else {
-				using Type = unsigned long long;
+				using Type = uint64_t;
 				const auto n = value.cast<Type>().template get<Type>();
 				writer.writeNumber(n);
 			}
