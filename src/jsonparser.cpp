@@ -73,6 +73,83 @@ std::string getParserTypeName(const ParserType type)
 	return "Unknown";
 }
 
+JsonParserSource::JsonParserSource()
+	:
+		prepared(false),
+		cstr(nullptr),
+		cstrLength(0),
+		str()
+{
+}
+
+JsonParserSource::JsonParserSource(const char * cstr, const std::size_t cstrLength)
+	:
+		prepared(false),
+		cstr(cstr),
+		cstrLength(cstrLength),
+		str()
+{
+}
+
+JsonParserSource::JsonParserSource(const std::string & str)
+	:
+		prepared(false),
+		cstr(nullptr),
+		cstrLength(0),
+		str(str)
+{
+}
+
+JsonParserSource::JsonParserSource(std::string && str)
+	:
+		prepared(false),
+		cstr(nullptr),
+		cstrLength(0),
+		str(std::move(str))
+{
+}
+
+const char * JsonParserSource::getText() const
+{
+	if(cstr != nullptr) {
+		return cstr;
+	}
+	return str.c_str();
+}
+
+std::size_t JsonParserSource::getTextLength() const
+{
+	if(cstr != nullptr) {
+		return cstrLength;
+	}
+	return str.size();
+}
+
+std::size_t JsonParserSource::getCapacity() const
+{
+	if(cstr != nullptr) {
+		return cstrLength;
+	}
+	return str.capacity();
+}
+
+void JsonParserSource::pad(const std::size_t size) const
+{
+	if(cstr != nullptr) {
+		str.resize(cstrLength);
+		str.reserve(cstrLength + size);
+		memmove(&str[0], cstr, cstrLength);
+		str[cstrLength] = 0;
+		cstr = nullptr;
+	}
+	else {
+		const auto capacity = str.capacity();
+		if(capacity < str.size() + size) {
+			str.reserve(str.size() + size);
+		}
+	}
+}
+
 JsonParser::JsonParser()
 	: JsonParser(ParserConfig(), ParserType::simdjsonDom)
 {
