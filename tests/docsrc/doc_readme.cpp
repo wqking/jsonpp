@@ -40,8 +40,9 @@ jsonpp is a cross platform C++ json library, focusing on easy to use.
   - For C++ native data types and STL containers, you don't need to provide any meta data to use them, because metapp already provides them.
   - Reflecting meta data for class is very easy. 
 
-- **Reusable meta data**. jsonpp uses meta data from [C++ reflection library metapp](https://github.com/wqking/metapp),
-which is not only not special to jsonpp, but also general enough to use for other purpose such as serialization, script binding, etc.
+- **Reusable meta data**. jsonpp uses meta data from [C++ reflection library metapp](https://github.com/wqking/metapp) that's developed
+by the same developer of jsonpp, which is not only not special to jsonpp, but also general enough to use for other purpose
+such as serialization, script binding, etc.
 
 - **Multiple parser backends**. jsonpp uses existing matured and well tested JSON parser libraries as the parser backend, such as
 [json-parser](https://github.com/json-parser/json-parser) and [simdjson 2.2.0](https://github.com/simdjson/simdjson). That means you can

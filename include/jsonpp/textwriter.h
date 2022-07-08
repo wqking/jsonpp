@@ -51,6 +51,7 @@ struct StringOutputter
 	StringOutputter()
 		: str()
 	{
+		str.reserve(1024 * 16);
 	}
 
 	void operator() (const char c) const {
@@ -61,8 +62,8 @@ struct StringOutputter
 		str.append(s, length);
 	}
 
-	const std::string & getString() const {
-		return str;
+	std::string && getString() const {
+		return std::move(str);
 	}
 
 	mutable std::string str;
@@ -73,6 +74,7 @@ struct VectorOutputter
 	VectorOutputter()
 		: charList()
 	{
+		charList.reserve(1024 * 16);
 	}
 
 	void operator() (const char c) const {
@@ -318,6 +320,5 @@ private:
 
 } // namespace jsonpp
 
-#include "implement/jsondumper_impl.h"
 
 #endif
