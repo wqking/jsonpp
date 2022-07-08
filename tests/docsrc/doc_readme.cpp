@@ -48,8 +48,8 @@ which is not only not special to jsonpp, but also general enough to use for othe
 choose the best backend to achieve your goals.  
 
 - **Decent performance**. Performance is not jsonpp strength and it's not close to high performance JSON libraries such as
-simdjson. However, the performance is slightly better than some existing popular JSON libraries which also focus on usability, thanks to
-the high performance simdjson.
+simdjson. However, the performance is better than some existing popular JSON libraries which also focus on usability, thanks to
+the high performance simdjson and well optimized metapp.
 
 - Cross platforms, cross compilers.
 

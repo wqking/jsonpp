@@ -21,7 +21,11 @@
 
 #include "simdjson/simdjson.h"
 
-//#include "json.hpp"
+//#define NLOH
+
+#ifdef NLOH
+#include "json.hpp"
+#endif
 
 #include <string>
 #include <fstream>
@@ -153,7 +157,7 @@ BenchmarkFunc
 }
 
 // Change it to #if 1 to enable benchmarking nlohmann json, the proper header must be included
-#if 0
+#ifdef NLOH
 BenchmarkFunc
 {
 	std::cout << std::endl;

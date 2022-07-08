@@ -109,23 +109,37 @@ private:
 			type = config.getArrayType();
 		}
 		if(type == nullptr) {
-			type = metapp::getMetaType<JsonArray>();
-		}
-		metapp::Variant result = metapp::Variant(type, nullptr);
-		auto metaIndexable = metapp::getNonReferenceMetaType(result)->getMetaIndexable();
-		Array array = implement.getArray(std::forward<T>(node));
-		metaIndexable->resize(result, implement.getArraySize(array));
-		implement.iterateArray(
-			array,
-			[this, metaIndexable, proto, &result](const std::size_t index, ArrayValue arrayValue) -> void {
-				const metapp::MetaType * elementProto = nullptr;
-				if(proto != nullptr) {
-					elementProto = metapp::getNonReferenceMetaType(metaIndexable->getValueType(result, index));
+			// If there is no prototype, we parse array as the default JsonArray. Since we know the native data structure,
+			// we operate on the data structure directly instead of using meta interface. This increases performance significantly.
+			// Parsing canada.json speeds up more than 30%, citm_catalog.json and twitter.json more than 60%~70%.
+			// The same for doConvertObject.
+			Array array = implement.getArray(std::forward<T>(node));
+			JsonArray result(implement.getArraySize(array));
+			implement.iterateArray(
+				array,
+				[this, &result](const std::size_t index, ArrayValue arrayValue) -> void {
+					result[index] = parse(arrayValue, nullptr);
 				}
-				metaIndexable->set(result, index, parse(arrayValue, elementProto));
-			}
-		);
-		return result;
+			);
+			return result;
+		}
+		else {
+			metapp::Variant result = metapp::Variant(type, nullptr);
+			auto metaIndexable = metapp::getNonReferenceMetaType(result)->getMetaIndexable();
+			Array array = implement.getArray(std::forward<T>(node));
+			metaIndexable->resize(result, implement.getArraySize(array));
+			implement.iterateArray(
+				array,
+				[this, metaIndexable, proto, &result](const std::size_t index, ArrayValue arrayValue) -> void {
+					const metapp::MetaType * elementProto = nullptr;
+					if(proto != nullptr) {
+						elementProto = metapp::getNonReferenceMetaType(metaIndexable->getValueType(result, index));
+					}
+					metaIndexable->set(result, index, parse(arrayValue, elementProto));
+				}
+			);
+			return result;
+		}
 	}
 
 	template <typename T>
@@ -140,63 +154,73 @@ private:
 			type = config.getObjectType();
 		}
 		if(type == nullptr) {
-			type = metapp::getMetaType<JsonObject>();
+			Object object = implement.getObject(std::forward<T>(node));
+			JsonObject result;
+			implement.iterateObject(
+				object,
+				[this, &result](const std::string & key, ObjectValue objectValue) -> void {
+					result.insert(std::make_pair(key, parse(objectValue, nullptr)));
+				}
+			);
+			return result;
 		}
-		const metapp::MetaMappable * metaMappable = type->getMetaMappable();
-		const metapp::MetaIndexable * metaIndexable = type->getMetaIndexable();
-		metapp::Variant result = metapp::Variant(type, nullptr);
-		Object object = implement.getObject(std::forward<T>(node));
+		else {
+			const metapp::MetaMappable * metaMappable = type->getMetaMappable();
+			const metapp::MetaIndexable * metaIndexable = type->getMetaIndexable();
+			metapp::Variant result = metapp::Variant(type, nullptr);
+			Object object = implement.getObject(std::forward<T>(node));
 
-		if(metaMappable != nullptr) {
-			auto valueType = metaMappable->getValueType(result);
-			implement.iterateObject(
-				object,
-				[this, &result, metaMappable, valueType](const std::string & key, ObjectValue objectValue) -> void {
-					metaMappable->set(
-						result,
-						key,
-						parse(objectValue, valueType->getUpType(1))
-					);
-				}
-			);
-		}
-		else if(metaIndexable != nullptr) {
-			metaIndexable->resize(result, implement.getObjectSize(object));
-			std::size_t index = 0;
-			implement.iterateObject(
-				object,
-				[this, &index, &result, metaIndexable](const std::string & key, ObjectValue objectValue) -> void {
-					const auto value = metaIndexable->get(result, index);
-					auto valueIndexable = metapp::getNonReferenceMetaType(value)->getMetaIndexable();
-					if(valueIndexable != nullptr) {
-						valueIndexable->resize(value, 2);
-						valueIndexable->set(value, 0, key);
-						valueIndexable->set(
-							value,
-							1,
-							parse(objectValue, valueIndexable->getValueType(value, 1))
+			if(metaMappable != nullptr) {
+				auto valueType = metaMappable->getValueType(result);
+				implement.iterateObject(
+					object,
+					[this, &result, metaMappable, valueType](const std::string & key, ObjectValue objectValue) -> void {
+						metaMappable->set(
+							result,
+							key,
+							parse(objectValue, valueType->getUpType(1))
 						);
 					}
-					++index;
-				}
-			);
-		}
-		else if(metaClass != nullptr) {
-			implement.iterateObject(
-				object,
-				[this, &result, metaClass](const std::string & key, ObjectValue objectValue) -> void {
-					const auto & field = metaClass->getAccessible(key);
-					if(! field.isEmpty()) {
-						metapp::accessibleSet(
-							field,
-							result.getAddress(),
-							parse(objectValue, metapp::accessibleGetValueType(field))
-						);
+				);
+			}
+			else if(metaIndexable != nullptr) {
+				metaIndexable->resize(result, implement.getObjectSize(object));
+				std::size_t index = 0;
+				implement.iterateObject(
+					object,
+					[this, &index, &result, metaIndexable](const std::string & key, ObjectValue objectValue) -> void {
+						const auto value = metaIndexable->get(result, index);
+						auto valueIndexable = metapp::getNonReferenceMetaType(value)->getMetaIndexable();
+						if(valueIndexable != nullptr) {
+							valueIndexable->resize(value, 2);
+							valueIndexable->set(value, 0, key);
+							valueIndexable->set(
+								value,
+								1,
+								parse(objectValue, valueIndexable->getValueType(value, 1))
+							);
+						}
+						++index;
 					}
-				}
-			);
+				);
+			}
+			else if(metaClass != nullptr) {
+				implement.iterateObject(
+					object,
+					[this, &result, metaClass](const std::string & key, ObjectValue objectValue) -> void {
+						const auto & field = metaClass->getAccessible(key);
+						if(! field.isEmpty()) {
+							metapp::accessibleSet(
+								field,
+								result.getAddress(),
+								parse(objectValue, metapp::accessibleGetValueType(field))
+							);
+						}
+					}
+				);
+			}
+			return result;
 		}
-		return result;
 	}
 
 private:
