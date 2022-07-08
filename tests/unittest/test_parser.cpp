@@ -130,3 +130,19 @@ TEST_CASE("JsonParser, object in array")
 	REQUIRE(object.at("b").get<jsonpp::JsonInt>() == 38);
 }
 
+TEST_CASE("JsonParser, object, parse as array")
+{
+	std::string jsonText = R"(
+		{ "one" : 1, "two" : 2.1 }
+	)";
+	auto parserType = PARSER_TYPES();
+	jsonpp::JsonParser parser(parserType);
+	using Proto = std::vector<std::pair<std::string, int> >;
+	metapp::Variant var = parser.parse(jsonText, metapp::getMetaType<Proto>());
+	const Proto & array = var.get<const Proto &>();
+	REQUIRE(array[0].first == "one");
+	REQUIRE(array[0].second == 1);
+	REQUIRE(array[1].first == "two");
+	REQUIRE(array[1].second == 2);
+}
+

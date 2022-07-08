@@ -152,8 +152,11 @@ private:
 			implement.iterateObject(
 				object,
 				[this, &result, metaMappable, valueType](const std::string & key, ObjectValue objectValue) -> void {
-					const metapp::Variant value(parse(objectValue, valueType->getUpType(1)));
-					metaMappable->set(result, key, value);
+					metaMappable->set(
+						result,
+						key,
+						parse(objectValue, valueType->getUpType(1))
+					);
 				}
 			);
 		}
@@ -168,8 +171,11 @@ private:
 					if(valueIndexable != nullptr) {
 						valueIndexable->resize(value, 2);
 						valueIndexable->set(value, 0, key);
-						const metapp::Variant convertedValue(parse(objectValue, valueIndexable->getValueType(value, 1)));
-						valueIndexable->set(convertedValue, 1, value);
+						valueIndexable->set(
+							value,
+							1,
+							parse(objectValue, valueIndexable->getValueType(value, 1))
+						);
 					}
 					++index;
 				}
@@ -179,10 +185,13 @@ private:
 			implement.iterateObject(
 				object,
 				[this, &result, metaClass](const std::string & key, ObjectValue objectValue) -> void {
-					auto field = metaClass->getAccessible(key);
+					const auto & field = metaClass->getAccessible(key);
 					if(! field.isEmpty()) {
-						const metapp::Variant value(parse(objectValue, metapp::accessibleGetValueType(field)));
-						metapp::accessibleSet(field, result.getAddress(), value);
+						metapp::accessibleSet(
+							field,
+							result.getAddress(),
+							parse(objectValue, metapp::accessibleGetValueType(field))
+						);
 					}
 				}
 			);
