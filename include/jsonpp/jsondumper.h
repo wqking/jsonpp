@@ -37,7 +37,7 @@ namespace jsonpp {
 
 namespace internal_ {
 
-template <typename Outputter>
+template <typename Output>
 class JsonDumperImplement;
 
 } // namespace internal_

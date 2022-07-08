@@ -15,7 +15,7 @@
 // limitations under the License.
 
 #include "jsonpp/jsondumper.h"
-#include "jsonpp/textwriter.h"
+#include "jsonpp/textoutput.h"
 
 #include "metapp/allmetatypes.h"
 #include "metapp/interfaces/metaclass.h"
@@ -98,8 +98,8 @@ JsonDumper::~JsonDumper()
 
 std::string JsonDumper::dump(const metapp::Variant & value)
 {
-	StringOutputter outputter;
-	dump(value, TextWriter<StringOutputter>(config, outputter));
+	StringWriter outputter;
+	dump(value, TextOutput<StringWriter>(config, outputter));
 	return outputter.getString();
 }
 

@@ -14,8 +14,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef JSONPP_TEXTWRITER_H_821598293712
-#define JSONPP_TEXTWRITER_H_821598293712
+#ifndef JSONPP_TEXTOUTPUT_H_821598293712
+#define JSONPP_TEXTOUTPUT_H_821598293712
 
 #include "implement/algorithms_i.h"
 #include "drachennest/dragonbox.h"
@@ -28,9 +28,9 @@
 
 namespace jsonpp {
 
-struct StreamOutputter
+struct StreamWriter
 {
-	StreamOutputter(std::ostream & stream)
+	StreamWriter(std::ostream & stream)
 		: stream(stream)
 	{
 	}
@@ -46,9 +46,9 @@ struct StreamOutputter
 	std::ostream & stream;
 };
 
-struct StringOutputter
+struct StringWriter
 {
-	StringOutputter()
+	StringWriter()
 		: str()
 	{
 		str.reserve(1024 * 16);
@@ -69,9 +69,9 @@ struct StringOutputter
 	mutable std::string str;
 };
 
-struct VectorOutputter
+struct VectorWriter
 {
-	VectorOutputter()
+	VectorWriter()
 		: charList()
 	{
 		charList.reserve(1024 * 16);
@@ -134,61 +134,61 @@ extern const std::array<EscapeItem, escapeItemListSize> escapeItemList;
 extern const EscapeItem escapeItemQuoteMark;
 extern const EscapeItem escapeItemBackSlash;
 
-template <typename Outputter>
-struct TextWriter
+template <typename Writer>
+struct TextOutput
 {
-	TextWriter(const DumperConfig & config, const Outputter & outputter)
+	TextOutput(const DumperConfig & config, const Writer & writer)
 		:
 		config(config),
-		outputter(outputter),
+		writer(writer),
 		indentLevel(0),
 		indentList(),
 		buffer()
 	{
 	}
 	
-	TextWriter(const DumperConfig & config, Outputter && outputter) = delete;
+	TextOutput(const DumperConfig & config, Writer && writer) = delete;
 
-	const Outputter & getOutputter() const {
-		return outputter;
+	const Writer & getOutputter() const {
+		return writer;
 	}
 
 	void writeNull() const {
-		outputter("null", 4);
+		writer("null", 4);
 	}
 
 	void writeBoolean(const bool value) const {
 		if(value) {
-			outputter("true", 4);
+			writer("true", 4);
 		}
 		else {
-			outputter("false", 5);
+			writer("false", 5);
 		}
 	}
 
 	void writeNumber(const int64_t value) const {
 		const auto result = integerToString(value, buffer.data());
-		outputter(result.start, result.length);
+		writer(result.start, result.length);
 	}
 
 	void writeNumber(const uint64_t value) const {
 		const auto result = integerToString(value, buffer.data());
-		outputter(result.start, result.length);
+		writer(result.start, result.length);
 	}
 
 	void writeNumber(const double value) const {
 		const auto result = doubleToString(value, buffer.data());
-		outputter(result.start, result.length);
+		writer(result.start, result.length);
 	}
 
 	void writeString(const std::string & s) const {
-		outputter('"');
+		writer('"');
 
 		std::size_t previousIndex = 0;
 		std::size_t index = 0;
 		auto flush = [this, &s, &previousIndex, &index]() {
 			if(previousIndex < index) {
-				outputter(s.c_str() + previousIndex, index - previousIndex);
+				writer(s.c_str() + previousIndex, index - previousIndex);
 				previousIndex = index;
 			}
 		};
@@ -207,7 +207,7 @@ struct TextWriter
 			}
 			if(escapeItem != nullptr) {
 				flush();
-				outputter(escapeItem->str, escapeItem->length);
+				writer(escapeItem->str, escapeItem->length);
 				++previousIndex;
 			}
 			++index;
@@ -215,11 +215,11 @@ struct TextWriter
 
 		flush();
 
-		outputter('"');
+		writer('"');
 	}
 
 	void beginArray() const {
-		outputter('[');
+		writer('[');
 		writeLineBreak();
 		increaseIndent();
 	}
@@ -228,11 +228,11 @@ struct TextWriter
 		writeLineBreak();
 		decreaseIndent();
 		writeIndent();
-		outputter(']');
+		writer(']');
 	}
 
 	void beginObject() const {
-		outputter('{');
+		writer('{');
 		writeLineBreak();
 		increaseIndent();
 	}
@@ -241,7 +241,7 @@ struct TextWriter
 		writeLineBreak();
 		decreaseIndent();
 		writeIndent();
-		outputter('}');
+		writer('}');
 	}
 
 	void beginObjectItem(const std::string & key, const std::size_t index) const {
@@ -249,7 +249,7 @@ struct TextWriter
 		writeIndent();
 
 		writeString(key);
-		outputter(':');
+		writer(':');
 		writeSpace();
 	}
 
@@ -267,7 +267,7 @@ struct TextWriter
 private:
 	void checkWriteComma(const std::size_t index) const {
 		if(index > 0) {
-			outputter(',');
+			writer(',');
 			writeLineBreak();
 		}
 	}
@@ -276,14 +276,14 @@ private:
 		if(! config.allowBeautify()) {
 			return;
 		}
-		outputter(' ');
+		writer(' ');
 	}
 
 	void writeLineBreak() const {
 		if(! config.allowBeautify()) {
 			return;
 		}
-		outputter('\n');
+		writer('\n');
 	}
 
 	void increaseIndent() const {
@@ -306,12 +306,12 @@ private:
 		if(indent.empty()) {
 			indent.resize(indentLevel * 4, ' ');
 		}
-		outputter(indent.c_str(), indent.size());
+		writer(indent.c_str(), indent.size());
 	}
 
 private:
 	DumperConfig config;
-	const Outputter & outputter;
+	const Writer & writer;
 	mutable std::size_t indentLevel;
 	mutable std::vector<std::string> indentList;
 	mutable std::array<char, 128> buffer;

@@ -28,12 +28,12 @@ namespace jsonpp {
 
 namespace internal_ {
 
-template <typename Outputter>
+template <typename Output>
 class JsonDumperImplement
 {
 public:
-	JsonDumperImplement(const DumperConfig & config, const Outputter & writer)
-		: config(config), writer(writer), indentList(), buffer()
+	JsonDumperImplement(const DumperConfig & config, const Output & output)
+		: config(config), output(output), indentList(), buffer()
 	{
 	}
 
@@ -50,7 +50,7 @@ private:
 	void doDumpValue(const metapp::Variant & value) {
 		auto metaType = metapp::getNonReferenceMetaType(value);
 		if(metaType->isPointer() && value.get<void *>() == nullptr) {
-			writer.writeNull();
+			output.writeNull();
 			return;
 		}
 
@@ -60,25 +60,25 @@ private:
 			return;
 		}
 		if(typeKind == metapp::tkBool) {
-			writer.writeBoolean(value.get<bool>());
+			output.writeBoolean(value.get<bool>());
 			return;
 		}
 		if(metapp::typeKindIsIntegral(typeKind)) {
 			if(metapp::typeKindIsSignedIntegral(typeKind)) {
 				using Type = int64_t;
 				const auto n = value.cast<Type>().template get<Type>();
-				writer.writeNumber(n);
+				output.writeNumber(n);
 			}
 			else {
 				using Type = uint64_t;
 				const auto n = value.cast<Type>().template get<Type>();
-				writer.writeNumber(n);
+				output.writeNumber(n);
 			}
 			return;
 		}
 		if(metapp::typeKindIsReal(typeKind)) {
 			const auto d = value.cast<double>().template get<double>();
-			writer.writeNumber(d);
+			output.writeNumber(d);
 			return;
 		}
 		{
@@ -95,7 +95,7 @@ private:
 	}
 
 	void doDumpString(const std::string & s) {
-		writer.writeString(s);
+		output.writeString(s);
 	}
 
 	bool doDumpObject(const metapp::Variant & value) {
@@ -141,14 +141,14 @@ private:
 			if(indexable == nullptr || indexable->getSizeInfo(item).getSize() < 2) {
 				return true;
 			}
-			writer.beginObjectItem(indexable->get(item, 0).template cast<std::string>().template get<std::string>(), index++);
+			output.beginObjectItem(indexable->get(item, 0).template cast<std::string>().template get<std::string>(), index++);
 			doDumpValue(indexable->get(item, 1));
-			writer.endObjectItem();
+			output.endObjectItem();
 
 			return true;
 		};
 
-		writer.beginObject();
+		output.beginObject();
 
 		if(as == asMap) {
 			metaIterable->forEach(value, itemDumper);
@@ -164,13 +164,13 @@ private:
 			const auto fieldView = metaClass->getAccessibleView();
 			std::size_t i = 0;
 			for(const auto & field : fieldView) {
-				writer.beginObjectItem(field.getName(), i++);
+				output.beginObjectItem(field.getName(), i++);
 				doDumpValue(metapp::accessibleGet(field, value.getAddress()));
-				writer.endObjectItem();
+				output.endObjectItem();
 			}
 		}
 
-		writer.endObject();
+		output.endObject();
 
 		return true;
 	}
@@ -185,12 +185,12 @@ private:
 				return false;
 			}
 		}
-		writer.beginArray();
+		output.beginArray();
 		std::size_t index = 0;
 		auto itemDumper = [this, &index](const metapp::Variant & item) -> bool {
-			writer.beginArrayItem(index++);
+			output.beginArrayItem(index++);
 			doDumpValue(item);
-			writer.endArrayItem();
+			output.endArrayItem();
 
 			return true;
 		};
@@ -204,13 +204,13 @@ private:
 				itemDumper(item);
 			}
 		}
-		writer.endArray();
+		output.endArray();
 		return true;
 	}
 
 private:
 	DumperConfig config;
-	const Outputter & writer;
+	const Output & output;
 	std::vector<std::string> indentList;
 	std::array<char, 128> buffer;
 };
