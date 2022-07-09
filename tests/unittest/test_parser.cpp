@@ -182,15 +182,31 @@ TEST_CASE("JsonParser, array, proto")
 {
 	auto parserType = PARSER_TYPES();
 	jsonpp::JsonParser parser(parserType);
-	std::string jsonText = R"(
-		[ 5, 6 ]
-	)";
-	metapp::Variant var = parser.parse(jsonText, metapp::getMetaType<std::deque<long> >());
-	REQUIRE(jsonpp::getJsonType(var) == jsonpp::JsonType::jtNone);
-	const std::deque<long> & array = var.get<const std::deque<long> &>();
-	REQUIRE(array[0] == 5);
-	REQUIRE(array[1] == 6);
-	REQUIRE(var.getMetaType()->getTypeKind() == metapp::tkStdDeque);
+
+	SECTION("std::deque<long>") {
+		std::string jsonText = R"(
+			[ 5, 6.1 ]
+		)";
+		metapp::Variant var = parser.parse(jsonText, metapp::getMetaType<std::deque<long> >());
+		REQUIRE(jsonpp::getJsonType(var) == jsonpp::JsonType::jtNone);
+		const auto & array = var.get<const std::deque<long> &>();
+		REQUIRE(var.getMetaType()->getTypeKind() == metapp::tkStdDeque);
+		REQUIRE(array[0] == 5);
+		REQUIRE(array[1] == 6);
+	}
+
+	SECTION("std::list<metapp::Variant>") {
+		std::string jsonText = R"(
+			[ 5, "abc" ]
+		)";
+		metapp::Variant var = parser.parse(jsonText, metapp::getMetaType<std::list<metapp::Variant> >());
+		REQUIRE(jsonpp::getJsonType(var) == jsonpp::JsonType::jtNone);
+		const auto & array = var.get<const std::list<metapp::Variant> &>();
+		auto it = array.begin();
+		REQUIRE(it->get<jsonpp::JsonInt>() == 5);
+		++it;
+		REQUIRE(it->get<const jsonpp::JsonString &>() == "abc");
+	}
 }
 
 TEST_CASE("JsonParser, object")
@@ -203,6 +219,21 @@ TEST_CASE("JsonParser, object")
 	metapp::Variant var = parser.parse(jsonText);
 	REQUIRE(jsonpp::getJsonType(var) == jsonpp::JsonType::jtObject);
 	const jsonpp::JsonObject & object = var.get<const jsonpp::JsonObject &>();
+	REQUIRE(object.at("a").get<std::string &>() == "hello");
+	REQUIRE(object.at("b").get<jsonpp::JsonInt>() == 5);
+}
+
+TEST_CASE("JsonParser, object, proto")
+{
+	auto parserType = PARSER_TYPES();
+	jsonpp::JsonParser parser(parserType);
+	using Proto = std::unordered_map<std::string, metapp::Variant>;
+	std::string jsonText = R"(
+		{ "b" : 5, "a" : "hello" }
+	)";
+	metapp::Variant var = parser.parse(jsonText, metapp::getMetaType<Proto>());
+	REQUIRE(jsonpp::getJsonType(var) == jsonpp::JsonType::jtNone);
+	const auto & object = var.get<const Proto &>();
 	REQUIRE(object.at("a").get<std::string &>() == "hello");
 	REQUIRE(object.at("b").get<jsonpp::JsonInt>() == 5);
 }
