@@ -139,6 +139,6 @@ inline std::string readFile(const std::string & fileName)
 	return ss.str();
 }
 
-#define PARSER_TYPES() GENERATE(jsonpp::ParserType::cparser, jsonpp::ParserType::simdjsonDom, jsonpp::ParserType::simdjsonOnDemand)
+#define PARSER_TYPES() GENERATE(jsonpp::ParserType::cparser, jsonpp::ParserType::simdjson)
 
 #endif

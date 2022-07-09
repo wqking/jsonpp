@@ -17,6 +17,8 @@
 #ifndef JSONPP_JSONPARSER_H_821598293712
 #define JSONPP_JSONPARSER_H_821598293712
 
+#include "jsonpp/common.h"
+
 #include "metapp/variant.h"
 #include "metapp/allmetatypes.h"
 
@@ -36,15 +38,6 @@
 namespace jsonpp {
 
 class ParserBackend;
-
-using JsonNull = void *;
-using JsonBool = bool;
-using JsonInt = int64_t;
-using JsonUnsignedInt = uint64_t;
-using JsonReal = double;
-using JsonString = std::string;
-using JsonArray = std::vector<metapp::Variant>;
-using JsonObject = std::map<std::string, metapp::Variant>;
 
 class ParserConfig
 {
@@ -82,8 +75,7 @@ private:
 enum class ParserType
 {
 	cparser,
-	simdjsonDom,
-	simdjsonOnDemand
+	simdjson
 };
 
 class JsonParserSource

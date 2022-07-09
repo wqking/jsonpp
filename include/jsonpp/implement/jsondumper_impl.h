@@ -65,12 +65,12 @@ private:
 		}
 		if(metapp::typeKindIsIntegral(typeKind)) {
 			if(metapp::typeKindIsSignedIntegral(typeKind)) {
-				using Type = int64_t;
+				using Type = JsonInt;
 				const auto n = value.cast<Type>().template get<Type>();
 				output.writeNumber(n);
 			}
 			else {
-				using Type = uint64_t;
+				using Type = JsonUnsignedInt;
 				const auto n = value.cast<Type>().template get<Type>();
 				output.writeNumber(n);
 			}

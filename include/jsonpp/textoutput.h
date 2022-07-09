@@ -139,11 +139,11 @@ struct TextOutput
 {
 	TextOutput(const DumperConfig & config, const Writer & writer)
 		:
-		config(config),
-		writer(writer),
-		indentLevel(0),
-		indentList(),
-		buffer()
+			config(config),
+			writer(writer),
+			indentLevel(0),
+			indentList(),
+			buffer()
 	{
 	}
 	
@@ -166,12 +166,12 @@ struct TextOutput
 		}
 	}
 
-	void writeNumber(const int64_t value) const {
+	void writeNumber(const JsonInt value) const {
 		const auto result = integerToString(value, buffer.data());
 		writer(result.start, result.length);
 	}
 
-	void writeNumber(const uint64_t value) const {
+	void writeNumber(const JsonUnsignedInt value) const {
 		const auto result = integerToString(value, buffer.data());
 		writer(result.start, result.length);
 	}
@@ -304,7 +304,9 @@ private:
 		}
 		std::string & indent = indentList[indentLevel];
 		if(indent.empty()) {
-			indent.resize(indentLevel * 4, ' ');
+			for(std::size_t i = 0; i < indentLevel; ++i) {
+				indent.append(config.getIndent());
+			}
 		}
 		writer(indent.c_str(), indent.size());
 	}

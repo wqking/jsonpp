@@ -176,6 +176,19 @@ metapp::Variant BackendSimdjsonDom::parse(const JsonParserSource & source, const
 	return GeneralParser<SimdjsonDomImplement>(config, SimdjsonDomImplement()).parse(element, proto);
 }
 
+std::unique_ptr<ParserBackend> createBackend_simdjsonDom(const ParserConfig & config)
+{
+	return std::unique_ptr<ParserBackend>(new BackendSimdjsonDom(config));
+}
+
+#if 0
+/*
+Dropped support for simdjson::ondemand, because,
+1, it doesn't gain much performance than simdjson::dom for jsonpp.
+2, it doesn't treat "5, 6" as error.
+3, it throws error on "true", while the node has boolean type but get_bool doesn't agree.
+No need to waste time on it.
+*/
 class BackendSimdjsonOnDemand : public BackendSimdjson
 {
 public:
@@ -331,15 +344,12 @@ metapp::Variant BackendSimdjsonOnDemand::parse(const JsonParserSource & source, 
 	return metapp::Variant();
 }
 
-std::unique_ptr<ParserBackend> createBackend_simdjsonDom(const ParserConfig & config)
-{
-	return std::unique_ptr<ParserBackend>(new BackendSimdjsonDom(config));
-}
-
 std::unique_ptr<ParserBackend> createBackend_simdjsonOnDemand(const ParserConfig & config)
 {
 	return std::unique_ptr<ParserBackend>(new BackendSimdjsonOnDemand(config));
 }
+#endif
+
 
 } // namespace internal_
 

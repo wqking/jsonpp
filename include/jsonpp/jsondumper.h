@@ -17,6 +17,8 @@
 #ifndef JSONPP_JSONDUMPER_H_821598293712
 #define JSONPP_JSONDUMPER_H_821598293712
 
+#include "jsonpp/common.h"
+
 #include "implement/algorithms_i.h"
 #include "drachennest/dragonbox.h"
 
@@ -47,7 +49,8 @@ class DumperConfig
 public:
 	DumperConfig()
 		:
-			beautify(false)
+			beautify(false),
+			indent("    ")
 	{
 	}
 
@@ -60,6 +63,15 @@ public:
 		return beautify;
 	}
 
+	DumperConfig & setIndent(const std::string & indent_) {
+		indent = indent_;
+		return *this;
+	}
+
+	const std::string & getIndent() const {
+		return indent;
+	}
+
 	bool isObjectType(const metapp::MetaType *) const {
 		return false;
 	}
@@ -70,6 +82,7 @@ public:
 
 private:
 	bool beautify;
+	std::string indent;
 };
 
 class JsonDumper

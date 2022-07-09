@@ -33,4 +33,5 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(metapp)
 
 set(COMMON_LIBS "metapp::metapp")
+#link_libraries("metapp::metapp")
 endif()
