@@ -82,8 +82,8 @@ inline JsonType getJsonType(const metapp::Variant & var)
 		}
 		break;
 	
-	case metapp::getTypeKind<JsonObject>():
-		if(metaType->getUpType()->getTypeKind() == metapp::tkVariant) {
+	default:
+		if(metaType->equal(metapp::getMetaType<JsonObject>())) {
 			return JsonType::jtObject;
 		}
 		break;

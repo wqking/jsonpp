@@ -72,12 +72,84 @@ TEST_CASE("JsonParser, int")
 {
 	auto parserType = PARSER_TYPES();
 	jsonpp::JsonParser parser(parserType);
-	std::string jsonText = R"(
-		5
-	)";
-	metapp::Variant var = parser.parse(jsonText);
-	REQUIRE(jsonpp::getJsonType(var) == jsonpp::JsonType::jtInt);
-	REQUIRE(var.get<jsonpp::JsonInt>() == 5);
+	SECTION("positive") {
+		std::string jsonText = R"(
+			9381538
+		)";
+		metapp::Variant var = parser.parse(jsonText);
+		REQUIRE(jsonpp::getJsonType(var) == jsonpp::JsonType::jtInt);
+		REQUIRE(var.get<jsonpp::JsonInt>() == 9381538);
+	}
+	SECTION("negative") {
+		std::string jsonText = R"(
+			-19381538
+		)";
+		metapp::Variant var = parser.parse(jsonText);
+		REQUIRE(jsonpp::getJsonType(var) == jsonpp::JsonType::jtInt);
+		REQUIRE(var.get<jsonpp::JsonInt>() == -19381538);
+	}
+	SECTION("zero") {
+		std::string jsonText = R"(
+			0
+		)";
+		metapp::Variant var = parser.parse(jsonText);
+		REQUIRE(jsonpp::getJsonType(var) == jsonpp::JsonType::jtInt);
+		REQUIRE(var.get<jsonpp::JsonInt>() == 0);
+	}
+}
+
+TEST_CASE("JsonParser, double")
+{
+	auto parserType = PARSER_TYPES();
+	jsonpp::JsonParser parser(parserType);
+	SECTION("positive") {
+		std::string jsonText = R"(
+			3.1415
+		)";
+		metapp::Variant var = parser.parse(jsonText);
+		REQUIRE(jsonpp::getJsonType(var) == jsonpp::JsonType::jtReal);
+		REQUIRE(var.get<jsonpp::JsonReal>() == 3.1415);
+	}
+	SECTION("negative") {
+		std::string jsonText = R"(
+			-3.1415
+		)";
+		metapp::Variant var = parser.parse(jsonText);
+		REQUIRE(jsonpp::getJsonType(var) == jsonpp::JsonType::jtReal);
+		REQUIRE(var.get<jsonpp::JsonReal>() == -3.1415);
+	}
+	SECTION("zero") {
+		std::string jsonText = R"(
+			0.0
+		)";
+		metapp::Variant var = parser.parse(jsonText);
+		REQUIRE(jsonpp::getJsonType(var) == jsonpp::JsonType::jtReal);
+		REQUIRE(var.get<jsonpp::JsonReal>() == 0.0);
+	}
+	SECTION("scientific, positive") {
+		std::string jsonText = R"(
+			1.618e+2
+		)";
+		metapp::Variant var = parser.parse(jsonText);
+		REQUIRE(jsonpp::getJsonType(var) == jsonpp::JsonType::jtReal);
+		REQUIRE(var.get<jsonpp::JsonReal>() == Approx(161.8));
+	}
+	SECTION("scientific, negative") {
+		std::string jsonText = R"(
+			-1.618e+2
+		)";
+		metapp::Variant var = parser.parse(jsonText);
+		REQUIRE(jsonpp::getJsonType(var) == jsonpp::JsonType::jtReal);
+		REQUIRE(var.get<jsonpp::JsonReal>() == Approx(-161.8));
+	}
+	SECTION("scientific, zero") {
+		std::string jsonText = R"(
+			0.0e+2
+		)";
+		metapp::Variant var = parser.parse(jsonText);
+		REQUIRE(jsonpp::getJsonType(var) == jsonpp::JsonType::jtReal);
+		REQUIRE(var.get<jsonpp::JsonReal>() == Approx(0.0));
+	}
 }
 
 TEST_CASE("JsonParser, string")
@@ -88,6 +160,7 @@ TEST_CASE("JsonParser, string")
 		"abc"
 	)";
 	metapp::Variant var = parser.parse(jsonText);
+	REQUIRE(jsonpp::getJsonType(var) == jsonpp::JsonType::jtString);
 	REQUIRE(var.get<std::string &>() == "abc");
 }
 
@@ -99,6 +172,7 @@ TEST_CASE("JsonParser, array")
 		[ 5, "abc" ]
 	)";
 	metapp::Variant var = parser.parse(jsonText);
+	REQUIRE(jsonpp::getJsonType(var) == jsonpp::JsonType::jtArray);
 	const jsonpp::JsonArray & array = var.get<const jsonpp::JsonArray &>();
 	REQUIRE(array[0].get<jsonpp::JsonInt>() == 5);
 	REQUIRE(array[1].get<std::string &>() == "abc");
@@ -112,6 +186,7 @@ TEST_CASE("JsonParser, array, proto")
 		[ 5, 6 ]
 	)";
 	metapp::Variant var = parser.parse(jsonText, metapp::getMetaType<std::deque<long> >());
+	REQUIRE(jsonpp::getJsonType(var) == jsonpp::JsonType::jtNone);
 	const std::deque<long> & array = var.get<const std::deque<long> &>();
 	REQUIRE(array[0] == 5);
 	REQUIRE(array[1] == 6);
@@ -126,6 +201,7 @@ TEST_CASE("JsonParser, object")
 		{ "b" : 5, "a" : "hello" }
 	)";
 	metapp::Variant var = parser.parse(jsonText);
+	REQUIRE(jsonpp::getJsonType(var) == jsonpp::JsonType::jtObject);
 	const jsonpp::JsonObject & object = var.get<const jsonpp::JsonObject &>();
 	REQUIRE(object.at("a").get<std::string &>() == "hello");
 	REQUIRE(object.at("b").get<jsonpp::JsonInt>() == 5);
