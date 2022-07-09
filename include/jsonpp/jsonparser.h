@@ -35,7 +35,17 @@
 #define JSONPP_BACKEND_SIMDJSON 1
 #endif
 
+#if ! (JSONPP_BACKEND_CPARSER || JSONPP_BACKEND_SIMDJSON)
+#error "jsonpp - no parser backend is specified"
+#endif
+
 namespace jsonpp {
+
+enum class ParserType
+{
+	cparser,
+	simdjson,
+};
 
 class ParserBackend;
 
@@ -44,9 +54,18 @@ class ParserConfig
 public:
 	ParserConfig()
 		:
+			comment(false),
 			arrayType(),
 			objectType()
 	{
+	}
+
+	bool allowComment() const {
+		return comment;
+	}
+
+	void enableComment(const bool enable) {
+		comment = enable;
 	}
 
 	ParserConfig & setArrayType(const metapp::MetaType * arrayType_) {
@@ -68,14 +87,9 @@ public:
 	}
 
 private:
+	bool comment;
 	const metapp::MetaType * arrayType;
 	const metapp::MetaType * objectType;
-};
-
-enum class ParserType
-{
-	cparser,
-	simdjson
 };
 
 class JsonParserSource

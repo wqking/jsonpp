@@ -47,6 +47,8 @@ std::unique_ptr<ParserBackend> createBackend(const ParserConfig & config, const 
 	}
 #endif
 
+	assert(false);
+
 	return std::unique_ptr<ParserBackend>();
 }
 

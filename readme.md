@@ -12,12 +12,8 @@
   - [Namespace](#mdtoc_33e16b56)
   - [Build and install, use jsonpp in your project](#mdtoc_3155c9b5)
 - [Example code](#mdtoc_3bb166c4)
-  - [Use Variant](#mdtoc_cee017b6)
-  - [Inspect MetaType](#mdtoc_3aaa429b)
-  - [Reflect a class (declare meta type)](#mdtoc_19cc9779)
-  - [Runtime generic algorithm on STL container](#mdtoc_afc73315)
-  - [Use reference with Variant](#mdtoc_b8048b76)
-  - [Work with unreflected types](#mdtoc_5095655f)
+  - [Parse JSON text](#mdtoc_f277719e)
+  - [Dump JSON object to text (stringify)](#mdtoc_a4e21f76)
 - [Documentations](#mdtoc_aa76f386)
 - [Build the test code](#mdtoc_460948ff)
 - [Known compiler related quirks in MSVC](#mdtoc_2f938cf5)
@@ -44,8 +40,8 @@ by the same developer of jsonpp, which is not only not special to jsonpp, but al
 such as serialization, script binding, etc.
 
 - **Multiple parser backends**. jsonpp uses existing matured and well tested JSON parser libraries as the parser backend, such as
-[json-parser](https://github.com/json-parser/json-parser) and [simdjson 2.2.0](https://github.com/simdjson/simdjson). That means you can
-choose the best backend to achieve your goals.  
+[json-parser](https://github.com/json-parser/json-parser) and [simdjson 2.2.0](https://github.com/simdjson/simdjson).
+That means you can choose the best backend to achieve your goals.  
 
 - **Decent performance**. Performance is not jsonpp strength and it's not close to high performance JSON libraries such as
 simdjson. However, the performance is better than some existing popular JSON libraries which also focus on usability, thanks to
@@ -131,385 +127,107 @@ To do so, replace `cmake ..` with `cmake .. -DCMAKE_INSTALL_PREFIX="YOUR_NEW_LIB
 <a id="mdtoc_3bb166c4"></a>
 ## Example code
 
-Here are some simple code pieces. There are comprehensive tutorials in the documentations.
 
-<a id="mdtoc_cee017b6"></a>
-### Use Variant
-Header for Variant
+<a id="mdtoc_f277719e"></a>
+### Parse JSON text
+Header for JsonParser
 
 ```c++
-#include "metapp/variant.h"
+#include "jsonpp/jsonparser.h"
 ```
 
-To use all declared meta types, include this header
+Create a parser with default configuration and default backend which is simdjson.
 
 ```c++
-#include "metapp/allmetatypes.h"
+jsonpp::JsonParser parser;
 ```
 
-v contains int.
+This is the JSON we are going to parse.
 
 ```c++
-metapp::Variant v { 5 };
-// Get the value
-ASSERT(v.get<int>() == 5);
+const std::string jsonText = R"(
+  [ 5, "abc", true, null, 3.14, [ 1, 2, 3 ], { "one": 1, "two": 2 } ]
+)";
 ```
 
-cast v to double
+Parse the JSON, the result is a `metapp::Variant`.
 
 ```c++
-metapp::Variant casted = v.cast<double>();
-ASSERT(casted.get<double>() == 5.0);
+metapp::Variant var = parser.parse(jsonText);
 ```
 
-Now v contains char array.
+The result is an array.
 
 ```c++
-v = "hello";
-ASSERT(strcmp(v.get<char []>(), "hello") == 0);
+ASSERT(jsonpp::getJsonType(var) == jsonpp::JsonType::jtArray);
 ```
 
-Cast to std::string.
+Get the underlying array. jsonpp::JsonArray is alias of `std::vector<metapp::Variant>`
 
 ```c++
-casted = v.cast<std::string>();
-// Get as reference to avoid copy.
-ASSERT(casted.get<const std::string &>() == "hello");
+const jsonpp::JsonArray & array = var.get<const jsonpp::JsonArray &>();
 ```
 
-<a id="mdtoc_3aaa429b"></a>
-### Inspect MetaType
-Let's inspect the type `const std::map<const int, std::string> * volatile *`
+Now verify the elements.
 
 ```c++
-const metapp::MetaType * metaType = metapp::getMetaType<
-  const std::map<const int, std::string> * volatile *>();
-ASSERT(metaType->isPointer()); // The type is pointer
-
-// Second level pointer
-const metapp::MetaType * secondLevelPointer = metaType->getUpType();
-ASSERT(secondLevelPointer->isPointer());
-ASSERT(secondLevelPointer->isVolatile()); //second level pointer is volatile
-
-// The pointed type (const std::map<const int, std::string>).
-const metapp::MetaType * pointed = secondLevelPointer->getUpType();
-ASSERT(pointed->isConst());
-ASSERT(pointed->getTypeKind() == metapp::tkStdMap);
-// Key type
-ASSERT(pointed->getUpType(0)->getTypeKind() == metapp::tkInt);
-ASSERT(pointed->getUpType(0)->isConst()); //key is const
-// Mapped type.
-ASSERT(pointed->getUpType(1)->getTypeKind() == metapp::tkStdString);
+ASSERT(array[0].get<jsonpp::JsonInt>() == 5);
+ASSERT(array[1].get<const jsonpp::JsonString &>() == "abc");
+ASSERT(array[2].get<jsonpp::JsonBool>());
+ASSERT(array[3].get<jsonpp::JsonNull>() == nullptr);
+ASSERT(array[4].get<jsonpp::JsonReal>() == 3.14);
+const jsonpp::JsonArray & nestedArray = array[5].get<const jsonpp::JsonArray &>();
+ASSERT(nestedArray[0].get<jsonpp::JsonInt>() == 1);
+ASSERT(nestedArray[1].get<jsonpp::JsonInt>() == 2);
+ASSERT(nestedArray[2].get<jsonpp::JsonInt>() == 3);
+jsonpp::JsonObject & nestedObject = array[6].get<jsonpp::JsonObject &>();
+ASSERT(nestedObject["one"].get<jsonpp::JsonInt>() == 1);
+ASSERT(nestedObject["two"].get<jsonpp::JsonInt>() == 2);
 ```
 
-<a id="mdtoc_19cc9779"></a>
-### Reflect a class (declare meta type)
-Here is the class we are going to reflect for.
+<a id="mdtoc_a4e21f76"></a>
+### Dump JSON object to text (stringify)
+Header for JsonDumper
 
 ```c++
-class MyPet
-{
-public:
-  MyPet() : name(), age() {}
-  MyPet(const std::string & name, const int age) : name(name), age(age) {}
-
-  int getAge() const { return age; }
-  void setAge(const int newAge) { age = newAge; }
-
-  std::string bark() const { return "Bow-wow, " + name; }
-  int calculate(const int a, const int b) const { return a + b; }
-
-  std::string name; // I don't like public field in non-POD, here is only for demo
-private:
-  int age;
-};
-
-// We can use factory function as constructor.
-MyPet * createMyPet(const std::string & name, const int birthYear, const int nowYear)
-{
-  return new MyPet(name, nowYear - birthYear);
-}
+#include "jsonpp/jsondumper.h"
 ```
 
-Now let's `DeclareMetaType` for MyPet. We `DeclareMetaType` for all kinds of types,
-not only classes, but also enumerators, templates, etc.
-
 ```c++
-template <>
-struct metapp::DeclareMetaType<MyPet> : metapp::DeclareMetaTypeBase<MyPet>
-{
-  // Reflect the class information via MetaClass.
-  static const metapp::MetaClass * getMetaClass() {
-    static const metapp::MetaClass metaClass(
-      metapp::getMetaType<MyPet>(),
-      [](metapp::MetaClass & mc) {
-        // Register constructors
-        mc.registerConstructor(metapp::Constructor<MyPet ()>());
-        mc.registerConstructor(metapp::Constructor<MyPet (const std::string &, int)>());
-        // Factory function as constructor
-        mc.registerConstructor(&createMyPet);
-
-        // Register field with getter/setter function
-        mc.registerAccessible("age",
-          metapp::createAccessor(&MyPet::getAge, &MyPet::setAge));
-        // Register another field
-        mc.registerAccessible("name", &MyPet::name);
-
-        // Register member functions
-        mc.registerCallable("bark", &MyPet::bark);
-        mc.registerCallable("calculate", &MyPet::calculate);
-      }
-    );
-    return &metaClass;
-  }
-};
+std::string text;
 ```
 
-Now let's use the reflected meta class.  
-Obtain the meta type for MyPet, then get the meta class. If we've registered the meta type of MyPet
-to MetaRepo, we can get it at runtime instead of depending on the compile time `getMetaType`.
+Create a dumper with default configuration.
 
 ```c++
-const metapp::MetaType * metaType = metapp::getMetaType<MyPet>();
-const metapp::MetaClass * metaClass = metaType->getMetaClass();
+jsonpp::JsonDumper dumper;
 ```
 
-`getConstructor`, then invoke the constructor as if it's a normal callable, with proper arguments.
-Then obtain the MyPet instance pointer from the returned Variant and store it in a `std::shared_ptr`.  
-The constructor is an overloaded callable since there are three constructors registered,
-`metapp::callableInvoke` will choose the proper callable to invoke.
+Dump a simple integer.
 
 ```c++
-std::shared_ptr<MyPet> myPet(metapp::callableInvoke(metaClass->getConstructor(), nullptr,
-  "Lovely", 3).get<MyPet *>());
-// Verify the object is constructed properly.
-ASSERT(myPet->name == "Lovely");
-ASSERT(myPet->getAge() == 3);
-// Call the factory function, the result is same as myPet with name == "Lovely" and age == 3.
-std::shared_ptr<MyPet> myPetFromFactory(metapp::callableInvoke(metaClass->getConstructor(), nullptr,
-  "Lovely", 2019, 2022).get<MyPet *>());
-ASSERT(myPetFromFactory->name == "Lovely");
-ASSERT(myPetFromFactory->getAge() == 3);
+text = dumper.dump(5);
+ASSERT(text == "5");
 ```
 
-Get field by name then get the value.
+Dump a boolean.
 
 ```c++
-const auto & propertyName = metaClass->getAccessible("name");
-ASSERT(metapp::accessibleGet(propertyName, myPet).get<const std::string &>() == "Lovely");
-const auto & propertyAge = metaClass->getAccessible("age");
-ASSERT(metapp::accessibleGet(propertyAge, myPet).get<int>() == 3);
+text = dumper.dump(true);
+ASSERT(text == "true");
 ```
 
-Set field `name` with new value.
+Dump complicated data struct.
 
 ```c++
-metapp::accessibleSet(propertyName, myPet, "Cute");
-ASSERT(metapp::accessibleGet(propertyName, myPet).get<const std::string &>() == "Cute");
-```
-
-Get member function then invoke it.
-
-```c++
-const auto & methodBark = metaClass->getCallable("bark");
-ASSERT(metapp::callableInvoke(methodBark, myPet).get<const std::string &>() == "Bow-wow, Cute");
-
-const auto & methodCalculate = metaClass->getCallable("calculate");
-// Pass arguments 2 and 3 to `calculate`, the result is 2+3=5.
-ASSERT(metapp::callableInvoke(methodCalculate, myPet, 2, 3).get<int>() == 5);
-```
-
-<a id="mdtoc_afc73315"></a>
-### Runtime generic algorithm on STL container
-Let's define a `concat` function that processes any Variant that implements meta interface MetaIterable
-
-```c++
-std::string concat(const metapp::Variant & container)
-{
-  // `container` may contains a pointer such as T *. We use `metapp::depointer` to convert it to equivalent
-  // non-pointer such as T &, that eases the algorithm because we don't care pointer any more.
-  const metapp::Variant nonPointer = metapp::depointer(container);
-  const metapp::MetaIterable * metaIterable
-    = metapp::getNonReferenceMetaType(nonPointer)->getMetaIterable();
-  if(metaIterable == nullptr) {
-    return "";
-  }
-  std::stringstream stream;
-  metaIterable->forEach(nonPointer, [&stream](const metapp::Variant & item) {
-    stream << item;
-    return true;
-  });
-  return stream.str();
-}
-```
-
-A std::vector of int.
-
-```c++
-std::vector<int> container1 { 1, 5, 9, 6, 7 };
-```
-
-Construct a Variant with the vector. To avoid container1 being copied, we move the container1 into Variant.
-
-```c++
-metapp::Variant v1 = std::move(container1);
-ASSERT(container1.empty()); // container1 was moved
-```
-
-Concat the items in the vector.
-
-```c++
-ASSERT(concat(v1) == "15967");
-```
-
-We can also use std::list. Any value can convert to Variant implicitly, so we can pass the container std::list on the fly.
-
-```c++
-ASSERT(concat(std::list<std::string>{ "Hello", "World", "Good" }) == "HelloWorldGood");
-```
-
-std::tuple is supported too, and we can use heterogeneous types.
-
-```c++
-ASSERT(concat(std::make_tuple("A", 1, "B", 2)) == "A1B2");
-```
-
-Isn't it cool we can use std::pair as a container?
-
-```c++
-ASSERT(concat(std::make_pair("Number", 1)) == "Number1");
-```
-
-We can even pass a pointer to container to `concat`.
-
-```c++
-std::deque<int> container2 { 1, 2, 3 };
-ASSERT(concat(&container2) == "123");
-```
-
-<a id="mdtoc_b8048b76"></a>
-### Use reference with Variant
-Declare a value to be referred to.
-
-```c++
-int n = 9;
-```
-
-rn holds a reference to n.
-C++ equivalence is `int & rn = n;`
-
-```c++
-metapp::Variant rn = metapp::Variant::reference(n);
-ASSERT(rn.get<int>() == 9);
-```
-
-Assign to rn with new value. C++ equivalence is `rn = (int)38.1;` where rn is `int &`.
-Here we can't use `rn = 38.1;` where rn is `Variant`, that's different meaning.
-See Variant document for details.
-
-```c++
-rn.assign(38.1); // different with rn = 38.1, `rn = 38.1` won't modify n
-```
-
-rn gets new value.
-
-```c++
-ASSERT(rn.get<int>() == 38);
-```
-
-n is modified too.
-
-```c++
-ASSERT(n == 38);
-```
-
-We can use reference to modify container elements as well.  
-vs holds a `std::vector<std::string>`.
-
-```c++
-metapp::Variant vs(std::vector<std::string> { "Hello", "world" });
-ASSERT(vs.get<const std::vector<std::string> &>()[0] == "Hello");
-```
-
-Get the first element. The element is returned as a reference.
-
-```c++
-metapp::Variant item = metapp::indexableGet(vs, 0);
-```
-
-assign to item with new value.
-
-```c++
-item.assign("Good");
-ASSERT(vs.get<const std::vector<std::string> &>()[0] == "Good");
-```
-
-<a id="mdtoc_5095655f"></a>
-### Work with unreflected types
-Assume we have two types that we don't reflect for.
-
-```c++
-struct UnreflectedFoo { int f; };
-enum class UnreflectedBar { one, two };
-```
-
-Surely we can't get any member function or property information for the classes since they are not reflected.
-But at least we can,  
-1, Construct the object using default constructor.
-
-```c++
-std::unique_ptr<UnreflectedFoo> foo(static_cast<UnreflectedFoo *>(
-  metapp::getMetaType<UnreflectedFoo>()->construct()));
-ASSERT(foo->f == 0);
-```
-
-2, Copy construct the object.
-
-```c++
-foo->f = 38; // Change member value to prove the value is copied.
-std::unique_ptr<UnreflectedFoo> copiedFoo(static_cast<UnreflectedFoo *>(
-  metapp::getMetaType<UnreflectedFoo>()->copyConstruct(foo.get())));
-ASSERT(copiedFoo->f == 38);
-```
-
-3, Construct the object inplace.
-
-```c++
-UnreflectedFoo foo2 { 9 };
-ASSERT(foo2.f == 9);
-metapp::getMetaType<UnreflectedFoo>()->placementConstruct(&foo2);
-ASSERT(foo2.f == 0);
-```
-
-4, Copy construct the object inplace.
-
-```c++
-foo2.f = 38;
-UnreflectedFoo foo3 { 19 };
-ASSERT(foo3.f == 19);
-metapp::getMetaType<UnreflectedFoo>()->placementCopyConstruct(&foo3, &foo2);
-ASSERT(foo3.f == 38);
-```
-
-5, Destroy the object, if we dont' use RAII
-
-```c++
-void * foo5 = metapp::getMetaType<UnreflectedFoo>()->construct();
-// `destroy` knows the type of foo5 and can destroy the `void *` properly.
-metapp::getMetaType<UnreflectedFoo>()->destroy(foo5);
-```
-
-6, Identify the meta type
-
-```c++
-const UnreflectedFoo * fooPtr = &foo3;
-metapp::Variant varFoo = fooPtr;
-metapp::Variant varBar = UnreflectedBar();
-ASSERT(varBar.getMetaType()->equal(metapp::getMetaType<UnreflectedBar>()));
-ASSERT(varFoo.getMetaType()->isPointer());
-ASSERT(varFoo.getMetaType()->getUpType()->isConst());
-ASSERT(varFoo.getMetaType()->equal(metapp::getMetaType<const UnreflectedFoo *>()));
-ASSERT(varFoo.getMetaType()->getUpType()->equal(metapp::getMetaType<const UnreflectedFoo>()));
+text = dumper.dump(jsonpp::JsonObject {
+  { "first", "hello" },
+  { "second", nullptr },
+  { "third", std::vector<int> { 5, 6, 7 } },
+  { "fourth", jsonpp::JsonArray { "abc", 9.1 } },
+});
+// jsonpp::JsonObject is alias of std::map<std::string, metapp::Variant>, so the keys are sorted alphabetically.
+ASSERT(text == R"({"first":"hello","fourth":["abc",9.1],"second":null,"third":[5,6,7]})");
 ```
 
 <a id="mdtoc_aa76f386"></a>
