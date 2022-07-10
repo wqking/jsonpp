@@ -77,8 +77,20 @@ private:
 			return;
 		}
 		if(metapp::typeKindIsReal(typeKind)) {
-			const auto d = value.cast<double>().template get<double>();
-			output.writeNumber(d);
+			output.writeNumber(value.cast<JsonReal>().template get<JsonReal>());
+			return;
+		}
+		if(metaType->isEnum()) {
+			const auto enumValue = value.cast<JsonInt>().template get<JsonInt>();
+			if(config.allowNamedEnum() && metaType->hasMetaEnum()) {
+				const metapp::MetaEnum * metaEnum = metaType->getMetaEnum();
+				const metapp::MetaItem & metaItem = metaEnum->getByValue(enumValue);
+				if(! metaItem.isEmpty()) {
+					doDumpString(metaItem.getName());
+					return;
+				}
+			}
+			output.writeNumber(enumValue);
 			return;
 		}
 		{

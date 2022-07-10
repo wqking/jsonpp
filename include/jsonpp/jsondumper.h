@@ -27,6 +27,7 @@
 #include "metapp/interfaces/metaclass.h"
 #include "metapp/interfaces/metaindexable.h"
 #include "metapp/interfaces/metamappable.h"
+#include "metapp/interfaces/metaenum.h"
 #include "metapp/utilities/utility.h"
 #include "metapp/compiler.h"
 
@@ -50,17 +51,27 @@ public:
 	DumperConfig()
 		:
 			beautify(false),
-			indent("    ")
+			indent("    "),
+			namedEnum(false)
 	{
-	}
-
-	DumperConfig & setBeautify(const bool beautify_) {
-		beautify = beautify_;
-		return *this;
 	}
 
 	bool allowBeautify() const {
 		return beautify;
+	}
+
+	DumperConfig & enableBeautify(const bool enable) {
+		beautify = enable;
+		return *this;
+	}
+
+	bool allowNamedEnum() const {
+		return namedEnum;
+	}
+
+	DumperConfig & enableNamedEnum(const bool enable) {
+		namedEnum = enable;
+		return *this;
 	}
 
 	DumperConfig & setIndent(const std::string & indent_) {
@@ -83,6 +94,7 @@ public:
 private:
 	bool beautify;
 	std::string indent;
+	bool namedEnum;
 };
 
 class JsonDumper

@@ -102,13 +102,13 @@ void doBenchmarkDumpJson(const FileInfo & fileInfo, const bool beaufify)
 
 	metapp::Variant var = jsonpp::JsonParser().parse(jsonText);
 	const auto t = measureElapsedTime([&var, iterations, beaufify]() {
-		jsonpp::JsonDumper dumper(jsonpp::DumperConfig().setBeautify(beaufify));
+		jsonpp::JsonDumper dumper(jsonpp::DumperConfig().enableBeautify(beaufify));
 		for(int i = 0; i < iterations; ++i) {
 			dumper.dump(var);
 		}
 	});
 
-	const std::string dumpedText = jsonpp::JsonDumper(jsonpp::DumperConfig().setBeautify(beaufify)).dump(var);
+	const std::string dumpedText = jsonpp::JsonDumper(jsonpp::DumperConfig().enableBeautify(beaufify)).dump(var);
 	metapp::Variant newVar = jsonpp::JsonParser().parse(dumpedText);
 	REQUIRE(! newVar.isEmpty());
 

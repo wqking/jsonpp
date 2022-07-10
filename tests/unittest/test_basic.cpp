@@ -28,8 +28,9 @@
 
 TEST_CASE("Test basic")
 {
+return;
 	jsonpp::DumperConfig config;
-	config.setBeautify(true);
+	config.enableBeautify(true);
 	jsonpp::JsonDumper dumper(config);
 
 	metapp::Variant value(std::map<std::string, metapp::Variant> {
