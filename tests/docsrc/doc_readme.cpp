@@ -16,9 +16,11 @@
 
 #include "testutil.h"
 
+#include "jsonpp/macros.h"
+
 #include "metapp/allmetatypes.h"
-#include "metapp/interfaces/metaiterable.h"
 #include "metapp/interfaces/metaclass.h"
+#include "metapp/interfaces/metaenum.h"
 
 #include <cstring>
 #include <sstream>
@@ -41,12 +43,14 @@ jsonpp is a cross platform C++ json library, focusing on easy to use.
   - Reflecting meta data for class is very easy. 
 
 - **Reusable meta data**. jsonpp uses meta data from [C++ reflection library metapp](https://github.com/wqking/metapp) that's developed
-by the same developer of jsonpp, which is not only not special to jsonpp, but also general enough to use for other purpose
-such as serialization, script binding, etc.
+by the same developer (wqking) of jsonpp, which is not only not special to jsonpp, but also general enough to use for other purpose
+such as serialization, script binding, etc. You don't build data or spend time for jsonpp, you invest for a potential ecosystem
+with bright future.
 
 - **Multiple parser backends**. jsonpp uses existing matured and well tested JSON parser libraries as the parser backend, such as
 [json-parser](https://github.com/json-parser/json-parser) and [simdjson 2.2.0](https://github.com/simdjson/simdjson).
-That means you can choose the best backend to achieve your goals.  
+That means you can choose the best viable backend to achieve your goals and avoid the backends that make you trouble. Also adding
+new backend is very easy.
 
 - **Decent performance**. Performance is not jsonpp strength and it's not close to high performance JSON libraries such as
 simdjson. However, the performance is better than some existing popular JSON libraries which also focus on usability, thanks to
@@ -193,6 +197,146 @@ ExampleFunc
 	//code
 }
 
+//desc ### Dump/parse class object
+//desc Now let's dump and parse customized class objects. First let's define the enum and classes we will use later.
+
+//code
+enum class Gender
+{
+	female,
+	male
+};
+
+struct Skill
+{
+	std::string name;
+	int level;
+};
+
+struct Person
+{
+	std::string name;
+	Gender gender;
+	int age;
+	std::vector<Skill> skills;
+};
+
+//desc Now make the enum and class information availabe to metapp. jsonpp uses the reflection information from metapp.
+//desc The information is not special to jsonpp, it's general purpose reflection and can be used for other purposes such
+//desc as serialization, script binding, etc.
+template <>
+struct metapp::DeclareMetaType <Gender> : metapp::DeclareMetaTypeBase <Gender>
+{
+	static const metapp::MetaEnum * getMetaEnum() {
+		static const metapp::MetaEnum metaEnum([](metapp::MetaEnum & me) {
+				me.registerValue("female", Gender::female);
+				me.registerValue("male", Gender::male);
+			}
+		);
+		return &metaEnum;
+	}
+};
+
+template <>
+struct metapp::DeclareMetaType <Skill> : metapp::DeclareMetaTypeBase <Skill>
+{
+	static const metapp::MetaClass * getMetaClass() {
+		static const metapp::MetaClass metaClass(
+			metapp::getMetaType<Skill>(),
+			[](metapp::MetaClass & mc) {
+				mc.registerAccessible("name", &Skill::name);
+				mc.registerAccessible("level", &Skill::level);
+			}
+		);
+		return &metaClass;
+	}
+};
+
+// I don't encourage to use macros and I don't provide macros in metapp library.
+// But for jsonpp users that don't want to dig into metapp and only want to the jsonpp features,
+// jsonpp provides macros to ease the meta type declaration.
+// Note: the macros are not required by jsonpp. The code can be rewritten without macros, as how Skill is declared above.
+JSONPP_BEGIN_DECLARE_CLASS(Person)
+	JSONPP_REGISTER_CLASS_FIELD(name)
+	JSONPP_REGISTER_CLASS_FIELD(gender)
+	JSONPP_REGISTER_CLASS_FIELD(age)
+	JSONPP_REGISTER_CLASS_FIELD(skills)
+JSONPP_END_DECLARE_CLASS()
+
+//code
+
+bool operator == (const Skill & a, const Skill & b)
+{
+	return a.name == b.name && a.level == b.level;
+}
+
+bool operator == (const Person & a, const Person & b)
+{
+	return a.name == b.name
+		&& a.gender == b.gender
+		&& a.age == b.age
+		&& a.skills == b.skills
+	;
+}
+
+ExampleFunc
+{
+	//code
+	//desc Now let's dump `person` to text, then parse the text back to `Person` object.
+	//desc `enableNamedEnum(true)` will use the name such as "female" for the Gender enum, instead of numbers such as 0.
+	//desc This allows the enum value change without breaking the dumped object.
+	Person person { "Mary", Gender::female, 26, { { "Writing", 8 }, { "Cooking", 6 } } };
+	jsonpp::JsonDumper dumper(jsonpp::DumperConfig().enableBeautify(true).enableNamedEnum(true));
+	// We don't user `person` any more, so we can move it to `dump` to avoid copying.
+	const std::string jsonText = dumper.dump(std::move(person));
+	/*desc
+	The jsonText looks like,
+```
+{
+    "name": "Mary",
+    "gender": "female",
+    "age": 26,
+    "skills": [
+        {
+            "name": "Writing",
+            "level": 8
+        },
+        {
+            "name": "Cooking",
+            "level": 6
+        }
+    ]
+}
+```
+	desc*/
+	//desc Now let's parse the JSON text back to Person object, and verify the values.
+	jsonpp::JsonParser parser;
+	const Person parsedPerson = parser.parse<Person>(jsonText);
+	ASSERT(parsedPerson.name == "Mary");
+	ASSERT(parsedPerson.gender == Gender::female);
+	ASSERT(parsedPerson.age == 26);
+	ASSERT(parsedPerson.skills[0].name == "Writing");
+	ASSERT(parsedPerson.skills[0].level == 8);
+	ASSERT(parsedPerson.skills[1].name == "Cooking");
+	ASSERT(parsedPerson.skills[1].level == 6);
+	//code
+}
+
+ExampleFunc
+{
+	//code
+	//desc We can not only dump/parse a single object, but also any STL containers with the objects.
+	Person personAlice { "Alice", Gender::female, 28, { { "Excel", 7 }, { "Word", 8 } } };
+	Person personTom { "Tom", Gender::male, 29, { { "C++", 9 }, { "Python", 10 }, { "PHP", 7 } } };
+	jsonpp::JsonDumper dumper(jsonpp::DumperConfig().enableBeautify(true).enableNamedEnum(true));
+	const std::string jsonText = dumper.dump(std::vector<Person>{ personAlice, personTom });
+	jsonpp::JsonParser parser;
+	const std::vector<Person> parsedPersons = parser.parse<std::vector<Person> >(jsonText);
+	ASSERT(parsedPersons[0] == personAlice);
+	ASSERT(parsedPersons[1] == personTom);
+	//code
+}
+
 /*desc
 ## Documentations
 Below are tutorials and documents. Don't feel upset if you find issues or missing stuff in the documents, I'm not
@@ -220,23 +364,5 @@ Go to folder `tests/build`, then run `make` with different target.
 - `make mingw` #build using MinGW
 - `make linux` #build on Linux
 - `make mingw_coverage` #build using MinGW and generate code coverage report
-
-## Known compiler related quirks in MSVC
-
-MSVC 2022 and 2019, can build the CMake generated test projects and the tests run correctly in Debug and RelWithDebugInfo
-configurations. But some tests fail in Release mode when incremental linking is disabled.  
-Those failed tests should not fail, because they work correct in MSVC debug mode and in GCC/Clang.
-Adding /Debug option to linking which generates debug information makes the tests success.  
-Without /Debug option, but enabling incremental linking, will cause the tests success too.  
-So if metapp shows weird behavior in MSVC, try to enable incremental linking.
-
-## Motivations
-
-I (wqking) developed `cpgf` library since more than 12 years ago. `cpgf` works, but it has several serious problems.
-The first problem is it was written in C++03, the code is verbose and difficult to write. The second problem is that
-it includes too many features in a single library -- reflection, serialization, script binding (Lua, Python, JavaScript).
-`cpgf` became unmanageable and can't be developed in an elegant way.  
-`metapp` is a fresh library that only focuses on reflection. Other features, such as serialization,
-script binding, will be in separated projects, if they are developed.
 
 desc*/
