@@ -14,8 +14,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef JSONPP_JSONDUMPER_H_821598293712
-#define JSONPP_JSONDUMPER_H_821598293712
+#ifndef JSONPP_DUMPER_H_821598293712
+#define JSONPP_DUMPER_H_821598293712
 
 #include "jsonpp/common.h"
 
@@ -41,7 +41,7 @@ namespace jsonpp {
 namespace internal_ {
 
 template <typename Output>
-class JsonDumperImplement;
+class DumperImplement;
 
 } // namespace internal_
 
@@ -97,18 +97,18 @@ private:
 	bool namedEnum;
 };
 
-class JsonDumper
+class Dumper
 {
 public:
-	JsonDumper();
-	explicit JsonDumper(const DumperConfig & config);
-	~JsonDumper();
+	Dumper();
+	explicit Dumper(const DumperConfig & config);
+	~Dumper();
 
 	std::string dump(const metapp::Variant & value);
 
 	template <typename Writer>
 	void dump(const metapp::Variant & value, const Writer & writer) {
-		internal_::JsonDumperImplement<Writer>(config, writer).dump(value);
+		internal_::DumperImplement<Writer>(config, writer).dump(value);
 	}
 
 private:
@@ -118,6 +118,6 @@ private:
 
 } // namespace jsonpp
 
-#include "implement/jsondumper_impl.h"
+#include "implement/dumper_impl.h"
 
 #endif

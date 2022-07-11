@@ -19,7 +19,7 @@
 
 #include "test.h"
 
-#include "jsonpp/jsonparser.h"
+#include "jsonpp/parser.h"
 
 #define PARSER_TYPES() GENERATE(jsonpp::ParserType::cparser, jsonpp::ParserType::simdjson)
 

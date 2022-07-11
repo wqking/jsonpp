@@ -14,8 +14,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef JSONPP_JSONDUMPER_IMPL_H_821598293712
-#define JSONPP_JSONDUMPER_IMPL_H_821598293712
+#ifndef JSONPP_DUMPER_IMPL_H_821598293712
+#define JSONPP_DUMPER_IMPL_H_821598293712
 
 #include "metapp/variant.h"
 
@@ -29,10 +29,10 @@ namespace jsonpp {
 namespace internal_ {
 
 template <typename Output>
-class JsonDumperImplement
+class DumperImplement
 {
 public:
-	JsonDumperImplement(const DumperConfig & config, const Output & output)
+	DumperImplement(const DumperConfig & config, const Output & output)
 		: config(config), output(output), indentList(), buffer()
 	{
 	}

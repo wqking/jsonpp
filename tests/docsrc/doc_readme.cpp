@@ -131,21 +131,21 @@ desc*/
 //desc ### Parse JSON text
 
 //code
-//desc Header for JsonParser
-#include "jsonpp/jsonparser.h"
+//desc Header for Parser
+#include "jsonpp/parser.h"
 //code
 
 ExampleFunc
 {
 	//code
 	//desc Create a parser with default configuration and default backend which is simdjson.
-	jsonpp::JsonParser parser;
+	jsonpp::Parser parser;
 	//desc This is the JSON we are going to parse.
 	const std::string jsonText = R"(
 		[ 5, "abc", true, null, 3.14, [ 1, 2, 3 ], { "one": 1, "two": 2 } ]
 	)";
 	//desc Parse the JSON, the result is a `metapp::Variant`.
-	metapp::Variant var = parser.parse(jsonText);
+	const metapp::Variant var = parser.parse(jsonText);
 	//desc The result is an array.
 	ASSERT(jsonpp::getJsonType(var) == jsonpp::JsonType::jtArray);
 	//desc Get the underlying array. jsonpp::JsonArray is alias of `std::vector<metapp::Variant>`
@@ -169,8 +169,8 @@ ExampleFunc
 //desc ### Dump JSON object to text (stringify)
 
 //code
-//desc Header for JsonDumper
-#include "jsonpp/jsondumper.h"
+//desc Header for Dumper
+#include "jsonpp/dumper.h"
 //code
 
 ExampleFunc
@@ -178,7 +178,7 @@ ExampleFunc
 	//code
 	std::string text;
 	//desc Create a dumper with default configuration.
-	jsonpp::JsonDumper dumper;
+	jsonpp::Dumper dumper;
 	//desc Dump a simple integer.
 	text = dumper.dump(5);
 	ASSERT(text == "5");
@@ -222,7 +222,7 @@ struct Person
 };
 
 //desc Now make the enum and class information availabe to metapp. jsonpp uses the reflection information from metapp.
-//desc The information is not special to jsonpp, it's general purpose reflection and can be used for other purposes such
+//desc The information is not special to jsonpp, it's general reflection and can be used for other purposes such
 //desc as serialization, script binding, etc.
 template <>
 struct metapp::DeclareMetaType <Gender> : metapp::DeclareMetaTypeBase <Gender>
@@ -286,7 +286,7 @@ ExampleFunc
 	//desc `enableNamedEnum(true)` will use the name such as "female" for the Gender enum, instead of numbers such as 0.
 	//desc This allows the enum value change without breaking the dumped object.
 	Person person { "Mary", Gender::female, 26, { { "Writing", 8 }, { "Cooking", 6 } } };
-	jsonpp::JsonDumper dumper(jsonpp::DumperConfig().enableBeautify(true).enableNamedEnum(true));
+	jsonpp::Dumper dumper(jsonpp::DumperConfig().enableBeautify(true).enableNamedEnum(true));
 	// We don't user `person` any more, so we can move it to `dump` to avoid copying.
 	const std::string jsonText = dumper.dump(std::move(person));
 	/*desc
@@ -310,7 +310,7 @@ ExampleFunc
 ```
 	desc*/
 	//desc Now let's parse the JSON text back to Person object, and verify the values.
-	jsonpp::JsonParser parser;
+	jsonpp::Parser parser;
 	const Person parsedPerson = parser.parse<Person>(jsonText);
 	ASSERT(parsedPerson.name == "Mary");
 	ASSERT(parsedPerson.gender == Gender::female);
@@ -328,9 +328,11 @@ ExampleFunc
 	//desc We can not only dump/parse a single object, but also any STL containers with the objects.
 	Person personAlice { "Alice", Gender::female, 28, { { "Excel", 7 }, { "Word", 8 } } };
 	Person personTom { "Tom", Gender::male, 29, { { "C++", 9 }, { "Python", 10 }, { "PHP", 7 } } };
-	jsonpp::JsonDumper dumper(jsonpp::DumperConfig().enableBeautify(true).enableNamedEnum(true));
-	const std::string jsonText = dumper.dump(std::vector<Person>{ personAlice, personTom });
-	jsonpp::JsonParser parser;
+
+	jsonpp::Dumper dumper(jsonpp::DumperConfig().enableBeautify(true).enableNamedEnum(true));
+	const std::string jsonText = dumper.dump(std::vector<Person> { personAlice, personTom });
+	
+	jsonpp::Parser parser;
 	const std::vector<Person> parsedPersons = parser.parse<std::vector<Person> >(jsonText);
 	ASSERT(parsedPersons[0] == personAlice);
 	ASSERT(parsedPersons[1] == personTom);

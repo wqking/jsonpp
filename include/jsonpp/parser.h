@@ -14,8 +14,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef JSONPP_JSONPARSER_H_821598293712
-#define JSONPP_JSONPARSER_H_821598293712
+#ifndef JSONPP_PARSER_H_821598293712
+#define JSONPP_PARSER_H_821598293712
 
 #include "jsonpp/common.h"
 
@@ -92,7 +92,7 @@ private:
 	const metapp::MetaType * objectType;
 };
 
-class JsonParserSource
+class ParserSource
 {
 private:
 	enum class StorageType {
@@ -102,10 +102,10 @@ private:
 	};
 
 public:
-	JsonParserSource();
-	JsonParserSource(const char * cstr, const std::size_t cstrLength);
-	explicit JsonParserSource(const std::string & str);
-	explicit JsonParserSource(std::string && str);
+	ParserSource();
+	ParserSource(const char * cstr, const std::size_t cstrLength);
+	explicit ParserSource(const std::string & str);
+	explicit ParserSource(std::string && str);
 
 	const char * getText() const;
 	std::size_t getTextLength() const;
@@ -130,24 +130,24 @@ private:
 	mutable const std::string * ref;
 	mutable std::string str;
 
-	friend class JsonParser;
+	friend class Parser;
 };
 
-class JsonParser
+class Parser
 {
 public:
-	JsonParser();
-	explicit JsonParser(const ParserConfig & config);
-	explicit JsonParser(const ParserType parserType);
-	JsonParser(const ParserConfig & config, const ParserType parserType);
-	~JsonParser();
+	Parser();
+	explicit Parser(const ParserConfig & config);
+	explicit Parser(const ParserType parserType);
+	Parser(const ParserConfig & config, const ParserType parserType);
+	~Parser();
 
 	bool hasError() const;
 	std::string getError() const;
 
 	metapp::Variant parse(const char * jsonText, const std::size_t length, const metapp::MetaType * proto = nullptr);
 	metapp::Variant parse(const std::string & jsonText, const metapp::MetaType * proto = nullptr);
-	metapp::Variant parse(const JsonParserSource & source, const metapp::MetaType * proto = nullptr);
+	metapp::Variant parse(const ParserSource & source, const metapp::MetaType * proto = nullptr);
 
 	template <typename T>
 	T parse(const char * jsonText, const std::size_t length) {
@@ -168,7 +168,7 @@ public:
 	}
 
 	template <typename T>
-	T parse(const JsonParserSource & source) {
+	T parse(const ParserSource & source) {
 		const metapp::Variant result = parse(source, metapp::getMetaType<T>());
 		if(hasError()) {
 			return T();

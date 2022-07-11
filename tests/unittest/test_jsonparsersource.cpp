@@ -16,27 +16,27 @@
 
 #include "test.h"
 #define private public
-#include "jsonpp/jsonparser.h"
+#include "jsonpp/parser.h"
 
-TEST_CASE("JsonParserSource, empty")
+TEST_CASE("ParserSource, empty")
 {
 	SECTION("storage type") {
-		REQUIRE(jsonpp::JsonParserSource().storageType == jsonpp::JsonParserSource::StorageType::string);
+		REQUIRE(jsonpp::ParserSource().storageType == jsonpp::ParserSource::StorageType::string);
 	}
 }
 
-TEST_CASE("JsonParserSource, c string")
+TEST_CASE("ParserSource, c string")
 {
 	SECTION("storage type") {
 		const char * s = "a";
-		REQUIRE(jsonpp::JsonParserSource(s, 1).storageType == jsonpp::JsonParserSource::StorageType::cstr);
+		REQUIRE(jsonpp::ParserSource(s, 1).storageType == jsonpp::ParserSource::StorageType::cstr);
 	}
 
 	SECTION("attributes") {
 		const char * s = "abcdef";
 		const auto len = 6;
-		auto source = jsonpp::JsonParserSource(s, len);
-		REQUIRE(source.storageType == jsonpp::JsonParserSource::StorageType::cstr);
+		auto source = jsonpp::ParserSource(s, len);
+		REQUIRE(source.storageType == jsonpp::ParserSource::StorageType::cstr);
 		REQUIRE(source.getText() == s);
 		REQUIRE(source.getTextLength() == len);
 		REQUIRE(source.getCapacity() == len);
@@ -45,10 +45,10 @@ TEST_CASE("JsonParserSource, c string")
 	SECTION("pad") {
 		const char * s = "abcdef";
 		const auto len = 6;
-		auto source = jsonpp::JsonParserSource(s, len);
-		REQUIRE(source.storageType == jsonpp::JsonParserSource::StorageType::cstr);
+		auto source = jsonpp::ParserSource(s, len);
+		REQUIRE(source.storageType == jsonpp::ParserSource::StorageType::cstr);
 		source.pad(32);
-		REQUIRE(source.storageType == jsonpp::JsonParserSource::StorageType::string);
+		REQUIRE(source.storageType == jsonpp::ParserSource::StorageType::string);
 		REQUIRE(source.getText() == &source.str[0]);
 		REQUIRE(source.str == s);
 		REQUIRE(source.getTextLength() == len);
@@ -57,17 +57,17 @@ TEST_CASE("JsonParserSource, c string")
 	}
 }
 
-TEST_CASE("JsonParserSource, ref")
+TEST_CASE("ParserSource, ref")
 {
 	SECTION("storage type") {
 		const std::string s;
-		REQUIRE(jsonpp::JsonParserSource(s).storageType == jsonpp::JsonParserSource::StorageType::ref);
+		REQUIRE(jsonpp::ParserSource(s).storageType == jsonpp::ParserSource::StorageType::ref);
 	}
 
 	SECTION("attributes") {
 		const std::string s = "abcdef";
-		auto source = jsonpp::JsonParserSource(s);
-		REQUIRE(source.storageType == jsonpp::JsonParserSource::StorageType::ref);
+		auto source = jsonpp::ParserSource(s);
+		REQUIRE(source.storageType == jsonpp::ParserSource::StorageType::ref);
 		REQUIRE(source.getText() == &s[0]);
 		REQUIRE(source.getTextLength() == s.size());
 		REQUIRE(source.getCapacity() >= s.size());
@@ -75,10 +75,10 @@ TEST_CASE("JsonParserSource, ref")
 
 	SECTION("pad") {
 		const std::string s = "abcdef";
-		auto source = jsonpp::JsonParserSource(s);
-		REQUIRE(source.storageType == jsonpp::JsonParserSource::StorageType::ref);
+		auto source = jsonpp::ParserSource(s);
+		REQUIRE(source.storageType == jsonpp::ParserSource::StorageType::ref);
 		source.pad(32);
-		REQUIRE(source.storageType == jsonpp::JsonParserSource::StorageType::string);
+		REQUIRE(source.storageType == jsonpp::ParserSource::StorageType::string);
 		REQUIRE(source.getText() == &source.str[0]);
 		REQUIRE(source.str == s);
 		REQUIRE(source.getTextLength() == s.size());
@@ -86,25 +86,25 @@ TEST_CASE("JsonParserSource, ref")
 	}
 }
 
-TEST_CASE("JsonParserSource, std::string")
+TEST_CASE("ParserSource, std::string")
 {
 	SECTION("storage type") {
-		REQUIRE(jsonpp::JsonParserSource(std::string()).storageType == jsonpp::JsonParserSource::StorageType::string);
+		REQUIRE(jsonpp::ParserSource(std::string()).storageType == jsonpp::ParserSource::StorageType::string);
 		std::string s;
-		REQUIRE(jsonpp::JsonParserSource(std::move(s)).storageType == jsonpp::JsonParserSource::StorageType::string);
+		REQUIRE(jsonpp::ParserSource(std::move(s)).storageType == jsonpp::ParserSource::StorageType::string);
 	}
 
 	SECTION("attributes") {
-		auto source = jsonpp::JsonParserSource(std::string("abcdef"));
-		REQUIRE(source.storageType == jsonpp::JsonParserSource::StorageType::string);
+		auto source = jsonpp::ParserSource(std::string("abcdef"));
+		REQUIRE(source.storageType == jsonpp::ParserSource::StorageType::string);
 		REQUIRE(source.getText() == &source.str[0]);
 		REQUIRE(source.getTextLength() == 6);
 		REQUIRE(source.getCapacity() >= 6);
 	}
 
 	SECTION("pad") {
-		auto source = jsonpp::JsonParserSource(std::string("abcdef"));
-		REQUIRE(source.storageType == jsonpp::JsonParserSource::StorageType::string);
+		auto source = jsonpp::ParserSource(std::string("abcdef"));
+		REQUIRE(source.storageType == jsonpp::ParserSource::StorageType::string);
 		source.pad(32);
 		REQUIRE(source.getText() == &source.str[0]);
 		REQUIRE(source.getTextLength() == 6);

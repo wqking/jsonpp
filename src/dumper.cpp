@@ -14,7 +14,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "jsonpp/jsondumper.h"
+#include "jsonpp/dumper.h"
 #include "jsonpp/textoutput.h"
 
 #include "metapp/allmetatypes.h"
@@ -82,21 +82,21 @@ const std::array<EscapeItem, escapeItemListSize> escapeItemList {{
 const EscapeItem escapeItemQuoteMark = { "\\\"", 2 };
 const EscapeItem escapeItemBackSlash = { "\\\\", 2 };
 
-JsonDumper::JsonDumper()
-	: JsonDumper(DumperConfig())
+Dumper::Dumper()
+	: Dumper(DumperConfig())
 {
 }
 
-JsonDumper::JsonDumper(const DumperConfig & config)
+Dumper::Dumper(const DumperConfig & config)
 	: config(config)
 {
 }
 
-JsonDumper::~JsonDumper()
+Dumper::~Dumper()
 {
 }
 
-std::string JsonDumper::dump(const metapp::Variant & value)
+std::string Dumper::dump(const metapp::Variant & value)
 {
 	StringWriter outputter;
 	dump(value, TextOutput<StringWriter>(config, outputter));

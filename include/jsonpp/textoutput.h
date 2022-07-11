@@ -19,7 +19,7 @@
 
 #include "implement/algorithms_i.h"
 #include "drachennest/dragonbox.h"
-#include "jsonpp/jsondumper.h"
+#include "jsonpp/dumper.h"
 
 #include <memory>
 #include <vector>

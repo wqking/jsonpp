@@ -14,7 +14,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "jsonpp/jsonparser.h"
+#include "jsonpp/parser.h"
 #include "jsonpp/parserbackend.h"
 
 #include "metapp/allmetatypes.h"
@@ -68,7 +68,7 @@ std::string getParserTypeName(const ParserType type)
 	return "Unknown";
 }
 
-JsonParserSource::JsonParserSource()
+ParserSource::ParserSource()
 	:
 		prepared(false),
 		storageType(StorageType::string),
@@ -79,7 +79,7 @@ JsonParserSource::JsonParserSource()
 {
 }
 
-JsonParserSource::JsonParserSource(const char * cstr, const std::size_t cstrLength)
+ParserSource::ParserSource(const char * cstr, const std::size_t cstrLength)
 	:
 		prepared(false),
 		storageType(StorageType::cstr),
@@ -90,7 +90,7 @@ JsonParserSource::JsonParserSource(const char * cstr, const std::size_t cstrLeng
 {
 }
 
-JsonParserSource::JsonParserSource(const std::string & str)
+ParserSource::ParserSource(const std::string & str)
 	:
 		prepared(false),
 		storageType(StorageType::ref),
@@ -101,7 +101,7 @@ JsonParserSource::JsonParserSource(const std::string & str)
 {
 }
 
-JsonParserSource::JsonParserSource(std::string && str)
+ParserSource::ParserSource(std::string && str)
 	:
 		prepared(false),
 		storageType(StorageType::string),
@@ -112,7 +112,7 @@ JsonParserSource::JsonParserSource(std::string && str)
 {
 }
 
-const char * JsonParserSource::getText() const
+const char * ParserSource::getText() const
 {
 	switch(storageType) {
 	case StorageType::cstr:
@@ -126,7 +126,7 @@ const char * JsonParserSource::getText() const
 	}
 }
 
-std::size_t JsonParserSource::getTextLength() const
+std::size_t ParserSource::getTextLength() const
 {
 	switch(storageType) {
 	case StorageType::cstr:
@@ -140,7 +140,7 @@ std::size_t JsonParserSource::getTextLength() const
 	}
 }
 
-std::size_t JsonParserSource::getCapacity() const
+std::size_t ParserSource::getCapacity() const
 {
 	switch(storageType) {
 	case StorageType::cstr:
@@ -154,7 +154,7 @@ std::size_t JsonParserSource::getCapacity() const
 	}
 }
 
-void JsonParserSource::pad(const std::size_t size) const
+void ParserSource::pad(const std::size_t size) const
 {
 	switch(storageType) {
 	case StorageType::cstr: {
@@ -188,51 +188,51 @@ void JsonParserSource::pad(const std::size_t size) const
 	}
 }
 
-JsonParser::JsonParser()
-	: JsonParser(ParserConfig())
+Parser::Parser()
+	: Parser(ParserConfig())
 {
 }
 
-JsonParser::JsonParser(const ParserConfig & config)
-	: JsonParser(config, ParserType::simdjson)
+Parser::Parser(const ParserConfig & config)
+	: Parser(config, ParserType::simdjson)
 {
 }
 
-JsonParser::JsonParser(const ParserType parserType)
-	: JsonParser(ParserConfig(), parserType)
+Parser::Parser(const ParserType parserType)
+	: Parser(ParserConfig(), parserType)
 {
 }
 
-JsonParser::JsonParser(const ParserConfig & config, const ParserType parserType)
+Parser::Parser(const ParserConfig & config, const ParserType parserType)
 	: backend(internal_::createBackend(config, parserType))
 {
 }
 
-JsonParser::~JsonParser()
+Parser::~Parser()
 {
 }
 
-bool JsonParser::hasError() const
+bool Parser::hasError() const
 {
 	return backend->hasError();
 }
 
-std::string JsonParser::getError() const
+std::string Parser::getError() const
 {
 	return backend->getError();
 }
 
-metapp::Variant JsonParser::parse(const char * jsonText, const std::size_t length, const metapp::MetaType * proto)
+metapp::Variant Parser::parse(const char * jsonText, const std::size_t length, const metapp::MetaType * proto)
 {
-	return parse(JsonParserSource(jsonText, length), proto);
+	return parse(ParserSource(jsonText, length), proto);
 }
 
-metapp::Variant JsonParser::parse(const std::string & jsonText, const metapp::MetaType * proto)
+metapp::Variant Parser::parse(const std::string & jsonText, const metapp::MetaType * proto)
 {
-	return parse(JsonParserSource(jsonText), proto);
+	return parse(ParserSource(jsonText), proto);
 }
 
-metapp::Variant JsonParser::parse(const JsonParserSource & source, const metapp::MetaType * proto)
+metapp::Variant Parser::parse(const ParserSource & source, const metapp::MetaType * proto)
 {
 	if(! source.hasPrepared()) {
 		source.setAsPrepared();

@@ -131,16 +131,16 @@ To do so, replace `cmake ..` with `cmake .. -DCMAKE_INSTALL_PREFIX="YOUR_NEW_LIB
 
 <a id="mdtoc_f277719e"></a>
 ### Parse JSON text
-Header for JsonParser
+Header for Parser
 
 ```c++
-#include "jsonpp/jsonparser.h"
+#include "jsonpp/parser.h"
 ```
 
 Create a parser with default configuration and default backend which is simdjson.
 
 ```c++
-jsonpp::JsonParser parser;
+jsonpp::Parser parser;
 ```
 
 This is the JSON we are going to parse.
@@ -154,7 +154,7 @@ const std::string jsonText = R"(
 Parse the JSON, the result is a `metapp::Variant`.
 
 ```c++
-metapp::Variant var = parser.parse(jsonText);
+const metapp::Variant var = parser.parse(jsonText);
 ```
 
 The result is an array.
@@ -188,10 +188,10 @@ ASSERT(nestedObject["two"].get<jsonpp::JsonInt>() == 2);
 
 <a id="mdtoc_a4e21f76"></a>
 ### Dump JSON object to text (stringify)
-Header for JsonDumper
+Header for Dumper
 
 ```c++
-#include "jsonpp/jsondumper.h"
+#include "jsonpp/dumper.h"
 ```
 
 ```c++
@@ -201,7 +201,7 @@ std::string text;
 Create a dumper with default configuration.
 
 ```c++
-jsonpp::JsonDumper dumper;
+jsonpp::Dumper dumper;
 ```
 
 Dump a simple integer.
@@ -258,7 +258,7 @@ struct Person
 ```
 
 Now make the enum and class information availabe to metapp. jsonpp uses the reflection information from metapp.
-The information is not special to jsonpp, it's general purpose reflection and can be used for other purposes such
+The information is not special to jsonpp, it's general reflection and can be used for other purposes such
 as serialization, script binding, etc.
 
 ```c++
@@ -308,7 +308,7 @@ This allows the enum value change without breaking the dumped object.
 
 ```c++
 Person person { "Mary", Gender::female, 26, { { "Writing", 8 }, { "Cooking", 6 } } };
-jsonpp::JsonDumper dumper(jsonpp::DumperConfig().enableBeautify(true).enableNamedEnum(true));
+jsonpp::Dumper dumper(jsonpp::DumperConfig().enableBeautify(true).enableNamedEnum(true));
 // We don't user `person` any more, so we can move it to `dump` to avoid copying.
 const std::string jsonText = dumper.dump(std::move(person));
 ```
@@ -335,7 +335,7 @@ The jsonText looks like,
 Now let's parse the JSON text back to Person object, and verify the values.
 
 ```c++
-jsonpp::JsonParser parser;
+jsonpp::Parser parser;
 const Person parsedPerson = parser.parse<Person>(jsonText);
 ASSERT(parsedPerson.name == "Mary");
 ASSERT(parsedPerson.gender == Gender::female);
@@ -351,9 +351,11 @@ We can not only dump/parse a single object, but also any STL containers with the
 ```c++
 Person personAlice { "Alice", Gender::female, 28, { { "Excel", 7 }, { "Word", 8 } } };
 Person personTom { "Tom", Gender::male, 29, { { "C++", 9 }, { "Python", 10 }, { "PHP", 7 } } };
-jsonpp::JsonDumper dumper(jsonpp::DumperConfig().enableBeautify(true).enableNamedEnum(true));
-const std::string jsonText = dumper.dump(std::vector<Person>{ personAlice, personTom });
-jsonpp::JsonParser parser;
+
+jsonpp::Dumper dumper(jsonpp::DumperConfig().enableBeautify(true).enableNamedEnum(true));
+const std::string jsonText = dumper.dump(std::vector<Person> { personAlice, personTom });
+
+jsonpp::Parser parser;
 const std::vector<Person> parsedPersons = parser.parse<std::vector<Person> >(jsonText);
 ASSERT(parsedPersons[0] == personAlice);
 ASSERT(parsedPersons[1] == personTom);

@@ -38,9 +38,9 @@ public:
 	virtual bool hasError() const = 0;
 	virtual std::string getError() const = 0;
 
-	virtual metapp::Variant parse(const JsonParserSource & source, const metapp::MetaType * proto) = 0;
+	virtual metapp::Variant parse(const ParserSource & source, const metapp::MetaType * proto) = 0;
 
-	virtual void prepareSource(const JsonParserSource & /*source*/) const {
+	virtual void prepareSource(const ParserSource & /*source*/) const {
 	}
 
 private:

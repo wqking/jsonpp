@@ -17,8 +17,8 @@
 #include "test_parser.h"
 #include "classes.h"
 
-#include "jsonpp/jsonparser.h"
-#include "jsonpp/jsondumper.h"
+#include "jsonpp/parser.h"
+#include "jsonpp/dumper.h"
 #include "metapp/interfaces/metaindexable.h"
 #include "metapp/allmetatypes.h"
 
@@ -31,7 +31,7 @@ TEST_CASE("Test basic")
 return;
 	jsonpp::DumperConfig config;
 	config.enableBeautify(true);
-	jsonpp::JsonDumper dumper(config);
+	jsonpp::Dumper dumper(config);
 
 	metapp::Variant value(std::map<std::string, metapp::Variant> {
 		{ "first",  std::vector<metapp::Variant> {
@@ -51,7 +51,7 @@ return;
 	const std::string text = dumper.dump(value);
 	std::cout << text << std::endl;
 
-	jsonpp::JsonParser parser;
+	jsonpp::Parser parser;
 	metapp::Variant parsed = parser.parse(text);
 	const std::string text2 = dumper.dump(parsed);
 	std::cout << text2 << std::endl;

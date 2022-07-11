@@ -16,8 +16,8 @@
 
 #include "benchmark.h"
 
-#include "jsonpp/jsonparser.h"
-#include "jsonpp/jsondumper.h"
+#include "jsonpp/parser.h"
+#include "jsonpp/dumper.h"
 
 namespace {
 
@@ -27,7 +27,7 @@ BenchmarkFunc
 	constexpr int iterations = 1000 * 100;
 	const std::string jsonText = R"([ 5, { "b" : 38, "a" : "hello" } ])";
 	const auto t = measureElapsedTime([iterations, jsonText, parserType]() {
-		jsonpp::JsonParser parser(parserType);
+		jsonpp::Parser parser(parserType);
 		for(int i = 0; i < iterations; ++i) {
 			parser.parse(jsonText);
 		}

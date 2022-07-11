@@ -14,7 +14,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "jsonpp/jsonparser.h"
+#include "jsonpp/parser.h"
 #include "jsonpp/parserbackend.h"
 
 #if JSONPP_BACKEND_SIMDJSON
@@ -47,7 +47,7 @@ namespace internal_ {
 class BackendSimdjson : public ParserBackend
 {
 public:
-	void prepareSource(const JsonParserSource & source) const override {
+	void prepareSource(const ParserSource & source) const override {
 		source.pad(simdjson::SIMDJSON_PADDING);
 	}
 
@@ -61,7 +61,7 @@ public:
 	bool hasError() const override;
 	std::string getError() const override;
 
-	metapp::Variant parse(const JsonParserSource & source, const metapp::MetaType * proto) override;
+	metapp::Variant parse(const ParserSource & source, const metapp::MetaType * proto) override;
 
 private:
 	ParserConfig config;
@@ -163,7 +163,7 @@ struct SimdjsonDomImplement
 
 };
 
-metapp::Variant BackendSimdjsonDom::parse(const JsonParserSource & source, const metapp::MetaType * proto)
+metapp::Variant BackendSimdjsonDom::parse(const ParserSource & source, const metapp::MetaType * proto)
 {
 	errorString.clear();
 
@@ -198,7 +198,7 @@ public:
 	bool hasError() const override;
 	std::string getError() const override;
 
-	metapp::Variant parse(const JsonParserSource & source, const metapp::MetaType * proto) override;
+	metapp::Variant parse(const ParserSource & source, const metapp::MetaType * proto) override;
 
 private:
 	ParserConfig config;
@@ -327,7 +327,7 @@ struct SimdjsonOnDemandImplement
 
 };
 
-metapp::Variant BackendSimdjsonOnDemand::parse(const JsonParserSource & source, const metapp::MetaType * proto)
+metapp::Variant BackendSimdjsonOnDemand::parse(const ParserSource & source, const metapp::MetaType * proto)
 {
 	errorString.clear();
 

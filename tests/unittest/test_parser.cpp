@@ -22,13 +22,13 @@
 #include <unordered_map>
 #include <iostream>
 
-TEST_CASE("JsonParser, error")
+TEST_CASE("Parser, error")
 {
 	auto parserType = PARSER_TYPES();
 	const std::string jsonText = R"(
 		5, 6
 	)";
-	jsonpp::JsonParser parser(parserType);
+	jsonpp::Parser parser(parserType);
 	SECTION("parse") {
 		metapp::Variant var = parser.parse(jsonText);
 		REQUIRE(var.isEmpty());
@@ -41,10 +41,10 @@ TEST_CASE("JsonParser, error")
 	}
 }
 
-TEST_CASE("JsonParser, null")
+TEST_CASE("Parser, null")
 {
 	auto parserType = PARSER_TYPES();
-	jsonpp::JsonParser parser(parserType);
+	jsonpp::Parser parser(parserType);
 	const std::string jsonText = R"(
 		null
 	)";
@@ -59,10 +59,10 @@ TEST_CASE("JsonParser, null")
 	}
 }
 
-TEST_CASE("JsonParser, bool")
+TEST_CASE("Parser, bool")
 {
 	auto parserType = PARSER_TYPES();
-	jsonpp::JsonParser parser(parserType);
+	jsonpp::Parser parser(parserType);
 	SECTION("true") {
 		const std::string jsonText = R"(
 			true
@@ -88,10 +88,10 @@ TEST_CASE("JsonParser, bool")
 	}
 }
 
-TEST_CASE("JsonParser, int")
+TEST_CASE("Parser, int")
 {
 	auto parserType = PARSER_TYPES();
-	jsonpp::JsonParser parser(parserType);
+	jsonpp::Parser parser(parserType);
 	SECTION("positive") {
 		const std::string jsonText = R"(
 			9381538
@@ -122,14 +122,14 @@ TEST_CASE("JsonParser, int")
 		)";
 		REQUIRE(parser.parse<long>(jsonText) == 9381538);
 		REQUIRE(parser.parse<long>(jsonText.c_str(), jsonText.size()) == 9381538);
-		REQUIRE(parser.parse<long>(jsonpp::JsonParserSource(jsonText.c_str(), jsonText.size())) == 9381538);
+		REQUIRE(parser.parse<long>(jsonpp::ParserSource(jsonText.c_str(), jsonText.size())) == 9381538);
 	}
 }
 
-TEST_CASE("JsonParser, double")
+TEST_CASE("Parser, double")
 {
 	auto parserType = PARSER_TYPES();
-	jsonpp::JsonParser parser(parserType);
+	jsonpp::Parser parser(parserType);
 	SECTION("positive") {
 		const std::string jsonText = R"(
 			3.1415
@@ -180,10 +180,10 @@ TEST_CASE("JsonParser, double")
 	}
 }
 
-TEST_CASE("JsonParser, string")
+TEST_CASE("Parser, string")
 {
 	auto parserType = PARSER_TYPES();
-	jsonpp::JsonParser parser(parserType);
+	jsonpp::Parser parser(parserType);
 	const std::string jsonText = R"(
 		"abc"
 	)";
@@ -192,10 +192,10 @@ TEST_CASE("JsonParser, string")
 	REQUIRE(var.get<std::string &>() == "abc");
 }
 
-TEST_CASE("JsonParser, array")
+TEST_CASE("Parser, array")
 {
 	auto parserType = PARSER_TYPES();
-	jsonpp::JsonParser parser(parserType);
+	jsonpp::Parser parser(parserType);
 	const std::string jsonText = R"(
 		[ 5, "abc" ]
 	)";
@@ -206,10 +206,10 @@ TEST_CASE("JsonParser, array")
 	REQUIRE(array[1].get<std::string &>() == "abc");
 }
 
-TEST_CASE("JsonParser, array, proto")
+TEST_CASE("Parser, array, proto")
 {
 	auto parserType = PARSER_TYPES();
-	jsonpp::JsonParser parser(parserType);
+	jsonpp::Parser parser(parserType);
 
 	SECTION("std::deque<long>") {
 		const std::string jsonText = R"(
@@ -237,10 +237,10 @@ TEST_CASE("JsonParser, array, proto")
 	}
 }
 
-TEST_CASE("JsonParser, object")
+TEST_CASE("Parser, object")
 {
 	auto parserType = PARSER_TYPES();
-	jsonpp::JsonParser parser(parserType);
+	jsonpp::Parser parser(parserType);
 	const std::string jsonText = R"(
 		{ "b" : 5, "a" : "hello" }
 	)";
@@ -251,10 +251,10 @@ TEST_CASE("JsonParser, object")
 	REQUIRE(object.at("b").get<jsonpp::JsonInt>() == 5);
 }
 
-TEST_CASE("JsonParser, object, proto")
+TEST_CASE("Parser, object, proto")
 {
 	auto parserType = PARSER_TYPES();
-	jsonpp::JsonParser parser(parserType);
+	jsonpp::Parser parser(parserType);
 	using Proto = std::unordered_map<std::string, metapp::Variant>;
 	const std::string jsonText = R"(
 		{ "b" : 5, "a" : "hello" }
@@ -266,10 +266,10 @@ TEST_CASE("JsonParser, object, proto")
 	REQUIRE(object.at("b").get<jsonpp::JsonInt>() == 5);
 }
 
-TEST_CASE("JsonParser, array in object")
+TEST_CASE("Parser, array in object")
 {
 	auto parserType = PARSER_TYPES();
-	jsonpp::JsonParser parser(parserType);
+	jsonpp::Parser parser(parserType);
 	const std::string jsonText = R"(
 		{ "b" : 5, "a" : [ "hello", 38 ] }
 	)";
@@ -281,10 +281,10 @@ TEST_CASE("JsonParser, array in object")
 	REQUIRE(array[1].cast<int>().template get<int>() == 38);
 }
 
-TEST_CASE("JsonParser, object in array")
+TEST_CASE("Parser, object in array")
 {
 	auto parserType = PARSER_TYPES();
-	jsonpp::JsonParser parser(parserType);
+	jsonpp::Parser parser(parserType);
 	const std::string jsonText = R"(
 		[ 5, { "b" : 38, "a" : "hello" } ]
 	)";
@@ -296,10 +296,10 @@ TEST_CASE("JsonParser, object in array")
 	REQUIRE(object.at("b").get<jsonpp::JsonInt>() == 38);
 }
 
-TEST_CASE("JsonParser, object, parse as array")
+TEST_CASE("Parser, object, parse as array")
 {
 	auto parserType = PARSER_TYPES();
-	jsonpp::JsonParser parser(parserType);
+	jsonpp::Parser parser(parserType);
 	const std::string jsonText = R"(
 		{ "one" : 1, "two" : 2.1 }
 	)";

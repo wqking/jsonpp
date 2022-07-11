@@ -16,8 +16,8 @@
 
 #include "benchmark.h"
 
-#include "jsonpp/jsonparser.h"
-#include "jsonpp/jsondumper.h"
+#include "jsonpp/parser.h"
+#include "jsonpp/dumper.h"
 
 #include "simdjson/simdjson.h"
 
@@ -64,8 +64,8 @@ void doBenchmarkParseFile(const FileInfo & fileInfo, const jsonpp::ParserType pa
 	const std::string pureFileName = fs::path(fullFileName).filename().string();
 
 	const auto fileSize = jsonText.size();
-	jsonpp::JsonParser parser(parserType);
-	auto source = jsonpp::JsonParserSource(std::move(jsonText));
+	jsonpp::Parser parser(parserType);
+	auto source = jsonpp::ParserSource(std::move(jsonText));
 	REQUIRE(jsonText.empty());
 	const auto t = measureElapsedTime([&parser, iterations, &source, parserType]() {
 		for(int i = 0; i < iterations; ++i) {
@@ -100,16 +100,16 @@ void doBenchmarkDumpJson(const FileInfo & fileInfo, const bool beaufify)
 
 	const std::string pureFileName = fs::path(fullFileName).filename().string();
 
-	metapp::Variant var = jsonpp::JsonParser().parse(jsonText);
+	metapp::Variant var = jsonpp::Parser().parse(jsonText);
 	const auto t = measureElapsedTime([&var, iterations, beaufify]() {
-		jsonpp::JsonDumper dumper(jsonpp::DumperConfig().enableBeautify(beaufify));
+		jsonpp::Dumper dumper(jsonpp::DumperConfig().enableBeautify(beaufify));
 		for(int i = 0; i < iterations; ++i) {
 			dumper.dump(var);
 		}
 	});
 
-	const std::string dumpedText = jsonpp::JsonDumper(jsonpp::DumperConfig().enableBeautify(beaufify)).dump(var);
-	metapp::Variant newVar = jsonpp::JsonParser().parse(dumpedText);
+	const std::string dumpedText = jsonpp::Dumper(jsonpp::DumperConfig().enableBeautify(beaufify)).dump(var);
+	metapp::Variant newVar = jsonpp::Parser().parse(dumpedText);
 	REQUIRE(! newVar.isEmpty());
 
 	printTps(t, iterations, dumpedText.size(), std::string(beaufify ? "Beautify" : "Minify") + " Dump file " + pureFileName);
