@@ -189,7 +189,12 @@ void JsonParserSource::pad(const std::size_t size) const
 }
 
 JsonParser::JsonParser()
-	: JsonParser(ParserConfig(), ParserType::simdjson)
+	: JsonParser(ParserConfig())
+{
+}
+
+JsonParser::JsonParser(const ParserConfig & config)
+	: JsonParser(config, ParserType::simdjson)
 {
 }
 

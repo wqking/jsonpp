@@ -137,8 +137,9 @@ class JsonParser
 {
 public:
 	JsonParser();
+	explicit JsonParser(const ParserConfig & config);
 	explicit JsonParser(const ParserType parserType);
-	explicit JsonParser(const ParserConfig & config, const ParserType parserType);
+	JsonParser(const ParserConfig & config, const ParserType parserType);
 	~JsonParser();
 
 	bool hasError() const;
@@ -147,6 +148,33 @@ public:
 	metapp::Variant parse(const char * jsonText, const std::size_t length, const metapp::MetaType * proto = nullptr);
 	metapp::Variant parse(const std::string & jsonText, const metapp::MetaType * proto = nullptr);
 	metapp::Variant parse(const JsonParserSource & source, const metapp::MetaType * proto = nullptr);
+
+	template <typename T>
+	T parse(const char * jsonText, const std::size_t length) {
+		const metapp::Variant result = parse(jsonText, length, metapp::getMetaType<T>());
+		if(hasError()) {
+			return T();
+		}
+		return result.get<const T &>();
+	}
+
+	template <typename T>
+	T parse(const std::string & jsonText) {
+		const metapp::Variant result = parse(jsonText, metapp::getMetaType<T>());
+		if(hasError()) {
+			return T();
+		}
+		return result.get<const T &>();
+	}
+
+	template <typename T>
+	T parse(const JsonParserSource & source) {
+		const metapp::Variant result = parse(source, metapp::getMetaType<T>());
+		if(hasError()) {
+			return T();
+		}
+		return result.get<const T &>();
+	}
 
 private:
 	std::unique_ptr<ParserBackend> backend;
