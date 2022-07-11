@@ -72,39 +72,51 @@ public:
 
 		switch(implement.getNodeType(std::forward<T>(node))) {
 		case Implement::typeNull:
+			if(proto != nullptr) {
+				return metapp::Variant(nullptr).cast(proto);
+			}
 			return metapp::Variant(nullptr);
 
 		case Implement::typeBoolean:
+			if(proto != nullptr) {
+				return metapp::Variant((JsonBool)(implement.getBoolean(std::forward<T>(node)))).cast(proto);
+			}
 			return (JsonBool)(implement.getBoolean(std::forward<T>(node)));
 
 		case Implement::typeInteger:
-			if(proto != nullptr && proto->isEnum()) {
+			if(proto != nullptr) {
 				return metapp::Variant((JsonInt)(implement.getInteger(std::forward<T>(node)))).cast(proto);
 			}
 			return (JsonInt)(implement.getInteger(std::forward<T>(node)));
 
 		case Implement::typeUnsignedInteger:
-			if(proto != nullptr && proto->isEnum()) {
+			if(proto != nullptr) {
 				return metapp::Variant((JsonInt)(implement.getUnsignedInteger(std::forward<T>(node)))).cast(proto);
 			}
 			return (JsonInt)(implement.getUnsignedInteger(std::forward<T>(node)));
 
 		case Implement::typeDouble:
+			if(proto != nullptr) {
+				return metapp::Variant((JsonReal)(implement.getDouble(std::forward<T>(node)))).cast(proto);
+			}
 			return (JsonReal)(implement.getDouble(std::forward<T>(node)));
 
 		case Implement::typeString: {
-			if(proto != nullptr && proto->isEnum()) {
-				const auto metaEnum = proto->getMetaEnum();
-				if(metaEnum != nullptr) {
-					const auto & metaItem = metaEnum->getByName(JsonString(implement.getString(std::forward<T>(node))));
-					metapp::Variant enumValue = 0;
-					if(! metaItem.isEmpty()) {
-						enumValue = metaItem.asEnumValue().cast<long long>();
+			if(proto != nullptr) {
+				if(proto->isEnum()) {
+					const auto metaEnum = proto->getMetaEnum();
+					if(metaEnum != nullptr) {
+						const auto & metaItem = metaEnum->getByName(JsonString(implement.getString(std::forward<T>(node))));
+						metapp::Variant enumValue = 0;
+						if(! metaItem.isEmpty()) {
+							enumValue = metaItem.asEnumValue().cast<long long>();
+						}
+						// There is a dedicated item in metapp FAQ for this conversion.
+						return enumValue.cast(proto);
 					}
-					// There is a dedicated item in metapp FAQ for this conversion.
-					return enumValue.cast(proto);
+					return metapp::Variant(proto, nullptr);
 				}
-				return metapp::Variant(proto, nullptr);
+				return metapp::Variant(JsonString(implement.getString(std::forward<T>(node)))).cast(proto);
 			}
 			return JsonString(implement.getString(std::forward<T>(node)));
 		}

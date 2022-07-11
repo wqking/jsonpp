@@ -23,5 +23,11 @@
 
 #define PARSER_TYPES() GENERATE(jsonpp::ParserType::cparser, jsonpp::ParserType::simdjson)
 
+#define DUMPER_CONFIGS() GENERATE( \
+	jsonpp::DumperConfig(jsonpp::DumperConfig().enableBeautify(false).enableNamedEnum(false)), \
+	jsonpp::DumperConfig(jsonpp::DumperConfig().enableBeautify(true).enableNamedEnum(false)), \
+	jsonpp::DumperConfig(jsonpp::DumperConfig().enableBeautify(false).enableNamedEnum(true)), \
+	jsonpp::DumperConfig(jsonpp::DumperConfig().enableBeautify(true).enableNamedEnum(true)) \
+)
 
 #endif
