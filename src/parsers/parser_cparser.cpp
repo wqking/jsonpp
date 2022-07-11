@@ -29,7 +29,7 @@
 //#pragma GCC diagnostic ignored "-Wunused-parameter"
 #endif
 
-#include "json_parser/json.h"
+#include "../thirdparty/json_parser/json.h"
 
 #if defined(METAPP_COMPILER_GCC)
 #pragma GCC diagnostic pop

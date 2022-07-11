@@ -18,13 +18,18 @@
 #define JSONPP_TEXTOUTPUT_H_821598293712
 
 #include "implement/algorithms_i.h"
-#include "drachennest/dragonbox.h"
 #include "jsonpp/dumper.h"
 
 #include <memory>
 #include <vector>
 #include <ostream>
 #include <sstream>
+
+namespace dragonbox {
+
+char* Dtoa(char* buffer, double value);
+
+} // namespace dragonbox
 
 namespace jsonpp {
 

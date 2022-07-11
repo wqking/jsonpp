@@ -20,7 +20,7 @@ target_include_directories(
 	$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 
-file(GLOB_RECURSE SRC_LIB "src/*.cpp")
+file(GLOB_RECURSE SRC_LIB "src/*.c*")
 target_sources(${PROJECT_NAME}
     PRIVATE
         ${SRC_LIB}

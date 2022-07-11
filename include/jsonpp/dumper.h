@@ -20,7 +20,6 @@
 #include "jsonpp/common.h"
 
 #include "implement/algorithms_i.h"
-#include "drachennest/dragonbox.h"
 
 #include "metapp/variant.h"
 #include "metapp/allmetatypes.h"

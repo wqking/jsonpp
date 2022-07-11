@@ -19,7 +19,7 @@
 #include "jsonpp/parser.h"
 #include "jsonpp/dumper.h"
 
-#include "simdjson/simdjson.h"
+#include "../src/thirdparty/simdjson/simdjson.h"
 
 //#define NLOH
 

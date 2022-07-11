@@ -29,7 +29,7 @@
 //#pragma GCC diagnostic ignored "-Wunused-parameter"
 #endif
 
-#include "simdjson/simdjson.h"
+#include "../thirdparty/simdjson/simdjson.h"
 
 #if defined(METAPP_COMPILER_GCC)
 #pragma GCC diagnostic pop
