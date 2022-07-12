@@ -253,7 +253,7 @@ Write a single charactor `c`.
 void operator() (const char * s, const std::size_t length) const
 ```
 
-Write a serias of charactors `s` of `length`.  
+Write a series of characters `s` of `length`.  
 Note: `s` is not null terminated.  
 
 Here is the source code of `StringWriter`, for example,  

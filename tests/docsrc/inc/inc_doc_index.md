@@ -1,2 +1,3 @@
-- [Parser](doc/parser.md)
-- [Dumper](doc/dumper.md)
+- [Common and default data types](doc/common_types.md)
+- [Use class Parser to read and parse JSON document](doc/parser.md)
+- [Use class Dumper to dump and stringify JSON data](doc/dumper.md)

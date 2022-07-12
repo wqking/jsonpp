@@ -163,9 +163,9 @@ public:
 	bool hasError() const;
 	std::string getError() const;
 
-	metapp::Variant parse(const char * jsonText, const std::size_t length, const metapp::MetaType * proto = nullptr);
-	metapp::Variant parse(const std::string & jsonText, const metapp::MetaType * proto = nullptr);
-	metapp::Variant parse(const ParserSource & source, const metapp::MetaType * proto = nullptr);
+	metapp::Variant parse(const char * jsonText, const std::size_t length, const metapp::MetaType * prototype = nullptr);
+	metapp::Variant parse(const std::string & jsonText, const metapp::MetaType * prototype = nullptr);
+	metapp::Variant parse(const ParserSource & source, const metapp::MetaType * prototype = nullptr);
 
 	template <typename T>
 	T parse(const char * jsonText, const std::size_t length) {

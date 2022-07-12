@@ -24,13 +24,14 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <cstdint>
 
 namespace jsonpp {
 
 using JsonNull = void *;
 using JsonBool = bool;
-using JsonInt = long long;
-using JsonUnsignedInt = unsigned long long;
+using JsonInt = int64_t;
+using JsonUnsignedInt = uint64_t;
 using JsonReal = double;
 using JsonString = std::string;
 using JsonArray = std::vector<metapp::Variant>;

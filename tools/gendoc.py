@@ -24,7 +24,7 @@ import subprocess
 import shlex
 import pathlib
 
-forceGenerateAll = False
+forceGenerateAll = not False
 sourcePath = '../tests/docsrc'
 docPath = '../doc'
 

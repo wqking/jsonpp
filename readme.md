@@ -368,8 +368,9 @@ native English speaker and it's not that exciting to write document. Any way, th
 than the document, for ever.  
 If you want to contribute to the documents, be sure to read [How to generate documentations](doc/about_document.md).  
 
-- [Parser](doc/parser.md)
-- [Dumper](doc/dumper.md)
+- [Common and default data types](doc/common_types.md)
+- [Use class Parser to read and parse JSON document](doc/parser.md)
+- [Use class Dumper to dump and stringify JSON data](doc/dumper.md)
 
 
 <a id="mdtoc_460948ff"></a>
