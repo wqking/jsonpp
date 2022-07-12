@@ -33,24 +33,6 @@ char* Dtoa(char* buffer, double value);
 
 namespace jsonpp {
 
-struct StreamWriter
-{
-	StreamWriter(std::ostream & stream)
-		: stream(stream)
-	{
-	}
-
-	void operator() (const char c) const {
-		stream.put(c);
-	}
-
-	void operator() (const char * s, const std::size_t length) const {
-		stream.write(s, static_cast<std::streamsize>(length));
-	}
-
-	std::ostream & stream;
-};
-
 struct StringWriter
 {
 	StringWriter()
@@ -67,10 +49,15 @@ struct StringWriter
 		str.append(s, length);
 	}
 
-	std::string && getString() const {
+	std::string && takeString() const {
 		return std::move(str);
 	}
 
+	const std::string & getString() const {
+		return str;
+	}
+
+private:
 	mutable std::string str;
 };
 
@@ -92,15 +79,39 @@ struct VectorWriter
 		memmove(charList.data() + size, s, length);
 	}
 
-	const char * getString() const {
-		return charList.data();
+	std::vector<char> && takeVector() const {
+		return std::move(charList);
 	}
 
-	std::size_t getLength() const {
-		return charList.size();
+	const std::vector<char> & getVector() const {
+		return charList;
 	}
 
+private:
 	mutable std::vector<char> charList;
+};
+
+struct StreamWriter
+{
+	explicit StreamWriter(std::ostream & stream)
+		: stream(stream)
+	{
+	}
+
+	void operator() (const char c) const {
+		stream.put(c);
+	}
+
+	void operator() (const char * s, const std::size_t length) const {
+		stream.write(s, static_cast<std::streamsize>(length));
+	}
+
+	std::ostream & getStream() const {
+		return stream;
+	}
+
+private:
+	std::ostream & stream;
 };
 
 constexpr int numberToStringBufferSize = 64;
@@ -142,6 +153,11 @@ extern const EscapeItem escapeItemBackSlash;
 template <typename Writer>
 struct TextOutput
 {
+	explicit TextOutput(const Writer & writer)
+		: TextOutput(DumperConfig(), writer)
+	{
+	}
+
 	TextOutput(const DumperConfig & config, const Writer & writer)
 		:
 			config(config),
@@ -152,11 +168,8 @@ struct TextOutput
 	{
 	}
 	
+	TextOutput(Writer && writer) = delete;
 	TextOutput(const DumperConfig & config, Writer && writer) = delete;
-
-	const Writer & getOutputter() const {
-		return writer;
-	}
 
 	void writeNull() const {
 		writer("null", 4);

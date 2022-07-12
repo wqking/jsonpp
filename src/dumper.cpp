@@ -100,7 +100,7 @@ std::string Dumper::dump(const metapp::Variant & value)
 {
 	StringWriter outputter;
 	dump(value, TextOutput<StringWriter>(config, outputter));
-	return outputter.getString();
+	return outputter.takeString();
 }
 
 } // namespace jsonpp

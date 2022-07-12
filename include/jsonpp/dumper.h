@@ -105,9 +105,9 @@ public:
 
 	std::string dump(const metapp::Variant & value);
 
-	template <typename Writer>
-	void dump(const metapp::Variant & value, const Writer & writer) {
-		internal_::DumperImplement<Writer>(config, writer).dump(value);
+	template <typename Output>
+	void dump(const metapp::Variant & value, const Output & output) {
+		internal_::DumperImplement<Output>(config, output).dump(value);
 	}
 
 private:
