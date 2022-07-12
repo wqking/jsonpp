@@ -58,16 +58,11 @@ public:
 	explicit BackendSimdjsonDom(const ParserConfig & config);
 	~BackendSimdjsonDom();
 
-	bool hasError() const override;
-	std::string getError() const override;
-
-	metapp::Variant parse(const ParserSource & source, const metapp::MetaType * prototype) override;
+	ParserBackendResult parse(const ParserSource & source, const metapp::MetaType * prototype) override;
 
 private:
 	ParserConfig config;
 	simdjson::dom::parser parser;
-
-	std::string errorString;
 };
 
 BackendSimdjsonDom::BackendSimdjsonDom(const ParserConfig & config)
@@ -77,16 +72,6 @@ BackendSimdjsonDom::BackendSimdjsonDom(const ParserConfig & config)
 
 BackendSimdjsonDom::~BackendSimdjsonDom()
 {
-}
-
-bool BackendSimdjsonDom::hasError() const
-{
-	return ! errorString.empty();
-}
-
-std::string BackendSimdjsonDom::getError() const
-{
-	return errorString;
 }
 
 struct SimdjsonDomImplement
@@ -163,17 +148,14 @@ struct SimdjsonDomImplement
 
 };
 
-metapp::Variant BackendSimdjsonDom::parse(const ParserSource & source, const metapp::MetaType * prototype)
+ParserBackendResult BackendSimdjsonDom::parse(const ParserSource & source, const metapp::MetaType * prototype)
 {
-	errorString.clear();
-
 	simdjson::dom::element element;
 	auto r = parser.parse(source.getText(), source.getTextLength(), false).get(element);
 	if(r != simdjson::SUCCESS) {
-		errorString = simdjson::error_message(r);
-		return metapp::Variant();
+		return { metapp::Variant(), simdjson::error_message(r) };
 	}
-	return GeneralParser<SimdjsonDomImplement>(config, SimdjsonDomImplement()).parse(element, prototype);
+	return { GeneralParser<SimdjsonDomImplement>(config, SimdjsonDomImplement()).parse(element, prototype), std::string() };
 }
 
 std::unique_ptr<ParserBackend> createBackend_simdjsonDom(const ParserConfig & config)

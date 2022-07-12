@@ -30,15 +30,18 @@
 
 namespace jsonpp {
 
+struct ParserBackendResult
+{
+	metapp::Variant value;
+	std::string errorMessage;
+};
+
 class ParserBackend
 {
 public:
 	virtual ~ParserBackend() {}
 
-	virtual bool hasError() const = 0;
-	virtual std::string getError() const = 0;
-
-	virtual metapp::Variant parse(const ParserSource & source, const metapp::MetaType * prototype) = 0;
+	virtual ParserBackendResult parse(const ParserSource & source, const metapp::MetaType * prototype) = 0;
 
 	virtual void prepareSource(const ParserSource & /*source*/) const {
 	}

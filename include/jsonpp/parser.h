@@ -161,7 +161,7 @@ public:
 	~Parser();
 
 	bool hasError() const;
-	std::string getError() const;
+	const std::string & getError() const;
 
 	metapp::Variant parse(const char * jsonText, const std::size_t length, const metapp::MetaType * prototype = nullptr);
 	metapp::Variant parse(const std::string & jsonText, const metapp::MetaType * prototype = nullptr);
@@ -196,6 +196,7 @@ public:
 
 private:
 	std::unique_ptr<ParserBackend> backend;
+	std::string errorMessage;
 };
 
 std::string getParserBackendName(const ParserBackendType type);

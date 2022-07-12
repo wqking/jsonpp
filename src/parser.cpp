@@ -203,7 +203,7 @@ Parser::Parser()
 }
 
 Parser::Parser(const ParserConfig & config)
-	: backend(internal_::createBackend(config))
+	: backend(internal_::createBackend(config)), errorMessage()
 {
 }
 
@@ -213,12 +213,12 @@ Parser::~Parser()
 
 bool Parser::hasError() const
 {
-	return backend->hasError();
+	return ! errorMessage.empty();
 }
 
-std::string Parser::getError() const
+const std::string & Parser::getError() const
 {
-	return backend->getError();
+	return errorMessage;
 }
 
 metapp::Variant Parser::parse(const char * jsonText, const std::size_t length, const metapp::MetaType * proto)
@@ -233,12 +233,25 @@ metapp::Variant Parser::parse(const std::string & jsonText, const metapp::MetaTy
 
 metapp::Variant Parser::parse(const ParserSource & source, const metapp::MetaType * proto)
 {
+	errorMessage.clear();
+
 	if(! source.hasPrepared()) {
 		source.setAsPrepared();
 		backend->prepareSource(source);
 	}
 
-	return backend->parse(source, proto);
+	try {
+		ParserBackendResult result = backend->parse(source, proto);
+		errorMessage = std::move(result.errorMessage);
+		return result.value;
+	}
+	catch(const metapp::MetaException & e) {
+		errorMessage = e.what();
+	}
+	catch(const std::exception & e) {
+		errorMessage = e.what();
+	}
+	return metapp::Variant();
 }
 
 

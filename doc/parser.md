@@ -111,7 +111,10 @@ std::string getError() const;
 ```
 
 `hasError()` returns true if there is any error occurred during previous `parse`, false if it succeeds.  
-`getError()` returns the error message if there is any error.
+`getError()` returns the error message if there is any error.  
+Both `metapp` and the parser backend may throw exceptions, all exceptions are captured and converted to error message.  
+`metapp` works if exceptions are disabled in compiler, for the parser backend, please check their document to see
+if exceptions can be disabled.
 
 <a id="mdtoc_f8e315db"></a>
 ## ParserSource

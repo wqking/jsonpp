@@ -123,21 +123,17 @@ public:
 	explicit BackendCParser(const ParserConfig & config);
 	~BackendCParser();
 
-	bool hasError() const override;
-	std::string getError() const override;
-
-	metapp::Variant parse(const ParserSource & source, const metapp::MetaType * prototype) override;
+	ParserBackendResult parse(const ParserSource & source, const metapp::MetaType * prototype) override;
 
 private:
 	ParserConfig config;
 
 	json_settings settings;
 	json_value * root;
-	std::array<char, json_error_max> error;
 };
 
 BackendCParser::BackendCParser(const ParserConfig & config)
-	: config(config), settings(), root(nullptr), error()
+	: config(config), settings(), root(nullptr)
 {
 	if(config.allowComment()) {
 		settings.settings |= json_enable_comments;
@@ -151,25 +147,16 @@ BackendCParser::~BackendCParser()
 	}
 }
 
-bool BackendCParser::hasError() const
+ParserBackendResult BackendCParser::parse(const ParserSource & source, const metapp::MetaType * prototype)
 {
-	return error[0] != 0;
-}
-
-std::string BackendCParser::getError() const
-{
-	return error.data();
-}
-
-metapp::Variant BackendCParser::parse(const ParserSource & source, const metapp::MetaType * prototype)
-{
+	std::array<char, json_error_max> error;
 	error[0] = 0;
 
 	root = json_parse_ex(&settings, source.getText(), source.getTextLength(), error.data());
 	if(error[0] != 0) {
-		return metapp::Variant();
+		return { metapp::Variant(), error.data() };
 	}
-	return GeneralParser<CParserImplement>(config, CParserImplement()).parse(root, prototype);
+	return { GeneralParser<CParserImplement>(config, CParserImplement()).parse(root, prototype), std::string() };
 }
 
 std::unique_ptr<ParserBackend> createBackend_cparser(const ParserConfig & config)
