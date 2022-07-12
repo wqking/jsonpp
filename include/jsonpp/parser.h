@@ -41,15 +41,15 @@
 
 namespace jsonpp {
 
-enum class ParserType;
+enum class ParserBackendType;
 
 namespace internal_ {
 
-ParserType getDefaultBackend();
+ParserBackendType getDefaultBackend();
 
 } // namespace internal_
 
-enum class ParserType
+enum class ParserBackendType
 {
 	cparser,
 	simdjson,
@@ -69,11 +69,11 @@ public:
 	{
 	}
 
-	ParserType getBackendType() const {
+	ParserBackendType getBackendType() const {
 		return backendType;
 	}
 
-	ParserConfig & setBackendType(const ParserType type) {
+	ParserConfig & setBackendType(const ParserBackendType type) {
 		backendType = type;
 		return *this;
 	}
@@ -106,7 +106,7 @@ public:
 	}
 
 private:
-	ParserType backendType;
+	ParserBackendType backendType;
 	bool comment;
 	const metapp::MetaType * arrayType;
 	const metapp::MetaType * objectType;
@@ -198,7 +198,7 @@ private:
 	std::unique_ptr<ParserBackend> backend;
 };
 
-std::string getParserTypeName(const ParserType type);
+std::string getParserBackendName(const ParserBackendType type);
 
 } // namespace jsonpp
 

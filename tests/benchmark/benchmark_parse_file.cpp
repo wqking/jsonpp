@@ -49,7 +49,7 @@ FileInfo fileInfoList[] = {
 	//{ "testdata/Zurich_Building_LoD2_V10.city.json", 1 },
 };
 
-void doBenchmarkParseFile(const FileInfo & fileInfo, const jsonpp::ParserType parserType)
+void doBenchmarkParseFile(const FileInfo & fileInfo, const jsonpp::ParserBackendType parserType)
 {
 	namespace fs = std::filesystem;
 
@@ -73,7 +73,7 @@ void doBenchmarkParseFile(const FileInfo & fileInfo, const jsonpp::ParserType pa
 		}
 	});
 
-	printTps(t, iterations, fileSize, jsonpp::getParserTypeName(parserType) + " Parse file " + pureFileName);
+	printTps(t, iterations, fileSize, jsonpp::getParserBackendName(parserType) + " Parse file " + pureFileName);
 }
 
 BenchmarkFunc

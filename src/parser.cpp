@@ -36,13 +36,13 @@ std::unique_ptr<ParserBackend> createBackend_simdjsonDom(const ParserConfig & co
 std::unique_ptr<ParserBackend> createBackend(const ParserConfig & config)
 {
 #if JSONPP_BACKEND_CPARSER
-	if(config.getBackendType() == ParserType::cparser) {
+	if(config.getBackendType() == ParserBackendType::cparser) {
 		return createBackend_cparser(config);
 	}
 #endif
 
 #if JSONPP_BACKEND_SIMDJSON
-	if(config.getBackendType() == ParserType::simdjson) {
+	if(config.getBackendType() == ParserBackendType::simdjson) {
 		return createBackend_simdjsonDom(config);
 	}
 #endif
@@ -52,25 +52,25 @@ std::unique_ptr<ParserBackend> createBackend(const ParserConfig & config)
 	return std::unique_ptr<ParserBackend>();
 }
 
-ParserType getDefaultBackend()
+ParserBackendType getDefaultBackend()
 {
 #if JSONPP_BACKEND_SIMDJSON
-	return ParserType::simdjson;
+	return ParserBackendType::simdjson;
 #else
-	return ParserType::cparser;
+	return ParserBackendType::cparser;
 #endif
 }
 
 } // namespace internal_
 
 
-std::string getParserTypeName(const ParserType type)
+std::string getParserBackendName(const ParserBackendType type)
 {
 	switch(type) {
-	case ParserType::cparser:
+	case ParserBackendType::cparser:
 		return "json-parser";
 
-	case ParserType::simdjson:
+	case ParserBackendType::simdjson:
 		return "simdjson";
 	}
 

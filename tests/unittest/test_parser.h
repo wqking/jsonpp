@@ -21,7 +21,7 @@
 
 #include "jsonpp/parser.h"
 
-#define PARSER_TYPES() GENERATE(jsonpp::ParserType::cparser, jsonpp::ParserType::simdjson)
+#define PARSER_TYPES() GENERATE(jsonpp::ParserBackendType::cparser, jsonpp::ParserBackendType::simdjson)
 
 #define DUMPER_CONFIGS() GENERATE( \
 	jsonpp::DumperConfig(jsonpp::DumperConfig().enableBeautify(false).enableNamedEnum(false)), \

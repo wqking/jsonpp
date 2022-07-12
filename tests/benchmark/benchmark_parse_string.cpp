@@ -32,7 +32,7 @@ BenchmarkFunc
 			parser.parse(jsonText);
 		}
 	});
-	printResult(t, iterations, jsonpp::getParserTypeName(parserType) + " Parse string");
+	printResult(t, iterations, jsonpp::getParserBackendName(parserType) + " Parse string");
 }
 
 
