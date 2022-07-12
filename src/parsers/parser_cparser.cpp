@@ -126,7 +126,7 @@ public:
 	bool hasError() const override;
 	std::string getError() const override;
 
-	metapp::Variant parse(const ParserSource & source, const metapp::MetaType * proto) override;
+	metapp::Variant parse(const ParserSource & source, const metapp::MetaType * prototype) override;
 
 private:
 	ParserConfig config;
@@ -161,7 +161,7 @@ std::string BackendCParser::getError() const
 	return error.data();
 }
 
-metapp::Variant BackendCParser::parse(const ParserSource & source, const metapp::MetaType * proto)
+metapp::Variant BackendCParser::parse(const ParserSource & source, const metapp::MetaType * prototype)
 {
 	error[0] = 0;
 
@@ -169,7 +169,7 @@ metapp::Variant BackendCParser::parse(const ParserSource & source, const metapp:
 	if(error[0] != 0) {
 		return metapp::Variant();
 	}
-	return GeneralParser<CParserImplement>(config, CParserImplement()).parse(root, proto);
+	return GeneralParser<CParserImplement>(config, CParserImplement()).parse(root, prototype);
 }
 
 std::unique_ptr<ParserBackend> createBackend_cparser(const ParserConfig & config)

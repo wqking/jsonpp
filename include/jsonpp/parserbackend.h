@@ -38,7 +38,7 @@ public:
 	virtual bool hasError() const = 0;
 	virtual std::string getError() const = 0;
 
-	virtual metapp::Variant parse(const ParserSource & source, const metapp::MetaType * proto) = 0;
+	virtual metapp::Variant parse(const ParserSource & source, const metapp::MetaType * prototype) = 0;
 
 	virtual void prepareSource(const ParserSource & /*source*/) const {
 	}
@@ -61,50 +61,50 @@ public:
 	{}
 
 	template <typename T>
-	metapp::Variant parse(T && node, const metapp::MetaType * proto)
+	metapp::Variant parse(T && node, const metapp::MetaType * prototype)
 	{
-		if(proto != nullptr) {
-			proto = metapp::getNonReferenceMetaType(proto);
-			if(proto->getTypeKind() == metapp::tkVariant) {
-				proto = nullptr;
+		if(prototype != nullptr) {
+			prototype = metapp::getNonReferenceMetaType(prototype);
+			if(prototype->getTypeKind() == metapp::tkVariant) {
+				prototype = nullptr;
 			}
 		}
 
 		switch(implement.getNodeType(std::forward<T>(node))) {
 		case Implement::typeNull:
-			if(proto != nullptr) {
-				return metapp::Variant(nullptr).cast(proto);
+			if(prototype != nullptr) {
+				return metapp::Variant(nullptr).cast(prototype);
 			}
 			return metapp::Variant(nullptr);
 
 		case Implement::typeBoolean:
-			if(proto != nullptr) {
-				return metapp::Variant((JsonBool)(implement.getBoolean(std::forward<T>(node)))).cast(proto);
+			if(prototype != nullptr) {
+				return metapp::Variant((JsonBool)(implement.getBoolean(std::forward<T>(node)))).cast(prototype);
 			}
 			return (JsonBool)(implement.getBoolean(std::forward<T>(node)));
 
 		case Implement::typeInteger:
-			if(proto != nullptr) {
-				return metapp::Variant((JsonInt)(implement.getInteger(std::forward<T>(node)))).cast(proto);
+			if(prototype != nullptr) {
+				return metapp::Variant((JsonInt)(implement.getInteger(std::forward<T>(node)))).cast(prototype);
 			}
 			return (JsonInt)(implement.getInteger(std::forward<T>(node)));
 
 		case Implement::typeUnsignedInteger:
-			if(proto != nullptr) {
-				return metapp::Variant((JsonInt)(implement.getUnsignedInteger(std::forward<T>(node)))).cast(proto);
+			if(prototype != nullptr) {
+				return metapp::Variant((JsonInt)(implement.getUnsignedInteger(std::forward<T>(node)))).cast(prototype);
 			}
 			return (JsonInt)(implement.getUnsignedInteger(std::forward<T>(node)));
 
 		case Implement::typeDouble:
-			if(proto != nullptr) {
-				return metapp::Variant((JsonReal)(implement.getDouble(std::forward<T>(node)))).cast(proto);
+			if(prototype != nullptr) {
+				return metapp::Variant((JsonReal)(implement.getDouble(std::forward<T>(node)))).cast(prototype);
 			}
 			return (JsonReal)(implement.getDouble(std::forward<T>(node)));
 
 		case Implement::typeString: {
-			if(proto != nullptr) {
-				if(proto->isEnum()) {
-					const auto metaEnum = proto->getMetaEnum();
+			if(prototype != nullptr) {
+				if(prototype->isEnum()) {
+					const auto metaEnum = prototype->getMetaEnum();
 					if(metaEnum != nullptr) {
 						const auto & metaItem = metaEnum->getByName(JsonString(implement.getString(std::forward<T>(node))));
 						metapp::Variant enumValue = 0;
@@ -112,20 +112,20 @@ public:
 							enumValue = metaItem.asEnumValue().cast<long long>();
 						}
 						// There is a dedicated item in metapp FAQ for this conversion.
-						return enumValue.cast(proto);
+						return enumValue.cast(prototype);
 					}
-					return metapp::Variant(proto, nullptr);
+					return metapp::Variant(prototype, nullptr);
 				}
-				return metapp::Variant(JsonString(implement.getString(std::forward<T>(node)))).cast(proto);
+				return metapp::Variant(JsonString(implement.getString(std::forward<T>(node)))).cast(prototype);
 			}
 			return JsonString(implement.getString(std::forward<T>(node)));
 		}
 
 		case Implement::typeArray:
-			return doConvertArray(std::forward<T>(node), proto);
+			return doConvertArray(std::forward<T>(node), prototype);
 
 		case Implement::typeObject:
-			return doConvertObject(std::forward<T>(node), proto);
+			return doConvertObject(std::forward<T>(node), prototype);
 
 		default:
 			break;
@@ -135,9 +135,9 @@ public:
 
 private:
 	template <typename T>
-	metapp::Variant doConvertArray(T && node, const metapp::MetaType * proto)
+	metapp::Variant doConvertArray(T && node, const metapp::MetaType * prototype)
 	{
-		const metapp::MetaType * type = proto;
+		const metapp::MetaType * type = prototype;
 		if(type == nullptr) {
 			type = config.getArrayType();
 		}
@@ -163,9 +163,9 @@ private:
 			metaIndexable->resize(result, implement.getArraySize(array));
 			implement.iterateArray(
 				array,
-				[this, metaIndexable, proto, &result](const std::size_t index, ArrayValue arrayValue) -> void {
+				[this, metaIndexable, prototype, &result](const std::size_t index, ArrayValue arrayValue) -> void {
 					const metapp::MetaType * elementProto = nullptr;
-					if(proto != nullptr) {
+					if(prototype != nullptr) {
 						elementProto = metapp::getNonReferenceMetaType(metaIndexable->getValueType(result, index));
 					}
 					metaIndexable->set(result, index, parse(arrayValue, elementProto));
@@ -176,12 +176,12 @@ private:
 	}
 
 	template <typename T>
-	metapp::Variant doConvertObject(T && node, const metapp::MetaType * proto)
+	metapp::Variant doConvertObject(T && node, const metapp::MetaType * prototype)
 	{
-		const metapp::MetaType * type = proto;
+		const metapp::MetaType * type = prototype;
 		const metapp::MetaClass * metaClass = nullptr;
-		if(proto != nullptr) {
-			metaClass = proto->getMetaClass();
+		if(prototype != nullptr) {
+			metaClass = prototype->getMetaClass();
 		}
 		if(type == nullptr) {
 			type = config.getObjectType();
