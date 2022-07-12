@@ -33,16 +33,16 @@ namespace internal_ {
 std::unique_ptr<ParserBackend> createBackend_cparser(const ParserConfig & config);
 std::unique_ptr<ParserBackend> createBackend_simdjsonDom(const ParserConfig & config);
 
-std::unique_ptr<ParserBackend> createBackend(const ParserConfig & config, const ParserType parserType)
+std::unique_ptr<ParserBackend> createBackend(const ParserConfig & config)
 {
 #if JSONPP_BACKEND_CPARSER
-	if(parserType == ParserType::cparser) {
+	if(config.getBackendType() == ParserType::cparser) {
 		return createBackend_cparser(config);
 	}
 #endif
 
 #if JSONPP_BACKEND_SIMDJSON
-	if(parserType == ParserType::simdjson) {
+	if(config.getBackendType() == ParserType::simdjson) {
 		return createBackend_simdjsonDom(config);
 	}
 #endif
@@ -50,6 +50,15 @@ std::unique_ptr<ParserBackend> createBackend(const ParserConfig & config, const 
 	assert(false);
 
 	return std::unique_ptr<ParserBackend>();
+}
+
+ParserType getDefaultBackend()
+{
+#if JSONPP_BACKEND_SIMDJSON
+	return ParserType::simdjson;
+#else
+	return ParserType::cparser;
+#endif
 }
 
 } // namespace internal_
@@ -194,17 +203,7 @@ Parser::Parser()
 }
 
 Parser::Parser(const ParserConfig & config)
-	: Parser(config, ParserType::simdjson)
-{
-}
-
-Parser::Parser(const ParserType parserType)
-	: Parser(ParserConfig(), parserType)
-{
-}
-
-Parser::Parser(const ParserConfig & config, const ParserType parserType)
-	: backend(internal_::createBackend(config, parserType))
+	: backend(internal_::createBackend(config))
 {
 }
 

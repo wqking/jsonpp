@@ -28,7 +28,7 @@ TEST_CASE("Parser, error")
 	const std::string jsonText = R"(
 		5, 6
 	)";
-	jsonpp::Parser parser(parserType);
+	jsonpp::Parser parser(jsonpp::ParserConfig().setBackendType(parserType));
 	SECTION("parse") {
 		metapp::Variant var = parser.parse(jsonText);
 		REQUIRE(var.isEmpty());
@@ -44,7 +44,7 @@ TEST_CASE("Parser, error")
 TEST_CASE("Parser, null")
 {
 	auto parserType = PARSER_TYPES();
-	jsonpp::Parser parser(parserType);
+	jsonpp::Parser parser(jsonpp::ParserConfig().setBackendType(parserType));
 	const std::string jsonText = R"(
 		null
 	)";
@@ -62,7 +62,7 @@ TEST_CASE("Parser, null")
 TEST_CASE("Parser, bool")
 {
 	auto parserType = PARSER_TYPES();
-	jsonpp::Parser parser(parserType);
+	jsonpp::Parser parser(jsonpp::ParserConfig().setBackendType(parserType));
 	SECTION("true") {
 		const std::string jsonText = R"(
 			true
@@ -91,7 +91,7 @@ TEST_CASE("Parser, bool")
 TEST_CASE("Parser, int")
 {
 	auto parserType = PARSER_TYPES();
-	jsonpp::Parser parser(parserType);
+	jsonpp::Parser parser(jsonpp::ParserConfig().setBackendType(parserType));
 	SECTION("positive") {
 		const std::string jsonText = R"(
 			9381538
@@ -129,7 +129,7 @@ TEST_CASE("Parser, int")
 TEST_CASE("Parser, double")
 {
 	auto parserType = PARSER_TYPES();
-	jsonpp::Parser parser(parserType);
+	jsonpp::Parser parser(jsonpp::ParserConfig().setBackendType(parserType));
 	SECTION("positive") {
 		const std::string jsonText = R"(
 			3.1415
@@ -183,7 +183,7 @@ TEST_CASE("Parser, double")
 TEST_CASE("Parser, string")
 {
 	auto parserType = PARSER_TYPES();
-	jsonpp::Parser parser(parserType);
+	jsonpp::Parser parser(jsonpp::ParserConfig().setBackendType(parserType));
 	const std::string jsonText = R"(
 		"abc"
 	)";
@@ -195,7 +195,7 @@ TEST_CASE("Parser, string")
 TEST_CASE("Parser, array")
 {
 	auto parserType = PARSER_TYPES();
-	jsonpp::Parser parser(parserType);
+	jsonpp::Parser parser(jsonpp::ParserConfig().setBackendType(parserType));
 	const std::string jsonText = R"(
 		[ 5, "abc" ]
 	)";
@@ -209,7 +209,7 @@ TEST_CASE("Parser, array")
 TEST_CASE("Parser, array, proto")
 {
 	auto parserType = PARSER_TYPES();
-	jsonpp::Parser parser(parserType);
+	jsonpp::Parser parser(jsonpp::ParserConfig().setBackendType(parserType));
 
 	SECTION("std::deque<long>") {
 		const std::string jsonText = R"(
@@ -240,7 +240,7 @@ TEST_CASE("Parser, array, proto")
 TEST_CASE("Parser, object")
 {
 	auto parserType = PARSER_TYPES();
-	jsonpp::Parser parser(parserType);
+	jsonpp::Parser parser(jsonpp::ParserConfig().setBackendType(parserType));
 	const std::string jsonText = R"(
 		{ "b" : 5, "a" : "hello" }
 	)";
@@ -254,7 +254,7 @@ TEST_CASE("Parser, object")
 TEST_CASE("Parser, object, proto")
 {
 	auto parserType = PARSER_TYPES();
-	jsonpp::Parser parser(parserType);
+	jsonpp::Parser parser(jsonpp::ParserConfig().setBackendType(parserType));
 	using Proto = std::unordered_map<std::string, metapp::Variant>;
 	const std::string jsonText = R"(
 		{ "b" : 5, "a" : "hello" }
@@ -269,7 +269,7 @@ TEST_CASE("Parser, object, proto")
 TEST_CASE("Parser, array in object")
 {
 	auto parserType = PARSER_TYPES();
-	jsonpp::Parser parser(parserType);
+	jsonpp::Parser parser(jsonpp::ParserConfig().setBackendType(parserType));
 	const std::string jsonText = R"(
 		{ "b" : 5, "a" : [ "hello", 38 ] }
 	)";
@@ -284,7 +284,7 @@ TEST_CASE("Parser, array in object")
 TEST_CASE("Parser, object in array")
 {
 	auto parserType = PARSER_TYPES();
-	jsonpp::Parser parser(parserType);
+	jsonpp::Parser parser(jsonpp::ParserConfig().setBackendType(parserType));
 	const std::string jsonText = R"(
 		[ 5, { "b" : 38, "a" : "hello" } ]
 	)";
@@ -299,7 +299,7 @@ TEST_CASE("Parser, object in array")
 TEST_CASE("Parser, object, parse as array")
 {
 	auto parserType = PARSER_TYPES();
-	jsonpp::Parser parser(parserType);
+	jsonpp::Parser parser(jsonpp::ParserConfig().setBackendType(parserType));
 	const std::string jsonText = R"(
 		{ "one" : 1, "two" : 2.1 }
 	)";

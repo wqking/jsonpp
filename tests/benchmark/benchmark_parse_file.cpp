@@ -64,7 +64,7 @@ void doBenchmarkParseFile(const FileInfo & fileInfo, const jsonpp::ParserType pa
 	const std::string pureFileName = fs::path(fullFileName).filename().string();
 
 	const auto fileSize = jsonText.size();
-	jsonpp::Parser parser(parserType);
+	jsonpp::Parser parser(jsonpp::ParserConfig().setBackendType(parserType));
 	auto source = jsonpp::ParserSource(std::move(jsonText));
 	REQUIRE(jsonText.empty());
 	const auto t = measureElapsedTime([&parser, iterations, &source, parserType]() {

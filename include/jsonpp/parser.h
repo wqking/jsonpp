@@ -41,6 +41,14 @@
 
 namespace jsonpp {
 
+enum class ParserType;
+
+namespace internal_ {
+
+ParserType getDefaultBackend();
+
+} // namespace internal_
+
 enum class ParserType
 {
 	cparser,
@@ -54,27 +62,28 @@ class ParserConfig
 public:
 	ParserConfig()
 		:
+			backendType(internal_::getDefaultBackend()),
 			comment(false),
 			arrayType(),
 			objectType()
 	{
 	}
 
+	ParserType getBackendType() const {
+		return backendType;
+	}
+
+	ParserConfig & setBackendType(const ParserType type) {
+		backendType = type;
+		return *this;
+	}
+
 	bool allowComment() const {
 		return comment;
 	}
 
-	void enableComment(const bool enable) {
+	ParserConfig & enableComment(const bool enable) {
 		comment = enable;
-	}
-
-	ParserConfig & setArrayType(const metapp::MetaType * arrayType_) {
-		arrayType = arrayType_;
-		return *this;
-	}
-
-	ParserConfig & setObjectType(const metapp::MetaType * objectType_) {
-		objectType = objectType_;
 		return *this;
 	}
 
@@ -82,11 +91,22 @@ public:
 		return arrayType;
 	}
 
+	ParserConfig & setArrayType(const metapp::MetaType * arrayType_) {
+		arrayType = arrayType_;
+		return *this;
+	}
+
 	const metapp::MetaType * getObjectType() const {
 		return objectType;
 	}
 
+	ParserConfig & setObjectType(const metapp::MetaType * objectType_) {
+		objectType = objectType_;
+		return *this;
+	}
+
 private:
+	ParserType backendType;
 	bool comment;
 	const metapp::MetaType * arrayType;
 	const metapp::MetaType * objectType;
@@ -138,8 +158,6 @@ class Parser
 public:
 	Parser();
 	explicit Parser(const ParserConfig & config);
-	explicit Parser(const ParserType parserType);
-	Parser(const ParserConfig & config, const ParserType parserType);
 	~Parser();
 
 	bool hasError() const;

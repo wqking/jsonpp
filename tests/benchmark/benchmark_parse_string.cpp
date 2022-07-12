@@ -27,7 +27,7 @@ BenchmarkFunc
 	constexpr int iterations = 1000 * 100;
 	const std::string jsonText = R"([ 5, { "b" : 38, "a" : "hello" } ])";
 	const auto t = measureElapsedTime([iterations, jsonText, parserType]() {
-		jsonpp::Parser parser(parserType);
+		jsonpp::Parser parser(jsonpp::ParserConfig().setBackendType(parserType));
 		for(int i = 0; i < iterations; ++i) {
 			parser.parse(jsonText);
 		}
