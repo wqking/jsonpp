@@ -20,6 +20,7 @@
 #include "jsonpp/dumper.h"
 
 #include "../src/thirdparty/simdjson/simdjson.h"
+#include "thirdparty/metrics.hpp"
 
 // Uncomment it to enable benchmarking nlohmann json, the proper header must be included
 //#define NLOH
@@ -32,6 +33,8 @@
 #include <fstream>
 #include <sstream>
 #include <filesystem>
+#include <map>
+#include <vector>
 
 namespace {
 
@@ -47,13 +50,204 @@ FileInfo fileInfoList[] = {
 	{ "testdata/twitter.json", 10 },
 	{ "testdata/airlines.json", 10 },
 	{ "testdata/tiny.json", 10000 },
-	{ "testdata/Zurich_Building_LoD2_V10.city.json", 1 },
+	//{ "testdata/Zurich_Building_LoD2_V10.city.json", 1 },
 };
+
+std::string formatSingleTime(uint64_t time, uint64_t iterations)
+{
+	char buffer[100];
+	sprintf_s(buffer, "%g", (double)time / (double)iterations);
+	return buffer;
+}
+
+std::string extractFileName(const std::string & fullFileName)
+{
+	namespace fs = std::filesystem;
+	return fs::path(fullFileName).filename().string();
+}
+
+std::string ensureTextWidth(std::string text, const std::size_t width)
+{
+	while(text.size() < width) {
+		text = " " + text;
+	}
+	return text;
+}
+
+constexpr jsonpp::ParserBackendType noBackend = jsonpp::ParserBackendType(-1);
+
+class BenchmarkDataCollection
+{
+private:
+	struct BenchmarkData
+	{
+		std::string fileName;
+		std::string libName;
+		uint64_t fileSize;
+		uint64_t time;
+		uint64_t iterations;
+	};
+
+	struct BenchmarkDataList
+	{
+		std::vector<BenchmarkData> dataList;
+		std::vector<std::string> fileList;
+		std::vector<std::string> libList;
+
+		void add(BenchmarkData data) {
+			if(data.fileName == "Zurich_Building_LoD2_V10.city.json") {
+				data.fileName = "Zurich_Building.json";
+			}
+			addText(data.fileName, fileList);
+			addText(data.libName, libList);
+			dataList.push_back(data);
+		}
+
+		const BenchmarkData * findData(const std::string & fileName, const std::string & libName) {
+			for(const auto & data : dataList) {
+				if(data.fileName == fileName && data.libName == libName) {
+					return &data;
+				}
+			}
+			return nullptr;
+		}
+
+	private:
+		void addText(const std::string & text, std::vector<std::string> & textList) {
+			if(std::find(textList.begin(), textList.end(), text) == textList.end()) {
+				textList.push_back(text);
+			}
+		}
+
+	};
+
+	struct ParseData
+	{
+		std::string fileName;
+		std::string libName;
+		uint64_t fileSize;
+		uint64_t time;
+		uint64_t iterations;
+	};
+
+	struct DumpData
+	{
+		std::string fileName;
+		std::string libName;
+		uint64_t fileSize;
+		uint64_t time;
+		uint64_t iterations;
+	};
+
+public:
+	void dumpMarkdownTables() {
+		std::cout << std::endl;
+		dumpParserMarkdownTables();
+
+		std::cout << std::endl;
+		dumpDumpMarkdownTables();
+	}
+
+	void addParseResult(
+		const std::string & fullFileName,
+		const std::string & libName,
+		const jsonpp::ParserBackendType backendType,
+		const uint64_t fileSize,
+		const uint64_t time,
+		const uint64_t iterations
+	) {
+		std::string fullLibName = libName;
+		if(backendType != noBackend) {
+			fullLibName += " (" + jsonpp::getParserBackendName(backendType) + ")";
+		}
+		const std::string pureFileName = extractFileName(fullFileName);
+
+		parseDataList.add({
+			pureFileName,
+			fullLibName,
+			fileSize,
+			time,
+			iterations
+		});
+	}
+
+	void addDumpResult(
+		const std::string & fullFileName,
+		const std::string & libName,
+		const bool beautify,
+		const uint64_t fileSize,
+		const uint64_t time,
+		const uint64_t iterations
+	) {
+		std::string fullLibName = libName;
+		fullLibName += std::string(" (") + (beautify ? "beautify" : "minify") + ")";
+		const std::string pureFileName = extractFileName(fullFileName);
+
+		dumpDataList.add({
+			pureFileName,
+			fullLibName,
+			fileSize,
+			time,
+			iterations
+		});
+	}
+
+private:
+	void dumpParserMarkdownTables() {
+		metrics::table_markdown table;
+		table.add_column_left("File name")
+			.add_column_right("File size")
+		;
+		for(const auto & item : parseDataList.libList) {
+			table.add_column_right(item);
+		}
+
+		for(const auto & fileName : parseDataList.fileList) {
+			table << fileName << sizeToStorage(parseDataList.findData(fileName, parseDataList.libList[0])->fileSize);
+			for(const auto & libName : parseDataList.libList) {
+				const auto parseData = parseDataList.findData(fileName, libName);
+				table << formatCell(parseData);
+			}
+		}
+
+		table.print(std::cout, false);
+	}
+
+	void dumpDumpMarkdownTables() {
+		metrics::table_markdown table;
+		table.add_column_left("File name")
+		;
+		for(const auto & item : dumpDataList.libList) {
+			table.add_column_right(item);
+		}
+
+		for(const auto & fileName : dumpDataList.fileList) {
+			table << fileName;
+			for(const auto & libName : dumpDataList.libList) {
+				const auto dumpData = dumpDataList.findData(fileName, libName);
+				table << formatCell(dumpData);
+			}
+		}
+
+		table.print(std::cout, false);
+	}
+
+	std::string formatCell(const BenchmarkData * data) {
+		const std::string timeText = formatSingleTime(data->time, data->iterations) + " ms";
+		const uint64_t tps = data->fileSize * data->iterations * 1000 / data->time;
+		const std::string tpsText = sizeToStorage(tps) + "/s";
+		return ensureTextWidth(timeText, 10) + ", " + ensureTextWidth(tpsText, 9);
+	}
+
+private:
+	BenchmarkDataList parseDataList;
+	BenchmarkDataList dumpDataList;
+};
+
+BenchmarkDataCollection benchmarkDataCollection;
 
 void doBenchmarkParseFile(const FileInfo & fileInfo, const jsonpp::ParserBackendType parserType)
 {
-	namespace fs = std::filesystem;
-
 	const std::string & fullFileName = fileInfo.fileName;
 	const int iterations = fileInfo.iterations;
 
@@ -61,8 +255,6 @@ void doBenchmarkParseFile(const FileInfo & fileInfo, const jsonpp::ParserBackend
 	if(jsonText.empty()) {
 		return;
 	}
-
-	const std::string pureFileName = fs::path(fullFileName).filename().string();
 
 	const auto fileSize = jsonText.size();
 	jsonpp::Parser parser(jsonpp::ParserConfig().setBackendType(parserType));
@@ -74,7 +266,10 @@ void doBenchmarkParseFile(const FileInfo & fileInfo, const jsonpp::ParserBackend
 		}
 	});
 
+	const std::string pureFileName = extractFileName(fullFileName);
 	printTps(t, iterations, fileSize, jsonpp::getParserBackendName(parserType) + " Parse file " + pureFileName);
+	
+	benchmarkDataCollection.addParseResult(pureFileName, "jsonpp", parserType, fileSize, t, iterations);
 }
 
 BenchmarkFunc
@@ -87,10 +282,8 @@ BenchmarkFunc
 	}
 }
 
-void doBenchmarkDumpJson(const FileInfo & fileInfo, const bool beaufify)
+void doBenchmarkDumpJson(const FileInfo & fileInfo, const bool beautify)
 {
-	namespace fs = std::filesystem;
-
 	const std::string & fullFileName = fileInfo.fileName;
 	const int iterations = fileInfo.iterations;
 
@@ -99,12 +292,10 @@ void doBenchmarkDumpJson(const FileInfo & fileInfo, const bool beaufify)
 		return;
 	}
 
-	const std::string pureFileName = fs::path(fullFileName).filename().string();
-
 	metapp::Variant var = jsonpp::Parser().parse(jsonText);
 	std::string dumpedText;
-	const auto t = measureElapsedTime([&var, iterations, beaufify, &dumpedText]() {
-		jsonpp::Dumper dumper(jsonpp::DumperConfig().enableBeautify(beaufify));
+	const auto t = measureElapsedTime([&var, iterations, beautify, &dumpedText]() {
+		jsonpp::Dumper dumper(jsonpp::DumperConfig().enableBeautify(beautify));
 		for(int i = 0; i < iterations; ++i) {
 			dumpedText = dumper.dump(var);
 		}
@@ -113,7 +304,10 @@ void doBenchmarkDumpJson(const FileInfo & fileInfo, const bool beaufify)
 	//metapp::Variant newVar = jsonpp::Parser().parse(dumpedText);
 	//REQUIRE(! newVar.isEmpty());
 
-	printTps(t, iterations, dumpedText.size(), std::string(beaufify ? "Beautify" : "Minify") + " Dump file " + pureFileName);
+	const std::string pureFileName = extractFileName(fullFileName);
+	printTps(t, iterations, dumpedText.size(), std::string(beautify ? "Beautify" : "Minify") + " Dump file " + pureFileName);
+
+	benchmarkDataCollection.addDumpResult(pureFileName, "jsonpp", beautify, dumpedText.size(), t, iterations);
 }
 
 BenchmarkFunc
@@ -131,8 +325,6 @@ BenchmarkFunc
 	std::cout << std::endl;
 
 	for(const auto & fileInfo : fileInfoList) {
-		namespace fs = std::filesystem;
-
 		const std::string & fullFileName = fileInfo.fileName;
 		const int iterations = fileInfo.iterations;
 
@@ -140,8 +332,6 @@ BenchmarkFunc
 		if(jsonText.empty()) {
 			return;
 		}
-
-		const std::string pureFileName = fs::path(fullFileName).filename().string();
 
 		simdjson::dom::parser parser;
 		simdjson::padded_string json(jsonText.c_str(), jsonText.size());
@@ -153,6 +343,7 @@ BenchmarkFunc
 			}
 		});
 
+		const std::string pureFileName = extractFileName(fullFileName);
 		printTps(t1, iterations, jsonText.size(), "simdjson DOM Parse file " + pureFileName);
 	}
 }
@@ -163,8 +354,6 @@ BenchmarkFunc
 	std::cout << std::endl;
 
 	for(const auto & fileInfo : fileInfoList) {
-		namespace fs = std::filesystem;
-
 		const std::string & fullFileName = fileInfo.fileName;
 		const int iterations = fileInfo.iterations;
 
@@ -173,7 +362,7 @@ BenchmarkFunc
 			return;
 		}
 
-		const std::string pureFileName = fs::path(fullFileName).filename().string();
+		const std::string pureFileName = extractFileName(fullFileName);
 
 		const auto t1 = measureElapsedTime([iterations, jsonText]() {
 			for(int i = 0; i < iterations; ++i) {
@@ -182,6 +371,8 @@ BenchmarkFunc
 		});
 
 		printTps(t1, iterations, jsonText.size(), "nlo Parse file " + pureFileName);
+
+		benchmarkDataCollection.addParseResult(pureFileName, "nlohmann", noBackend, jsonText.size(), t1, iterations);
 
 		auto parsed = nlohmann::json::parse(jsonText);
 		std::string dumpedText;
@@ -192,15 +383,23 @@ BenchmarkFunc
 		});
 		printTps(t2, iterations, dumpedText.size(), "nlo Dump file beautify " + pureFileName);
 
+		benchmarkDataCollection.addDumpResult(pureFileName, "nlohmann", true, dumpedText.size(), t2, iterations);
+
 		const auto t3 = measureElapsedTime([iterations, &parsed, &dumpedText]() {
 			for(int i = 0; i < iterations; ++i) {
 				dumpedText = parsed.dump();
 			}
 		});
 		printTps(t3, iterations, dumpedText.size(), "nlo Dump file minify " + pureFileName);
+
+		benchmarkDataCollection.addDumpResult(pureFileName, "nlohmann", false, dumpedText.size(), t3, iterations);
 	}
 }
 #endif
 
+BenchmarkFunc
+{
+	benchmarkDataCollection.dumpMarkdownTables();
+}
 
 } //namespace
