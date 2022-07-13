@@ -21,6 +21,7 @@
 
 #include "../src/thirdparty/simdjson/simdjson.h"
 
+// Uncomment it to enable benchmarking nlohmann json, the proper header must be included
 //#define NLOH
 
 #ifdef NLOH
@@ -46,7 +47,7 @@ FileInfo fileInfoList[] = {
 	{ "testdata/twitter.json", 10 },
 	{ "testdata/airlines.json", 10 },
 	{ "testdata/tiny.json", 10000 },
-	//{ "testdata/Zurich_Building_LoD2_V10.city.json", 1 },
+	{ "testdata/Zurich_Building_LoD2_V10.city.json", 1 },
 };
 
 void doBenchmarkParseFile(const FileInfo & fileInfo, const jsonpp::ParserBackendType parserType)
@@ -101,16 +102,16 @@ void doBenchmarkDumpJson(const FileInfo & fileInfo, const bool beaufify)
 	const std::string pureFileName = fs::path(fullFileName).filename().string();
 
 	metapp::Variant var = jsonpp::Parser().parse(jsonText);
-	const auto t = measureElapsedTime([&var, iterations, beaufify]() {
+	std::string dumpedText;
+	const auto t = measureElapsedTime([&var, iterations, beaufify, &dumpedText]() {
 		jsonpp::Dumper dumper(jsonpp::DumperConfig().enableBeautify(beaufify));
 		for(int i = 0; i < iterations; ++i) {
-			dumper.dump(var);
+			dumpedText = dumper.dump(var);
 		}
 	});
 
-	const std::string dumpedText = jsonpp::Dumper(jsonpp::DumperConfig().enableBeautify(beaufify)).dump(var);
-	metapp::Variant newVar = jsonpp::Parser().parse(dumpedText);
-	REQUIRE(! newVar.isEmpty());
+	//metapp::Variant newVar = jsonpp::Parser().parse(dumpedText);
+	//REQUIRE(! newVar.isEmpty());
 
 	printTps(t, iterations, dumpedText.size(), std::string(beaufify ? "Beautify" : "Minify") + " Dump file " + pureFileName);
 }
@@ -156,7 +157,6 @@ BenchmarkFunc
 	}
 }
 
-// Change it to #if 1 to enable benchmarking nlohmann json, the proper header must be included
 #ifdef NLOH
 BenchmarkFunc
 {
@@ -184,13 +184,20 @@ BenchmarkFunc
 		printTps(t1, iterations, jsonText.size(), "nlo Parse file " + pureFileName);
 
 		auto parsed = nlohmann::json::parse(jsonText);
-		const auto t2 = measureElapsedTime([iterations, &parsed]() {
+		std::string dumpedText;
+		const auto t2 = measureElapsedTime([iterations, &parsed, &dumpedText]() {
 			for(int i = 0; i < iterations; ++i) {
-				parsed.dump();
+				dumpedText = parsed.dump(4);
 			}
 		});
+		printTps(t2, iterations, dumpedText.size(), "nlo Dump file beautify " + pureFileName);
 
-		printTps(t2, iterations, jsonText.size(), "nlo Dump file " + pureFileName);
+		const auto t3 = measureElapsedTime([iterations, &parsed, &dumpedText]() {
+			for(int i = 0; i < iterations; ++i) {
+				dumpedText = parsed.dump();
+			}
+		});
+		printTps(t3, iterations, dumpedText.size(), "nlo Dump file minify " + pureFileName);
 	}
 }
 #endif

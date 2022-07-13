@@ -128,7 +128,7 @@ To do so, replace `cmake ..` with `cmake .. -DCMAKE_INSTALL_PREFIX="YOUR_NEW_LIB
 ## Example code
 
 desc*/
-//desc ### Parse JSON text
+//desc ### Parse JSON document
 
 //code
 //desc Header for Parser
@@ -200,6 +200,8 @@ ExampleFunc
 //desc ### Dump/parse class object
 //desc Now let's dump and parse customized class objects. First let's define the enum and classes we will use later.
 
+namespace {
+
 //code
 enum class Gender
 {
@@ -220,6 +222,26 @@ struct Person
 	int age;
 	std::vector<Skill> skills;
 };
+
+//code
+
+bool operator == (const Skill & a, const Skill & b)
+{
+	return a.name == b.name && a.level == b.level;
+}
+
+bool operator == (const Person & a, const Person & b)
+{
+	return a.name == b.name
+		&& a.gender == b.gender
+		&& a.age == b.age
+		&& a.skills == b.skills
+		;
+}
+
+} // namespace
+
+//code
 
 //desc Now make the enum and class information availabe to metapp. jsonpp uses the reflection information from metapp.
 //desc The information is not special to jsonpp, it's general reflection and can be used for other purposes such
@@ -264,20 +286,6 @@ JSONPP_BEGIN_DECLARE_CLASS(Person)
 JSONPP_END_DECLARE_CLASS()
 
 //code
-
-bool operator == (const Skill & a, const Skill & b)
-{
-	return a.name == b.name && a.level == b.level;
-}
-
-bool operator == (const Person & a, const Person & b)
-{
-	return a.name == b.name
-		&& a.gender == b.gender
-		&& a.age == b.age
-		&& a.skills == b.skills
-	;
-}
 
 ExampleFunc
 {

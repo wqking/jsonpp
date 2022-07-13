@@ -42,3 +42,30 @@ so any data types can be stored.
 `JsonObject` represents JSON object. It's heterogeneous data structure, the mapped value type is `metapp::Variant`,
 so any data types can be stored.  
 
+#### Type constants
+
+There are enum values to identify the types. `jtNone` means it's not any known default data type.
+
+```c++
+enum class JsonType {
+  jtNone,
+  jtNull,
+  jtBool,
+  jtInt,
+  jtUnsignedInt,
+  jtReal,
+  jtString,
+  jtArray,
+  jtObject
+};
+```
+
+#### Function getJsonType
+
+```c++
+JsonType getJsonType(const metapp::Variant & var);
+```
+
+Returns the data type of `var` if it holds any default data type, otherwise returns `JsonType::jtNone`.
+
+

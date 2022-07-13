@@ -12,7 +12,7 @@
   - [Namespace](#mdtoc_33e16b56)
   - [Build and install, use jsonpp in your project](#mdtoc_3155c9b5)
 - [Example code](#mdtoc_3bb166c4)
-  - [Parse JSON text](#mdtoc_f277719e)
+  - [Parse JSON document](#mdtoc_bdd95779)
   - [Dump JSON object to text (stringify)](#mdtoc_a4e21f76)
   - [Dump/parse class object](#mdtoc_9eda3b58)
 - [Documentations](#mdtoc_aa76f386)
@@ -129,8 +129,8 @@ To do so, replace `cmake ..` with `cmake .. -DCMAKE_INSTALL_PREFIX="YOUR_NEW_LIB
 ## Example code
 
 
-<a id="mdtoc_f277719e"></a>
-### Parse JSON text
+<a id="mdtoc_bdd95779"></a>
+### Parse JSON document
 Header for Parser
 
 ```c++
