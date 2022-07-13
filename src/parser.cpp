@@ -63,6 +63,50 @@ ParserBackendType getDefaultBackend()
 
 } // namespace internal_
 
+JsonType getJsonType(const metapp::Variant & var)
+{
+	auto metaType = metapp::getNonReferenceMetaType(var);
+	const auto typeKind = metaType->getTypeKind();
+
+	switch(typeKind) {
+	case metapp::getTypeKind<JsonNull>():
+		if(metaType->getUpType()->getTypeKind() == metapp::tkVoid
+			&& var.get<void *>() == nullptr) {
+			return JsonType::jtNull;
+		}
+		break;
+
+	case metapp::getTypeKind<JsonBool>():
+		return JsonType::jtBool;
+
+	case metapp::getTypeKind<JsonInt>():
+		return JsonType::jtInt;
+
+	case metapp::getTypeKind<JsonUnsignedInt>():
+		return JsonType::jtUnsignedInt;
+
+	case metapp::getTypeKind<JsonReal>():
+		return JsonType::jtReal;
+
+	case metapp::getTypeKind<JsonString>():
+		return JsonType::jtString;
+
+	case metapp::getTypeKind<JsonArray>():
+		if(metaType->getUpType()->getTypeKind() == metapp::tkVariant) {
+			return JsonType::jtArray;
+		}
+		break;
+
+	default:
+		if(metaType->equal(metapp::getMetaType<JsonObject>())) {
+			return JsonType::jtObject;
+		}
+		break;
+
+	}
+
+	return JsonType::jtNone;
+}
 
 std::string getParserBackendName(const ParserBackendType type)
 {
