@@ -145,10 +145,8 @@ struct EscapeItem {
 	const char * str;
 	std::size_t length;
 };
-constexpr char escapeItemListSize = 32;
-extern const std::array<EscapeItem, escapeItemListSize> escapeItemList;
-extern const EscapeItem escapeItemQuoteMark;
-extern const EscapeItem escapeItemBackSlash;
+extern const uint8_t encodeCharMap[];
+extern const EscapeItem escapeItemList[];
 
 template <typename Writer>
 struct TextOutput
@@ -212,9 +210,16 @@ struct TextOutput
 		};
 
 		while(index < s.size()) {
-			const char c = s[index];
+			const unsigned char c = static_cast<unsigned char>(s[index]);
+			if(encodeCharMap[c] != 0) {
+				const EscapeItem * escapeItem = &escapeItemList[encodeCharMap[c]];
+				flush();
+				writer(escapeItem->str, escapeItem->length);
+				++previousIndex;
+			}
+#if 0
 			const EscapeItem * escapeItem = nullptr;
-			if(c >= 0 && c < escapeItemListSize) {
+			if(c < escapeItemListSize) {
 				escapeItem = &escapeItemList[c];
 			}
 			else if(c == '"') {
@@ -228,6 +233,7 @@ struct TextOutput
 				writer(escapeItem->str, escapeItem->length);
 				++previousIndex;
 			}
+#endif
 			++index;
 		}
 

@@ -93,8 +93,11 @@ inline void printResult(const uint64_t time, const int iterations, const std::st
 	;
 }
 
-inline void printTps(const uint64_t time, const int iterations, const uint64_t size, const std::string & message)
+inline void printTps(uint64_t time, const int iterations, const uint64_t size, const std::string & message)
 {
+	if(time == 0) {
+		time = 1;
+	}
 	const uint64_t tps = size * iterations * 1000 / time;
 	std::cout
 		<< message

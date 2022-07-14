@@ -123,14 +123,13 @@ private:
 		int as = asNone;
 
 		const metapp::MetaMappable * metaMappable = metaType->getMetaMappable();
-		const metapp::MetaIterable * metaIterable = metaType->getMetaIterable();
 		const metapp::MetaIndexable * metaIndexable = nullptr;
 		if(config.isObjectType(metaType)) {
 			metaIndexable = metaType->getMetaIndexable();
 		}
 		const metapp::MetaClass * metaClass = nullptr;
 
-		if(metaMappable != nullptr && metaIterable != nullptr) {
+		if(metaMappable != nullptr) {
 			as = asMap;
 		}
 		else if(metaIndexable != nullptr) {
@@ -147,36 +146,37 @@ private:
 			return false;
 		}
 
-		std::size_t index = 0;
-		auto itemDumper = [this, &index](const metapp::Variant & item) -> bool {
-			auto indexable = metapp::getNonReferenceMetaType(item)->getMetaIndexable();
-			if(indexable == nullptr || indexable->getSizeInfo(item).getSize() < 2) {
-				return true;
-			}
-			output.beginObjectItem(indexable->get(item, 0).template cast<std::string>().template get<std::string>(), index++);
-			doDumpValue(indexable->get(item, 1));
-			output.endObjectItem();
-
-			return true;
-		};
-
 		output.beginObject();
 
 		if(as == asMap) {
-			metaIterable->forEach(value, itemDumper);
+			std::size_t index = 0;
+			metaMappable->forEach(value, [this, &index](const metapp::Variant & key, const metapp::Variant & mapped) -> bool {
+				output.beginObjectItem(key.cast<std::string>().template get<std::string>(), index++);
+				doDumpValue(mapped);
+				output.endObjectItem();
+
+				return true;
+			});
 		}
 		else if(as == asIndexable) {
 			const std::size_t size = metaIndexable->getSizeInfo(value).getSize();
 			for(std::size_t i = 0; i < size; ++i) {
 				const metapp::Variant item = metaIndexable->get(value, i);
-				itemDumper(item);
+
+				auto indexable = metapp::getNonReferenceMetaType(item)->getMetaIndexable();
+				if(indexable == nullptr) {
+					return true;
+				}
+				output.beginObjectItem(indexable->get(item, 0).template cast<std::string>().template get<std::string>(), i);
+				doDumpValue(indexable->get(item, 1));
+				output.endObjectItem();
 			}
 		}
 		else {
 			const auto fieldView = metaClass->getAccessibleView();
-			std::size_t i = 0;
+			std::size_t index = 0;
 			for(const auto & field : fieldView) {
-				output.beginObjectItem(field.getName(), i++);
+				output.beginObjectItem(field.getName(), index++);
 				doDumpValue(metapp::accessibleGet(field, value.getAddress()));
 				output.endObjectItem();
 			}
