@@ -348,6 +348,36 @@ ExampleFunc
 }
 
 /*desc
+## Performance
+
+Hardware: HP laptop, Intel(R) Core(TM) i5-8300H CPU @ 2.30GHz, 16 GB RAM.  
+Software: Windows 10 Pro, 21H2. MinGW gcc version 11.3.0, optimization level is -O3.  
+
+There are two parts in each benchmark data. The first part is the time to parse/dump one file, the second part
+is the per second throughput.
+
+### Parse JSON file
+
+|File name           |File size|    jsonpp (simdjson)| jsonpp (json-parser)|             nlohmann|
+|:-------------------|--------:|--------------------:|--------------------:|--------------------:|
+|canada.json         | 2,198 KB|   18.7 ms,  114 MB/s|   41.2 ms,   52 MB/s|  108.8 ms,   19 MB/s|
+|citm_catalog.json   | 1,686 KB|   7.02 ms,  234 MB/s|  18.84 ms,   87 MB/s|  13.16 ms,  125 MB/s|
+|twitter.json        |   616 KB|   3.93 ms,  153 MB/s|   8.81 ms,   68 MB/s|      6 ms,  100 MB/s|
+|airlines.json       | 4,848 KB|   32.7 ms,  144 MB/s|   73.5 ms,   64 MB/s|   53.7 ms,   88 MB/s|
+|tiny.json           |    348 B| 0.0026 ms,  127 MB/s| 0.0058 ms,   57 MB/s|  0.007 ms,   47 MB/s|
+|Zurich_Building.json|   278 MB|   4187 ms,   66 MB/s|   9076 ms,   30 MB/s|  10388 ms,   26 MB/s|
+
+### Stringify JSON document
+
+|File name           |    jsonpp (beautify)|      jsonpp (minify)|  nlohmann (beautify)|    nlohmann (minify)|
+|:-------------------|--------------------:|--------------------:|--------------------:|--------------------:|
+|canada.json         |   14.1 ms,  548 MB/s|     10 ms,  199 MB/s|     20 ms,  386 MB/s|   14.3 ms,  139 MB/s|
+|citm_catalog.json   |   4.14 ms,  457 MB/s|   2.67 ms,  178 MB/s|   5.04 ms,  326 MB/s|   4.09 ms,  116 MB/s|
+|twitter.json        |   2.44 ms,  306 MB/s|   2.13 ms,  209 MB/s|   4.17 ms,  175 MB/s|   3.21 ms,  138 MB/s|
+|airlines.json       |   22.6 ms,  257 MB/s|   18.7 ms,  179 MB/s|   22.8 ms,  254 MB/s|   20.1 ms,  167 MB/s|
+|tiny.json           | 0.0033 ms,  137 MB/s| 0.0029 ms,   86 MB/s| 0.0017 ms,  251 MB/s| 0.0016 ms,  152 MB/s|
+|Zurich_Building.json|   3923 ms,  327 MB/s|   2855 ms,   97 MB/s|   2747 ms,  467 MB/s|   1940 ms,  143 MB/s|
+
 ## Documentations
 Below are tutorials and documents. Don't feel upset if you find issues or missing stuff in the documents, I'm not
 native English speaker and it's not that exciting to write document. Any way, the code quality is always much better

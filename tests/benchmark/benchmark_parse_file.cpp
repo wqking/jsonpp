@@ -46,8 +46,8 @@ struct FileInfo
 
 FileInfo fileInfoList[] = {
 	{ "testdata/canada.json", 10 },
-	{ "testdata/citm_catalog.json", 10 },
-	{ "testdata/twitter.json", 10 },
+	{ "testdata/citm_catalog.json", 100 },
+	{ "testdata/twitter.json", 100 },
 	{ "testdata/airlines.json", 10 },
 	{ "testdata/tiny.json", 10000 },
 	//{ "testdata/Zurich_Building_LoD2_V10.city.json", 1 },
@@ -246,23 +246,25 @@ private:
 
 BenchmarkDataCollection benchmarkDataCollection;
 
-void doBenchmarkParseFile(const FileInfo & fileInfo, const jsonpp::ParserBackendType parserType)
+metapp::Variant doBenchmarkParseFile(const FileInfo & fileInfo, const jsonpp::ParserBackendType parserType)
 {
 	const std::string & fullFileName = fileInfo.fileName;
 	const int iterations = fileInfo.iterations;
 
 	std::string jsonText = readFile(fullFileName);
 	if(jsonText.empty()) {
-		return;
+		return metapp::Variant();
 	}
 
 	const auto fileSize = jsonText.size();
 	jsonpp::Parser parser(jsonpp::ParserConfig().setBackendType(parserType));
 	auto source = jsonpp::ParserSource(std::move(jsonText));
 	REQUIRE(jsonText.empty());
-	const auto t = measureElapsedTime([&parser, iterations, &source, parserType]() {
+
+	metapp::Variant result;
+	const auto t = measureElapsedTime([&parser, iterations, &source, parserType, &result]() {
 		for(int i = 0; i < iterations; ++i) {
-			parser.parse(source);
+			result = parser.parse(source);
 		}
 	});
 
@@ -270,34 +272,24 @@ void doBenchmarkParseFile(const FileInfo & fileInfo, const jsonpp::ParserBackend
 	printTps(t, iterations, fileSize, jsonpp::getParserBackendName(parserType) + " Parse file " + pureFileName);
 	
 	benchmarkDataCollection.addParseResult(pureFileName, "jsonpp", parserType, fileSize, t, iterations);
+
+	return result;
 }
 
-BenchmarkFunc
-{
-	std::cout << std::endl;
-
-	auto parserType = PARSER_TYPES();
-	for(const auto & fileInfo : fileInfoList) {
-		doBenchmarkParseFile(fileInfo, parserType);
-	}
-}
-
-void doBenchmarkDumpJson(const FileInfo & fileInfo, const bool beautify)
+void doBenchmarkDumpJson(const metapp::Variant & parsedObject, const FileInfo & fileInfo, const bool beautify)
 {
 	const std::string & fullFileName = fileInfo.fileName;
 	const int iterations = fileInfo.iterations;
 
-	const std::string jsonText = readFile(fullFileName);
-	if(jsonText.empty()) {
+	if(parsedObject.isEmpty()) {
 		return;
 	}
 
-	metapp::Variant var = jsonpp::Parser().parse(jsonText);
 	std::string dumpedText;
-	const auto t = measureElapsedTime([&var, iterations, beautify, &dumpedText]() {
+	const auto t = measureElapsedTime([&parsedObject, iterations, beautify, &dumpedText]() {
 		jsonpp::Dumper dumper(jsonpp::DumperConfig().enableBeautify(beautify));
 		for(int i = 0; i < iterations; ++i) {
-			dumpedText = dumper.dump(var);
+			dumpedText = dumper.dump(parsedObject);
 		}
 	});
 
@@ -314,9 +306,19 @@ BenchmarkFunc
 {
 	std::cout << std::endl;
 
+	const std::array<jsonpp::ParserBackendType, 2> backendTypesList {
+		jsonpp::ParserBackendType::simdjson,
+		jsonpp::ParserBackendType::cparser
+	};
+
 	for(const auto & fileInfo : fileInfoList) {
-		doBenchmarkDumpJson(fileInfo, true);
-		doBenchmarkDumpJson(fileInfo, false);
+		metapp::Variant parsedObject;
+		for(auto backend : backendTypesList) {
+			parsedObject = doBenchmarkParseFile(fileInfo, backend);
+		}
+		doBenchmarkDumpJson(parsedObject, fileInfo, true);
+		doBenchmarkDumpJson(parsedObject, fileInfo, false);
+		std::cout << std::endl;
 	}
 }
 
@@ -364,9 +366,11 @@ BenchmarkFunc
 
 		const std::string pureFileName = extractFileName(fullFileName);
 
-		const auto t1 = measureElapsedTime([iterations, jsonText]() {
+		nlohmann::basic_json parsedObject;
+
+		const auto t1 = measureElapsedTime([&parsedObject, iterations, jsonText]() {
 			for(int i = 0; i < iterations; ++i) {
-				auto result = nlohmann::json::parse(jsonText);
+				parsedObject = nlohmann::json::parse(jsonText);
 			}
 		});
 
@@ -374,20 +378,19 @@ BenchmarkFunc
 
 		benchmarkDataCollection.addParseResult(pureFileName, "nlohmann", noBackend, jsonText.size(), t1, iterations);
 
-		auto parsed = nlohmann::json::parse(jsonText);
 		std::string dumpedText;
-		const auto t2 = measureElapsedTime([iterations, &parsed, &dumpedText]() {
+		const auto t2 = measureElapsedTime([iterations, &parsedObject, &dumpedText]() {
 			for(int i = 0; i < iterations; ++i) {
-				dumpedText = parsed.dump(4);
+				dumpedText = parsedObject.dump(4);
 			}
 		});
 		printTps(t2, iterations, dumpedText.size(), "nlo Dump file beautify " + pureFileName);
 
 		benchmarkDataCollection.addDumpResult(pureFileName, "nlohmann", true, dumpedText.size(), t2, iterations);
 
-		const auto t3 = measureElapsedTime([iterations, &parsed, &dumpedText]() {
+		const auto t3 = measureElapsedTime([iterations, &parsedObject, &dumpedText]() {
 			for(int i = 0; i < iterations; ++i) {
-				dumpedText = parsed.dump();
+				dumpedText = parsedObject.dump();
 			}
 		});
 		printTps(t3, iterations, dumpedText.size(), "nlo Dump file minify " + pureFileName);
