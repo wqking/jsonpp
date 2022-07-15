@@ -61,7 +61,18 @@ Construct Dumper using `config`.
 std::string dump(const metapp::Variant & value);
 ```
 
-Dump `value` to `std::string`.
+Dump `value` to `std::string`.  
+`value` can be any data, it will be converted to `metapp::Variant` automatically.  
+To avoid copying large object, we can either move the object, or use metapp::Variant::reference. For example,  
+```c++
+LargeObject object;
+// move the object
+jsonpp::Dumper()::dump(std::move(object));
+// reference to the object
+jsonpp::Dumper()::dump(metapp::Variant::reference(object));
+// rvalue object, move to `dump`
+jsonpp::Dumper()::dump(LargeObject());
+```
 
 #### dump to customized output
 
@@ -325,5 +336,6 @@ ExampleFunc
 	dumper.dump(5, streamOutput);
 	// output 5
 	//code
+	std::cout << std::endl;
 }
 

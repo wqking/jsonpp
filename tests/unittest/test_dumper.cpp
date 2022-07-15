@@ -98,7 +98,17 @@ TEST_CASE("Dumper, dump/parse, string, escape/unescape")
 {
 	auto parserType = PARSER_TYPES();
 	auto dumperConfig = DUMPER_CONFIGS();
-	const std::string text = "\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1a\x1b\x1c\x1d\x1e\x1f";
+	const std::string text = ""
+		"one"
+		"\x01\x02\x03\x04\x05\x06\x07\x08"
+		"two"
+		"\x09\x0a\x0b\x0c\x0d\x0e\x0f\x10"
+		"three"
+		"\x11\x12\x13\x14\x15\x16\x17\x18"
+		"four"
+		"\x19\x1a\x1b\x1c\x1d\x1e\x1f\"\\"
+		"five"
+	;
 	const std::string jsonText = jsonpp::Dumper(dumperConfig).dump(text);
 	metapp::Variant var = jsonpp::Parser(jsonpp::ParserConfig().setBackendType(parserType)).parse(jsonText);
 	REQUIRE(var.get<const std::string &>() == text);

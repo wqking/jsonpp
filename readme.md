@@ -5,7 +5,7 @@
 - [Features](#mdtoc_bfc0dc13)
 - [Basic information](#mdtoc_abc52c05)
   - [License](#mdtoc_5768f419)
-  - [Version 0.1.0](#mdtoc_c3ac4dae)
+  - [Version 0.1.0-beta](#mdtoc_c77a4649)
   - [Source code](#mdtoc_6b8a2c23)
   - [Supported compilers](#mdtoc_215a5bea)
 - [Quick start](#mdtoc_ea7b0a9)
@@ -34,7 +34,7 @@ jsonpp is a cross platform C++ json library, focusing on easy to use.
 
 - **Easy to use, very easy to use, very very ... easy to use**. That means,
   - You can parse and stringify any C++ data structures, include STL containers, classes, etc.
-  - For C++ native data types and STL containers, you don't need to provide any meta data to use them, because metapp already provides them.
+  - For C++ native data types and STL containers, you don't need to provide any meta data to use them, because metapp already supports them.
   - Reflecting meta data for class is very easy. 
 
 - **Reusable meta data**. jsonpp uses meta data from [C++ reflection library metapp](https://github.com/wqking/metapp) that's developed
@@ -51,6 +51,14 @@ new backend is very easy.
 simdjson. However, the performance is better than some existing popular JSON libraries which also focus on usability, thanks to
 the high performance simdjson and well optimized metapp.
 
+- Support stringify and parse almost all C++ native types and STL containers, such as integers, float points, C string,
+std::string, std::array, std::vector, std::list, std::deque, std::map, std::unordered_map, etc.
+New containers can be added via metapp reflection system.
+
+- Support stringify and parse classes and enumerators.
+
+- Enumerators can be stringified as string names and parsed back to enum values.
+
 - Cross platforms, cross compilers.
 
 - Written in standard and portable C++, only require C++11, and support later C++ standard
@@ -63,10 +71,10 @@ the high performance simdjson and well optimized metapp.
 
 Apache License, Version 2.0  
 
-<a id="mdtoc_c3ac4dae"></a>
-### Version 0.1.0
+<a id="mdtoc_c77a4649"></a>
+### Version 0.1.0-beta
 
-The project is under working in progress.  
+The project is under working in progress and near the first release.  
 The first stable release will be v1.0.0. 
 
 To put the library to first release, we need to,   
@@ -97,10 +105,6 @@ In brief, MSVC, GCC, Clang that has well support for C++11, or released after 20
 
 <a id="mdtoc_3155c9b5"></a>
 ### Build and install, use jsonpp in your project
-
-There are various methods to use jsonpp
-
-1, Install using CMake and use it in CMake
 
 If you are going to use jsonpp in CMake managed project, you can install jsonpp then use it in CMake.  
 In jsonpp root folder, run the commands,  
@@ -407,6 +411,7 @@ If you want to contribute to the documents, be sure to read [How to generate doc
 - [Common and default data types](doc/common_types.md)
 - [Use class Parser to read and parse JSON document](doc/parser.md)
 - [Use class Dumper to dump and stringify JSON data](doc/dumper.md)
+- [Declare meta data, use classes and enumerators, use metapp](doc/metapp_basic.md)
 
 
 <a id="mdtoc_460948ff"></a>

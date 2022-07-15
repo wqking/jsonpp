@@ -21,15 +21,6 @@
 
 #include "implement/algorithms_i.h"
 
-#include "metapp/variant.h"
-#include "metapp/allmetatypes.h"
-#include "metapp/interfaces/metaclass.h"
-#include "metapp/interfaces/metaindexable.h"
-#include "metapp/interfaces/metamappable.h"
-#include "metapp/interfaces/metaenum.h"
-#include "metapp/utilities/utility.h"
-#include "metapp/compiler.h"
-
 #include <memory>
 #include <vector>
 #include <ostream>

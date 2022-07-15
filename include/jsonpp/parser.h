@@ -19,9 +19,6 @@
 
 #include "jsonpp/common.h"
 
-#include "metapp/variant.h"
-#include "metapp/allmetatypes.h"
-
 #include <memory>
 #include <string>
 #include <vector>
