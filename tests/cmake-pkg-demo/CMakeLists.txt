@@ -18,3 +18,6 @@ add_executable(
 find_package(jsonpp CONFIG REQUIRED)
 target_link_libraries(${TARGET} PRIVATE jsonpp::jsonpp)
 
+if(CMAKE_COMPILER_IS_GNUCXX)
+set(CMAKE_CXX_FLAGS "-Wl,-Map,pkgdemo.map")
+endif()

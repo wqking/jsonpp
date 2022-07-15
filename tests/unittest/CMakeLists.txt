@@ -1,5 +1,10 @@
 set(TARGET_TEST unittest)
 
+if(MSVC)
+	# MSVC pre-C++20 can't compile some code due to bad conformance to C++ standard
+	set(CMAKE_CXX_STANDARD 20)
+endif()
+
 include(../cmakecommon.txt)
 
 file(GLOB_RECURSE SRC_TEST "./*.cpp")

@@ -21,13 +21,13 @@
 
 namespace {
 
-BenchmarkFunc
+TEMPLATE_LIST_TEST_CASE("Parse string", "", BackendTypes)
 {
-	auto parserType = PARSER_TYPES();
+	constexpr auto parserType = TestType::backendType;
 	constexpr int iterations = 1000 * 100;
 	const std::string jsonText = R"([ 5, { "b" : 38, "a" : "hello" } ])";
-	const auto t = measureElapsedTime([iterations, jsonText, parserType]() {
-		jsonpp::Parser parser(jsonpp::ParserConfig().setBackendType(parserType));
+	const auto t = measureElapsedTime([jsonText]() {
+		jsonpp::Parser parser(jsonpp::ParserConfig().setBackendType<parserType>());
 		for(int i = 0; i < iterations; ++i) {
 			parser.parse(jsonText);
 		}

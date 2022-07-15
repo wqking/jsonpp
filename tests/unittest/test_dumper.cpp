@@ -27,76 +27,76 @@
 #include <unordered_map>
 #include <iostream>
 
-TEST_CASE("Dumper, dump/parse, null")
+TEMPLATE_LIST_TEST_CASE("Dumper, dump/parse, null", "", BackendTypes)
 {
-	auto parserType = PARSER_TYPES();
+	constexpr auto parserType = TestType::backendType;
 	auto dumperConfig = DUMPER_CONFIGS();
 	const std::string jsonText = jsonpp::Dumper(dumperConfig).dump(nullptr);
-	metapp::Variant var = jsonpp::Parser(jsonpp::ParserConfig().setBackendType(parserType)).parse(jsonText);
+	metapp::Variant var = jsonpp::Parser(jsonpp::ParserConfig().setBackendType<parserType>()).parse(jsonText);
 	REQUIRE(var.get<jsonpp::JsonNull>() == nullptr);
 }
 
-TEST_CASE("Dumper, dump/parse, bool")
+TEMPLATE_LIST_TEST_CASE("Dumper, dump/parse, bool", "", BackendTypes)
 {
-	auto parserType = PARSER_TYPES();
+	constexpr auto parserType = TestType::backendType;
 	auto dumperConfig = DUMPER_CONFIGS();
 	SECTION("true") {
 		const std::string jsonText = jsonpp::Dumper(dumperConfig).dump(true);
-		metapp::Variant var = jsonpp::Parser(jsonpp::ParserConfig().setBackendType(parserType)).parse(jsonText);
+		metapp::Variant var = jsonpp::Parser(jsonpp::ParserConfig().setBackendType<parserType>()).parse(jsonText);
 		REQUIRE(var.get<jsonpp::JsonBool>());
 	}
 
 	SECTION("false") {
 		const std::string jsonText = jsonpp::Dumper(dumperConfig).dump(false);
-		metapp::Variant var = jsonpp::Parser(jsonpp::ParserConfig().setBackendType(parserType)).parse(jsonText);
+		metapp::Variant var = jsonpp::Parser(jsonpp::ParserConfig().setBackendType<parserType>()).parse(jsonText);
 		REQUIRE(! var.get<jsonpp::JsonBool>());
 	}
 }
 
-TEST_CASE("Dumper, dump/parse, int")
+TEMPLATE_LIST_TEST_CASE("Dumper, dump/parse, int", "", BackendTypes)
 {
-	auto parserType = PARSER_TYPES();
+	constexpr auto parserType = TestType::backendType;
 	auto dumperConfig = DUMPER_CONFIGS();
 	SECTION("38") {
 		const std::string jsonText = jsonpp::Dumper(dumperConfig).dump(38);
-		metapp::Variant var = jsonpp::Parser(jsonpp::ParserConfig().setBackendType(parserType)).parse(jsonText);
+		metapp::Variant var = jsonpp::Parser(jsonpp::ParserConfig().setBackendType<parserType>()).parse(jsonText);
 		REQUIRE(var.get<jsonpp::JsonInt>() == 38);
 	}
 	SECTION("-98765") {
 		const std::string jsonText = jsonpp::Dumper(dumperConfig).dump(-98765);
-		metapp::Variant var = jsonpp::Parser(jsonpp::ParserConfig().setBackendType(parserType)).parse(jsonText);
+		metapp::Variant var = jsonpp::Parser(jsonpp::ParserConfig().setBackendType<parserType>()).parse(jsonText);
 		REQUIRE(var.get<jsonpp::JsonInt>() == -98765);
 	}
 }
 
-TEST_CASE("Dumper, dump/parse, double")
+TEMPLATE_LIST_TEST_CASE("Dumper, dump/parse, double", "", BackendTypes)
 {
-	auto parserType = PARSER_TYPES();
+	constexpr auto parserType = TestType::backendType;
 	auto dumperConfig = DUMPER_CONFIGS();
 	SECTION("9.1") {
 		const std::string jsonText = jsonpp::Dumper(dumperConfig).dump(9.1);
-		metapp::Variant var = jsonpp::Parser(jsonpp::ParserConfig().setBackendType(parserType)).parse(jsonText);
+		metapp::Variant var = jsonpp::Parser(jsonpp::ParserConfig().setBackendType<parserType>()).parse(jsonText);
 		REQUIRE(var.get<jsonpp::JsonReal>() == 9.1);
 	}
 	SECTION("-3.14") {
 		const std::string jsonText = jsonpp::Dumper(dumperConfig).dump(-3.14);
-		metapp::Variant var = jsonpp::Parser(jsonpp::ParserConfig().setBackendType(parserType)).parse(jsonText);
+		metapp::Variant var = jsonpp::Parser(jsonpp::ParserConfig().setBackendType<parserType>()).parse(jsonText);
 		REQUIRE(var.get<jsonpp::JsonReal>() == -3.14);
 	}
 }
 
-TEST_CASE("Dumper, dump/parse, string")
+TEMPLATE_LIST_TEST_CASE("Dumper, dump/parse, string", "", BackendTypes)
 {
-	auto parserType = PARSER_TYPES();
+	constexpr auto parserType = TestType::backendType;
 	auto dumperConfig = DUMPER_CONFIGS();
 	const std::string jsonText = jsonpp::Dumper(dumperConfig).dump("Hello world");
-	metapp::Variant var = jsonpp::Parser(jsonpp::ParserConfig().setBackendType(parserType)).parse(jsonText);
+	metapp::Variant var = jsonpp::Parser(jsonpp::ParserConfig().setBackendType<parserType>()).parse(jsonText);
 	REQUIRE(var.get<const std::string &>() == "Hello world");
 }
 
-TEST_CASE("Dumper, dump/parse, string, escape/unescape")
+TEMPLATE_LIST_TEST_CASE("Dumper, dump/parse, string, escape/unescape", "", BackendTypes)
 {
-	auto parserType = PARSER_TYPES();
+	constexpr auto parserType = TestType::backendType;
 	auto dumperConfig = DUMPER_CONFIGS();
 	const std::string text = ""
 		"one"
@@ -110,16 +110,16 @@ TEST_CASE("Dumper, dump/parse, string, escape/unescape")
 		"five"
 	;
 	const std::string jsonText = jsonpp::Dumper(dumperConfig).dump(text);
-	metapp::Variant var = jsonpp::Parser(jsonpp::ParserConfig().setBackendType(parserType)).parse(jsonText);
+	metapp::Variant var = jsonpp::Parser(jsonpp::ParserConfig().setBackendType<parserType>()).parse(jsonText);
 	REQUIRE(var.get<const std::string &>() == text);
 }
 
-TEST_CASE("Dumper, dump/parse, array")
+TEMPLATE_LIST_TEST_CASE("Dumper, dump/parse, array", "", BackendTypes)
 {
-	auto parserType = PARSER_TYPES();
+	constexpr auto parserType = TestType::backendType;
 	auto dumperConfig = DUMPER_CONFIGS();
 	const std::string jsonText = jsonpp::Dumper(dumperConfig).dump(std::make_tuple("Hello world", 5, -9, "good"));
-	metapp::Variant var = jsonpp::Parser(jsonpp::ParserConfig().setBackendType(parserType)).parse(jsonText);
+	metapp::Variant var = jsonpp::Parser(jsonpp::ParserConfig().setBackendType<parserType>()).parse(jsonText);
 	const jsonpp::JsonArray & array = var.get<const jsonpp::JsonArray &>();
 	REQUIRE(array[0].get<const std::string &>() == "Hello world");
 	REQUIRE(array[1].get<jsonpp::JsonInt>() == 5);
@@ -127,18 +127,18 @@ TEST_CASE("Dumper, dump/parse, array")
 	REQUIRE(array[3].get<const std::string &>() == "good");
 }
 
-TEST_CASE("Dumper, dump/parse, TestClass2")
+TEMPLATE_LIST_TEST_CASE("Dumper, dump/parse, TestClass2", "", BackendTypes)
 {
-	auto parserType = PARSER_TYPES();
+	constexpr auto parserType = TestType::backendType;
 	auto dumperConfig = DUMPER_CONFIGS();
 	const std::string jsonText = jsonpp::Dumper(jsonpp::DumperConfig(dumperConfig).enableBeautify(true)).dump(makeTestClass2(0));
-	metapp::Variant var = jsonpp::Parser(jsonpp::ParserConfig().setBackendType(parserType)).parse(jsonText, metapp::getMetaType<TestClass2>());
+	metapp::Variant var = jsonpp::Parser(jsonpp::ParserConfig().setBackendType<parserType>()).parse(jsonText, metapp::getMetaType<TestClass2>());
 	REQUIRE(var.get<const TestClass2 &>() == makeTestClass2(0));
 }
 
-TEST_CASE("Dumper, dump/parse, std::vector<TestClass2>")
+TEMPLATE_LIST_TEST_CASE("Dumper, dump/parse, std::vector<TestClass2>", "", BackendTypes)
 {
-	auto parserType = PARSER_TYPES();
+	constexpr auto parserType = TestType::backendType;
 	auto dumperConfig = DUMPER_CONFIGS();
 	const std::string jsonText = jsonpp::Dumper(dumperConfig).dump(
 		std::vector<TestClass2> {
@@ -146,18 +146,18 @@ TEST_CASE("Dumper, dump/parse, std::vector<TestClass2>")
 			makeTestClass2(1),
 		}
 	);
-	metapp::Variant var = jsonpp::Parser(jsonpp::ParserConfig().setBackendType(parserType)).parse(jsonText, metapp::getMetaType<std::vector<TestClass2> >());
+	metapp::Variant var = jsonpp::Parser(jsonpp::ParserConfig().setBackendType<parserType>()).parse(jsonText, metapp::getMetaType<std::vector<TestClass2> >());
 	REQUIRE(var.get<const std::vector<TestClass2> &>()[0] == makeTestClass2(0));
 	REQUIRE(var.get<const std::vector<TestClass2> &>()[1] == makeTestClass2(1));
 }
 
-TEST_CASE("Dumper, dump/parse, enum")
+TEMPLATE_LIST_TEST_CASE("Dumper, dump/parse, enum", "", BackendTypes)
 {
+	constexpr auto parserType = TestType::backendType;
 	enum class MyEnum { one = 1, two = 2 };
-	auto parserType = PARSER_TYPES();
 	auto dumperConfig = DUMPER_CONFIGS();
 	const std::string jsonText = jsonpp::Dumper(dumperConfig).dump(MyEnum::one);
-	metapp::Variant var = jsonpp::Parser(jsonpp::ParserConfig().setBackendType(parserType)).parse(jsonText);
+	metapp::Variant var = jsonpp::Parser(jsonpp::ParserConfig().setBackendType<parserType>()).parse(jsonText);
 	REQUIRE(var.get<jsonpp::JsonInt>() == 1);
 }
 

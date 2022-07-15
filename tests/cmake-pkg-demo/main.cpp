@@ -25,6 +25,7 @@ int main()
 		{ "fourth", jsonpp::JsonArray { "abc", 9.1 } },
 	});
 	std::cout << text << std::endl;
+	jsonpp::Parser().parse(text);
 
 	return 0;
 }

@@ -1,6 +1,10 @@
 set(TARGET_BENCHMARK benchmark)
 
 set(CMAKE_CXX_STANDARD 17)
+if(MSVC)
+	# MSVC pre-C++20 can't compile some code due to bad conformance to C++ standard
+	set(CMAKE_CXX_STANDARD 20)
+endif()
 
 include(../cmakecommon.txt)
 

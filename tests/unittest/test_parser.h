@@ -23,6 +23,17 @@
 
 #define PARSER_TYPES() GENERATE(jsonpp::ParserBackendType::cparser, jsonpp::ParserBackendType::simdjson)
 
+template <jsonpp::ParserBackendType type>
+struct TestBackendType
+{
+	static constexpr jsonpp::ParserBackendType backendType = type;
+};
+
+using BackendTypes = std::tuple<
+	TestBackendType<jsonpp::ParserBackendType::simdjson>,
+	TestBackendType<jsonpp::ParserBackendType::cparser>
+>;
+
 #define DUMPER_CONFIGS() GENERATE( \
 	jsonpp::DumperConfig(jsonpp::DumperConfig().enableBeautify(false).enableNamedEnum(false)), \
 	jsonpp::DumperConfig(jsonpp::DumperConfig().enableBeautify(true).enableNamedEnum(false)), \

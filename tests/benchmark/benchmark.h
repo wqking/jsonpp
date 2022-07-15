@@ -18,6 +18,7 @@
 #define BENCHMARK_H
 
 #include "metapp/compiler.h"
+#include "jsonpp/parser.h"
 
 #include "../catch.hpp"
 
@@ -142,6 +143,15 @@ inline std::string readFile(const std::string & fileName)
 	return ss.str();
 }
 
-#define PARSER_TYPES() GENERATE(jsonpp::ParserBackendType::simdjson, jsonpp::ParserBackendType::cparser)
+template <jsonpp::ParserBackendType type>
+struct TestBackendType
+{
+	static constexpr jsonpp::ParserBackendType backendType = type;
+};
+
+using BackendTypes = std::tuple<
+	TestBackendType<jsonpp::ParserBackendType::simdjson>,
+	TestBackendType<jsonpp::ParserBackendType::cparser>
+>;
 
 #endif

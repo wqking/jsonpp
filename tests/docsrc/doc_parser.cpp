@@ -167,7 +167,9 @@ Construct a `ParserConfig` with default settings with the default values of,
 
 ```c++
 ParserBackendType getBackendType() const;
-ParserConfig & setBackendType(const ParserBackendType type);
+
+template <ParserBackendType type>
+ParserConfig & setBackendType();
 ```
 
 jsonpp doesn't parse JSON document directly, it uses third party JSON parser as the backend.  
@@ -185,6 +187,9 @@ enum class ParserBackendType
 
 `cparser` is [json-parser project](https://github.com/json-parser/json-parser). It's said it has very low footprint.  
 `simdjson` is [simdjson project](https://github.com/simdjson/simdjson). It's very high performance.  
+
+Note `setBackendType` accepts the backend type as template argument because then the linker can eliminate the unused
+backend from the executable.
 
 #### Set/get comment
 
