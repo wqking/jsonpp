@@ -23,18 +23,17 @@ namespace {
 
 TEMPLATE_LIST_TEST_CASE("Parse string", "", BackendTypes)
 {
-	constexpr auto parserType = TestType::backendType;
+	constexpr auto backendType = TestType::backendType;
 	constexpr int iterations = 1000 * 100;
 	const std::string jsonText = R"([ 5, { "b" : 38, "a" : "hello" } ])";
 	const auto t = measureElapsedTime([jsonText]() {
-		jsonpp::Parser parser(jsonpp::ParserConfig().setBackendType<parserType>());
+		jsonpp::Parser parser(jsonpp::ParserConfig().setBackendType<backendType>());
 		for(int i = 0; i < iterations; ++i) {
 			parser.parse(jsonText);
 		}
 	});
-	printResult(t, iterations, jsonpp::getParserBackendName(parserType) + " Parse string");
+	printResult(t, iterations, jsonpp::getParserBackendName(backendType) + " Parse string");
 }
-
 
 
 } //namespace

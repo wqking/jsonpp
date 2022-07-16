@@ -24,11 +24,11 @@
 
 TEMPLATE_LIST_TEST_CASE("Parser, error", "", BackendTypes)
 {
-	constexpr auto parserType = TestType::backendType;
+	constexpr auto backendType = TestType::backendType;
 	const std::string jsonText = R"(
 		5, 6
 	)";
-	jsonpp::Parser parser(jsonpp::ParserConfig().setBackendType<parserType>());
+	jsonpp::Parser parser(jsonpp::ParserConfig().setBackendType<backendType>());
 	SECTION("parse") {
 		metapp::Variant var = parser.parse(jsonText);
 		REQUIRE(var.isEmpty());
@@ -43,8 +43,8 @@ TEMPLATE_LIST_TEST_CASE("Parser, error", "", BackendTypes)
 
 TEMPLATE_LIST_TEST_CASE("Parser, null", "", BackendTypes)
 {
-	constexpr auto parserType = TestType::backendType;
-	jsonpp::Parser parser(jsonpp::ParserConfig().setBackendType<parserType>());
+	constexpr auto backendType = TestType::backendType;
+	jsonpp::Parser parser(jsonpp::ParserConfig().setBackendType<backendType>());
 	const std::string jsonText = R"(
 		null
 	)";
@@ -61,8 +61,8 @@ TEMPLATE_LIST_TEST_CASE("Parser, null", "", BackendTypes)
 
 TEMPLATE_LIST_TEST_CASE("Parser, bool", "", BackendTypes)
 {
-	constexpr auto parserType = TestType::backendType;
-	jsonpp::Parser parser(jsonpp::ParserConfig().setBackendType<parserType>());
+	constexpr auto backendType = TestType::backendType;
+	jsonpp::Parser parser(jsonpp::ParserConfig().setBackendType<backendType>());
 	SECTION("true") {
 		const std::string jsonText = R"(
 			true
@@ -90,8 +90,8 @@ TEMPLATE_LIST_TEST_CASE("Parser, bool", "", BackendTypes)
 
 TEMPLATE_LIST_TEST_CASE("Parser, int", "", BackendTypes)
 {
-	constexpr auto parserType = TestType::backendType;
-	jsonpp::Parser parser(jsonpp::ParserConfig().setBackendType<parserType>());
+	constexpr auto backendType = TestType::backendType;
+	jsonpp::Parser parser(jsonpp::ParserConfig().setBackendType<backendType>());
 	SECTION("positive") {
 		const std::string jsonText = R"(
 			9381538
@@ -128,8 +128,8 @@ TEMPLATE_LIST_TEST_CASE("Parser, int", "", BackendTypes)
 
 TEMPLATE_LIST_TEST_CASE("Parser, double", "", BackendTypes)
 {
-	constexpr auto parserType = TestType::backendType;
-	jsonpp::Parser parser(jsonpp::ParserConfig().setBackendType<parserType>());
+	constexpr auto backendType = TestType::backendType;
+	jsonpp::Parser parser(jsonpp::ParserConfig().setBackendType<backendType>());
 	SECTION("positive") {
 		const std::string jsonText = R"(
 			3.1415
@@ -182,8 +182,8 @@ TEMPLATE_LIST_TEST_CASE("Parser, double", "", BackendTypes)
 
 TEMPLATE_LIST_TEST_CASE("Parser, string", "", BackendTypes)
 {
-	constexpr auto parserType = TestType::backendType;
-	jsonpp::Parser parser(jsonpp::ParserConfig().setBackendType<parserType>());
+	constexpr auto backendType = TestType::backendType;
+	jsonpp::Parser parser(jsonpp::ParserConfig().setBackendType<backendType>());
 	const std::string jsonText = R"(
 		"abc"
 	)";
@@ -194,8 +194,8 @@ TEMPLATE_LIST_TEST_CASE("Parser, string", "", BackendTypes)
 
 TEMPLATE_LIST_TEST_CASE("Parser, array", "", BackendTypes)
 {
-	constexpr auto parserType = TestType::backendType;
-	jsonpp::Parser parser(jsonpp::ParserConfig().setBackendType<parserType>());
+	constexpr auto backendType = TestType::backendType;
+	jsonpp::Parser parser(jsonpp::ParserConfig().setBackendType<backendType>());
 	const std::string jsonText = R"(
 		[ 5, "abc" ]
 	)";
@@ -208,8 +208,8 @@ TEMPLATE_LIST_TEST_CASE("Parser, array", "", BackendTypes)
 
 TEMPLATE_LIST_TEST_CASE("Parser, array, proto", "", BackendTypes)
 {
-	constexpr auto parserType = TestType::backendType;
-	jsonpp::Parser parser(jsonpp::ParserConfig().setBackendType<parserType>());
+	constexpr auto backendType = TestType::backendType;
+	jsonpp::Parser parser(jsonpp::ParserConfig().setBackendType<backendType>());
 
 	SECTION("std::deque<long>") {
 		const std::string jsonText = R"(
@@ -239,8 +239,8 @@ TEMPLATE_LIST_TEST_CASE("Parser, array, proto", "", BackendTypes)
 
 TEMPLATE_LIST_TEST_CASE("Parser, object", "", BackendTypes)
 {
-	constexpr auto parserType = TestType::backendType;
-	jsonpp::Parser parser(jsonpp::ParserConfig().setBackendType<parserType>());
+	constexpr auto backendType = TestType::backendType;
+	jsonpp::Parser parser(jsonpp::ParserConfig().setBackendType<backendType>());
 	const std::string jsonText = R"(
 		{ "b" : 5, "a" : "hello" }
 	)";
@@ -253,8 +253,8 @@ TEMPLATE_LIST_TEST_CASE("Parser, object", "", BackendTypes)
 
 TEMPLATE_LIST_TEST_CASE("Parser, object, proto", "", BackendTypes)
 {
-	constexpr auto parserType = TestType::backendType;
-	jsonpp::Parser parser(jsonpp::ParserConfig().setBackendType<parserType>());
+	constexpr auto backendType = TestType::backendType;
+	jsonpp::Parser parser(jsonpp::ParserConfig().setBackendType<backendType>());
 	using Proto = std::unordered_map<std::string, metapp::Variant>;
 	const std::string jsonText = R"(
 		{ "b" : 5, "a" : "hello" }
@@ -268,8 +268,8 @@ TEMPLATE_LIST_TEST_CASE("Parser, object, proto", "", BackendTypes)
 
 TEMPLATE_LIST_TEST_CASE("Parser, array in object", "", BackendTypes)
 {
-	constexpr auto parserType = TestType::backendType;
-	jsonpp::Parser parser(jsonpp::ParserConfig().setBackendType<parserType>());
+	constexpr auto backendType = TestType::backendType;
+	jsonpp::Parser parser(jsonpp::ParserConfig().setBackendType<backendType>());
 	const std::string jsonText = R"(
 		{ "b" : 5, "a" : [ "hello", 38 ] }
 	)";
@@ -283,8 +283,8 @@ TEMPLATE_LIST_TEST_CASE("Parser, array in object", "", BackendTypes)
 
 TEMPLATE_LIST_TEST_CASE("Parser, object in array", "", BackendTypes)
 {
-	constexpr auto parserType = TestType::backendType;
-	jsonpp::Parser parser(jsonpp::ParserConfig().setBackendType<parserType>());
+	constexpr auto backendType = TestType::backendType;
+	jsonpp::Parser parser(jsonpp::ParserConfig().setBackendType<backendType>());
 	const std::string jsonText = R"(
 		[ 5, { "b" : 38, "a" : "hello" } ]
 	)";
@@ -298,8 +298,8 @@ TEMPLATE_LIST_TEST_CASE("Parser, object in array", "", BackendTypes)
 
 TEMPLATE_LIST_TEST_CASE("Parser, object, parse as array", "", BackendTypes)
 {
-	constexpr auto parserType = TestType::backendType;
-	jsonpp::Parser parser(jsonpp::ParserConfig().setBackendType<parserType>());
+	constexpr auto backendType = TestType::backendType;
+	jsonpp::Parser parser(jsonpp::ParserConfig().setBackendType<backendType>());
 	const std::string jsonText = R"(
 		{ "one" : 1, "two" : 2.1 }
 	)";

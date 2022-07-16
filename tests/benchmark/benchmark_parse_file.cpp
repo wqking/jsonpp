@@ -246,7 +246,7 @@ private:
 
 BenchmarkDataCollection benchmarkDataCollection;
 
-template <jsonpp::ParserBackendType parserType>
+template <jsonpp::ParserBackendType backendType>
 metapp::Variant doBenchmarkParseFile(const FileInfo & fileInfo)
 {
 	const std::string & fullFileName = fileInfo.fileName;
@@ -258,7 +258,7 @@ metapp::Variant doBenchmarkParseFile(const FileInfo & fileInfo)
 	}
 
 	const auto fileSize = jsonText.size();
-	jsonpp::Parser parser(jsonpp::ParserConfig().setBackendType<parserType>());
+	jsonpp::Parser parser(jsonpp::ParserConfig().setBackendType<backendType>());
 	auto source = jsonpp::ParserSource(std::move(jsonText));
 	REQUIRE(jsonText.empty());
 
@@ -270,9 +270,9 @@ metapp::Variant doBenchmarkParseFile(const FileInfo & fileInfo)
 	});
 
 	const std::string pureFileName = extractFileName(fullFileName);
-	printTps(t, iterations, fileSize, jsonpp::getParserBackendName(parserType) + " Parse file " + pureFileName);
+	printTps(t, iterations, fileSize, jsonpp::getParserBackendName(backendType) + " Parse file " + pureFileName);
 	
-	benchmarkDataCollection.addParseResult(pureFileName, "jsonpp", parserType, fileSize, t, iterations);
+	benchmarkDataCollection.addParseResult(pureFileName, "jsonpp", backendType, fileSize, t, iterations);
 
 	return result;
 }
