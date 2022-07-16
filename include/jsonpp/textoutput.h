@@ -24,6 +24,7 @@
 #include <vector>
 #include <ostream>
 #include <sstream>
+#include <cstring>
 
 namespace dragonbox {
 

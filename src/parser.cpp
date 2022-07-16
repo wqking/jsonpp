@@ -25,6 +25,7 @@
 
 #include <array>
 #include <limits>
+#include <cstring>
 
 #ifndef JSONPP_DEFAULT_PARSER_BACKEND
 #define JSONPP_DEFAULT_PARSER_BACKEND simdjson

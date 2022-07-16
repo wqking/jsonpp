@@ -5,7 +5,6 @@ cmake_minimum_required(VERSION 3.2)
 set(CMAKE_CXX_STANDARD 11)
 
 include_directories(../include)
-include_directories(/projects/metapp/include)
 
 if(MSVC)
 	add_definitions(/W4)

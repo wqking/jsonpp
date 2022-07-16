@@ -56,7 +56,7 @@ FileInfo fileInfoList[] = {
 std::string formatSingleTime(uint64_t time, uint64_t iterations)
 {
 	char buffer[100];
-	sprintf_s(buffer, "%g", (double)time / (double)iterations);
+	sprintf(buffer, "%g", (double)time / (double)iterations);
 	return buffer;
 }
 

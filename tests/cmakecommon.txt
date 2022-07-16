@@ -19,6 +19,7 @@ set(ALL_FILES
 
 if(EXISTS "${METAPP_DIR}")
 message(STATUS "metapp directory exists, use local metapp")
+include_directories(${METAPP_DIR}/include)
 else()
 message(STATUS "metapp directory doesn't exist, fetch metapp from github")
 
