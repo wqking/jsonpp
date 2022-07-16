@@ -26,6 +26,10 @@
 #include <array>
 #include <limits>
 
+#ifndef JSONPP_DEFAULT_PARSER_BACKEND
+#define JSONPP_DEFAULT_PARSER_BACKEND simdjson
+#endif
+
 namespace jsonpp {
 
 namespace internal_ {
@@ -91,6 +95,21 @@ std::string getParserBackendName(const ParserBackendType type)
 	}
 
 	return "Unknown";
+}
+
+ParserConfig::ParserConfig()
+	:
+		backendType(),
+		backendCreator(nullptr),
+		comment(false),
+		arrayType(),
+		objectType()
+{
+	setBackendType<ParserBackendType::JSONPP_DEFAULT_PARSER_BACKEND>();
+}
+
+ParserConfig::~ParserConfig()
+{
 }
 
 ParserSource::ParserSource()

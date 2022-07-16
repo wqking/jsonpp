@@ -17,8 +17,6 @@
 #include "jsonpp/parser.h"
 #include "jsonpp/parserbackend.h"
 
-#if JSONPP_BACKEND_SIMDJSON
-
 #if defined(METAPP_COMPILER_VC)
 #pragma warning(push)
 #pragma warning(disable: 4245 4100 4459)
@@ -337,5 +335,3 @@ std::unique_ptr<ParserBackend> createBackend_simdjsonOnDemand(const ParserConfig
 
 } // namespace jsonpp
 
-
-#endif

@@ -17,8 +17,6 @@
 #include "jsonpp/parser.h"
 #include "jsonpp/parserbackend.h"
 
-#if JSONPP_BACKEND_CPARSER
-
 #if defined(METAPP_COMPILER_VC)
 #pragma warning(push)
 #pragma warning(disable: 4244 4996 4706)
@@ -169,4 +167,3 @@ std::unique_ptr<ParserBackend> createBackend_cparser(const ParserConfig & config
 
 } // namespace jsonpp
 
-#endif

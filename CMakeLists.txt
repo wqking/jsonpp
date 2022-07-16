@@ -4,6 +4,11 @@ project(jsonpp VERSION 0.1.0)
 add_library(${PROJECT_NAME} STATIC)
 set(CMAKE_CXX_STANDARD 11)
 
+set(DEFAULT_PARSER_BACKEND "simdjson" CACHE STRING "Specify default ParserBackendType, the default value is simdjson.")
+set_property(CACHE DEFAULT_PARSER_BACKEND PROPERTY STRINGS simdjson cparser)
+
+add_definitions(-DJSONPP_DEFAULT_PARSER_BACKEND=${DEFAULT_PARSER_BACKEND})
+
 include(FetchContent)
 FetchContent_Declare(
 	metapp

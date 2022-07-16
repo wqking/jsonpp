@@ -24,31 +24,20 @@
 #include <vector>
 #include <map>
 
-#ifndef JSONPP_BACKEND_CPARSER
-#define JSONPP_BACKEND_CPARSER 1
-#endif
-
-#ifndef JSONPP_BACKEND_SIMDJSON
-#define JSONPP_BACKEND_SIMDJSON 1
-#endif
-
-#if ! (JSONPP_BACKEND_CPARSER || JSONPP_BACKEND_SIMDJSON)
-#error "jsonpp - no parser backend is specified"
-#endif
-
 namespace jsonpp {
 
 enum class ParserBackendType
 {
-	cparser,
 	simdjson,
+	cparser,
 };
 
 class ParserBackend;
 class ParserConfig;
-using BackendCreator = std::unique_ptr<ParserBackend> (*)(const ParserConfig & config);
 
 namespace internal_ {
+
+using BackendCreator = std::unique_ptr<ParserBackend> (*)(const ParserConfig & config);
 
 std::unique_ptr<ParserBackend> createBackend_cparser(const ParserConfig & config);
 std::unique_ptr<ParserBackend> createBackend_simdjsonDom(const ParserConfig & config);
@@ -79,16 +68,8 @@ class ParserBackend;
 class ParserConfig
 {
 public:
-	ParserConfig()
-		:
-			backendType(),
-			backendCreator(nullptr),
-			comment(false),
-			arrayType(),
-			objectType()
-	{
-		setBackendType<ParserBackendType::simdjson>();
-	}
+	ParserConfig();
+	~ParserConfig();
 
 	ParserBackendType getBackendType() const {
 		return backendType;
@@ -101,7 +82,7 @@ public:
 		return *this;
 	}
 
-	BackendCreator getBackendCreator() const {
+	internal_::BackendCreator getBackendCreator() const {
 		return backendCreator;
 	}
 
@@ -134,7 +115,7 @@ public:
 
 private:
 	ParserBackendType backendType;
-	BackendCreator backendCreator;
+	internal_::BackendCreator backendCreator;
 	bool comment;
 	const metapp::MetaType * arrayType;
 	const metapp::MetaType * objectType;
