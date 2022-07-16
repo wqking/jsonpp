@@ -10,7 +10,6 @@
   - [Supported compilers](#mdtoc_215a5bea)
 - [Quick start](#mdtoc_ea7b0a9)
   - [Namespace](#mdtoc_33e16b56)
-  - [Build and install, use jsonpp in your project](#mdtoc_3155c9b5)
 - [Example code](#mdtoc_3bb166c4)
   - [Parse JSON document](#mdtoc_bdd95779)
   - [Dump JSON object to text (stringify)](#mdtoc_a4e21f76)
@@ -61,7 +60,9 @@ New containers can be added via metapp reflection system.
 
 - Cross platforms, cross compilers.
 
-- Written in standard and portable C++, only require C++11, and support later C++ standard
+- Written in standard and portable C++, only require C++11, and support later C++ standard.
+
+- Use CMake to build and install.
 
 <a id="mdtoc_abc52c05"></a>
 ## Basic information
@@ -102,35 +103,6 @@ In brief, MSVC, GCC, Clang that has well support for C++11, or released after 20
 ### Namespace
 
 `jsonpp`
-
-<a id="mdtoc_3155c9b5"></a>
-### Build and install, use jsonpp in your project
-
-If you are going to use jsonpp in CMake managed project, you can install jsonpp then use it in CMake.  
-In jsonpp root folder, run the commands,  
-```
-mkdir build
-cd build
-cmake ..
-sudo make install
-```
-
-Then in the project CMakeLists.txt,   
-```
-# the project target is mytest, just for example
-add_executable(mytest test.cpp)
-
-find_package(jsonpp)
-if(jsonpp)
-target_link_libraries(mytest jsonpp::jsonpp)
-else(jsonpp)
-message(FATAL_ERROR "jsonpp library is not found")
-endif()
-```
-
-Note: when using this method with MinGW on Windows, by default CMake will install jsonpp in system folder which is not writable.
-You should specify another folder to install.
-To do so, replace `cmake ..` with `cmake .. -DCMAKE_INSTALL_PREFIX="YOUR_NEW_LIB_FOLDER"`.
 
 <a id="mdtoc_3bb166c4"></a>
 ## Example code
@@ -408,6 +380,7 @@ native English speaker and it's not that exciting to write document. Any way, th
 than the document, for ever.  
 If you want to contribute to the documents, be sure to read [How to generate documentations](doc/about_document.md).  
 
+- [Build and install the library](doc/build_install.md)
 - [Common and default data types](doc/common_types.md)
 - [Use class Parser to read and parse JSON document](doc/parser.md)
 - [Use class Dumper to dump and stringify JSON data](doc/dumper.md)
