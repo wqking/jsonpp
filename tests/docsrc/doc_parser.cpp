@@ -68,10 +68,15 @@ If `prototype` is nullptr, the document is parsed as default data types. Please 
 default data types.  
 If `prototype` is not nullptr, the document is parsed as `prototype`.  
 
+For the first form,  
 If there is no any error, a `metapp::Variant` is returned that represents the document.  
 If there is any error occurred, empty Variant is returned (Variant::isEmpty() is true).  
 
-Some parser backends have special requirement on the data alignment and padding, `jsonpp` will handle such requirements
+For the second templated form,  
+If there is no any error, the parsed value of `T` is returned.  
+If there is any error occurred, the default constructed `T()` is returned.  
+
+Some parser backends have special requirements on the data alignment and padding, `jsonpp` will handle such requirements
 internally, so the caller of `parse` don't need to care about the requirements.  
 
 The second template form is same as,  
@@ -122,6 +127,47 @@ std::string getError() const;
 Both `metapp` and the parser backend may throw exceptions, all exceptions are captured and converted to error message.  
 `metapp` works if exceptions are disabled in compiler, for the parser backend, please check their document to see
 if exceptions can be disabled.
+
+#### Use the parsed result
+
+In this section we will use the overloaded function `parse(const std::string & jsonText)` as example, we can apply the same
+knowledge to the other overloaded functions.
+
+The function `parse` can be called in 3 forms,
+
+```c++
+// #1 prototype is nullptr
+metapp::Variant parse(const std::string & jsonText);
+
+// #2 prototype is not nullptr
+metapp::Variant parse(const std::string & jsonText, const metapp::MetaType * prototype);
+
+// #3 templated version
+template <typename T>
+T parse(const std::string & jsonText);
+```
+
+**#1 prototype is nullptr**  
+The document is parsed as default data types. Please check [this document](common_types.md) for the default data types.  
+
+**#2 prototype is not nullptr**  
+The document is parsed as the type of `prototype`, the result Variant can be converted to the type of `prototype`.  
+For example, assume we have a type `MyStruct`, then,  
+```c++
+metapp::Variant doc = myJsonppParser.parse("What every json text", metapp::getMetaType<MyStruct>());
+```
+// You may want to check error before calling below line.
+const MyStruct & myStruct = doc.get<>(const MyStruct &);
+
+**#3 templated version**  
+This form is the simplest way to use.  
+```c++
+MyStruct myStruct = myJsonppParser.parse<MyStruct>("What every json text");
+```
+Note: unlike #2, here `myStruct` must be value and not reference, because #2 has the Variant to hold the object, but in this form,
+there is no variable to hold the object.  
+Note: you should prefer this form to #2. You should only use #2 for advanced usage, such as the prototype is obtained at runtime
+and you don't know the compile time type.
 
 ## ParserSource
 
@@ -180,13 +226,13 @@ Different backend may have different features and performance.
 ```c++
 enum class ParserBackendType
 {
-	cparser,
 	simdjson,
+	cparser,
 };
 ```
 
-`cparser` is [json-parser project](https://github.com/json-parser/json-parser). It's said it has very low footprint.  
 `simdjson` is [simdjson project](https://github.com/simdjson/simdjson). It's very high performance.  
+`cparser` is [json-parser project](https://github.com/json-parser/json-parser). It's said it has very low footprint.  
 
 Note `setBackendType` accepts the backend type as template argument because then the linker can eliminate the unused
 backend from the executable.

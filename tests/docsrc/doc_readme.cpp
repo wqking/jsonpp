@@ -44,11 +44,10 @@ jsonpp is a cross platform C++ json library, focusing on easy to use.
 
 - **Reusable meta data**. jsonpp uses meta data from [C++ reflection library metapp](https://github.com/wqking/metapp) that's developed
 by the same developer (wqking) of jsonpp, which is not only not special to jsonpp, but also general enough to use for other purpose
-such as serialization, script binding, etc. You don't build data or spend time for jsonpp, you invest for a potential ecosystem
-with bright future.
+such as serialization, script binding, etc. 
 
 - **Multiple parser backends**. jsonpp uses existing matured and well tested JSON parser libraries as the parser backend, such as
-[json-parser](https://github.com/json-parser/json-parser) and [simdjson 2.2.0](https://github.com/simdjson/simdjson).
+[simdjson 2.2.0](https://github.com/simdjson/simdjson) and [json-parser](https://github.com/json-parser/json-parser).
 That means you can choose the best viable backend to achieve your goals and avoid the backends that make you trouble. Also adding
 new backend is very easy.
 
@@ -102,6 +101,8 @@ In brief, MSVC, GCC, Clang that has well support for C++11, or released after 20
 ### Namespace
 
 `jsonpp`
+
+You should not use any nested namespace in `jsonpp`.
 
 ## Example code
 
@@ -331,8 +332,10 @@ ExampleFunc
 Hardware: HP laptop, Intel(R) Core(TM) i5-8300H CPU @ 2.30GHz, 16 GB RAM.  
 Software: Windows 10 Pro, 21H2. MinGW gcc version 11.3.0, optimization level is -O3.  
 
-There are two parts in each benchmark data. The first part is the time to parse/dump one file, the second part
+There are two parts in each benchmark data. The first part is the time to parse/dump one file, in milliseconds. The second part
 is the per second throughput.
+
+Absolute data doesn't make sense, so the other library "JSON for Modern C++" (nlohmann) is tested for comparison.
 
 ### Parse JSON file
 
