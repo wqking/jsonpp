@@ -100,6 +100,8 @@ public:
 	}
 
 	ParserConfig & setArrayType(const metapp::MetaType * arrayType_) {
+		assert(metapp::getNonReferenceMetaType(arrayType_)->hasMetaIndexable());
+
 		arrayType = arrayType_;
 		return *this;
 	}
@@ -109,6 +111,11 @@ public:
 	}
 
 	ParserConfig & setObjectType(const metapp::MetaType * objectType_) {
+		assert(
+			metapp::getNonReferenceMetaType(objectType_)->hasMetaMappable()
+			|| metapp::getNonReferenceMetaType(objectType_)->hasMetaIndexable()
+		);
+
 		objectType = objectType_;
 		return *this;
 	}
