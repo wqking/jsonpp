@@ -171,7 +171,7 @@ ExampleFunc
 		{ "third", std::vector<int> { 5, 6, 7 } },
 		{ "fourth", jsonpp::JsonArray { "abc", 9.1 } },
 	});
-	// jsonpp::JsonObject is alias of std::map<std::string, metapp::Variant>, so the keys are sorted alphabetically.
+	// JsonObject is alias of std::map<std::string, metapp::Variant>, so the keys are sorted alphabetically.
 	ASSERT(text == R"({"first":"hello","fourth":["abc",9.1],"second":null,"third":[5,6,7]})");
 	//code
 }
@@ -256,7 +256,8 @@ struct metapp::DeclareMetaType <Skill> : metapp::DeclareMetaTypeBase <Skill>
 // I don't encourage to use macros and I don't provide macros in metapp library.
 // But for jsonpp users that don't want to dig into metapp and only want to the jsonpp features,
 // jsonpp provides macros to ease the meta type declaration.
-// Note: the macros are not required by jsonpp. The code can be rewritten without macros, as how Skill is declared above.
+// Note: the macros are not required by jsonpp. The code can be rewritten without macros,
+// same as how Skill is declared above.
 JSONPP_BEGIN_DECLARE_CLASS(Person)
 	JSONPP_REGISTER_CLASS_FIELD(name)
 	JSONPP_REGISTER_CLASS_FIELD(gender)
@@ -367,23 +368,13 @@ If you want to contribute to the documents, be sure to read [How to generate doc
 
 //@include inc/inc_doc_index.md
 
-## Build the test code
+## Known compiler related quirks in MSVC
 
-There are several parts of code to test the library,
-
-- unittests: tests the library.
-- docsrc: documentation source code, and sample code to demonstrate how to use the library. 
-- benchmark: measure the performance.
-
-All parts are in the `tests` folder.
-
-All parts require CMake to build, and there is a makefile to ease the building.  
-Go to folder `tests/build`, then run `make` with different target.
-- `make vc19` #generate solution files for Microsoft Visual Studio 2019, then open metapptest.sln in folder project_vc19
-- `make vc17` #generate solution files for Microsoft Visual Studio 2017, then open metapptest.sln in folder project_vc17
-- `make vc15` #generate solution files for Microsoft Visual Studio 2015, then open metapptest.sln in folder project_vc15
-- `make mingw` #build using MinGW
-- `make linux` #build on Linux
-- `make mingw_coverage` #build using MinGW and generate code coverage report
+MSVC 2022 and 2019, can build the CMake generated test projects and the tests run correctly in Debug and RelWithDebugInfo
+configurations. But some tests fail in Release mode when incremental linking is disabled.  
+Those failed tests should not fail, because they work correct in MSVC debug mode and in GCC/Clang.
+Adding /Debug option to linking which generates debug information makes the tests success.  
+Without /Debug option, but enabling incremental linking, will cause the tests success too.  
+So if jsonpp shows weird behavior in MSVC, try to enable incremental linking.
 
 desc*/

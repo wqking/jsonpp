@@ -27,4 +27,8 @@ if(coverage)
 endif()
 endif()
 
+if(MSVC)
+	target_link_options(${TARGET_TEST} PRIVATE "/INCREMENTAL")
+endif()
+
 add_test(NAME ${TARGET_TEST} COMMAND ${TARGET_TEST})

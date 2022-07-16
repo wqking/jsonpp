@@ -307,11 +307,6 @@ BenchmarkFunc
 {
 	std::cout << std::endl;
 
-	const std::array<jsonpp::ParserBackendType, 2> backendTypesList {
-		jsonpp::ParserBackendType::simdjson,
-		jsonpp::ParserBackendType::cparser
-	};
-
 	for(const auto & fileInfo : fileInfoList) {
 		metapp::Variant parsedObject = doBenchmarkParseFile<jsonpp::ParserBackendType::simdjson>(fileInfo);
 		doBenchmarkParseFile<jsonpp::ParserBackendType::cparser>(fileInfo);
