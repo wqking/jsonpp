@@ -81,7 +81,7 @@ internally, so the caller of `parse` don't need to care about the requirements.
 
 The second template form is same as,  
 ```
-json::Parser parser;
+jsonpp::Parser parser;
 
 // template form
 T result = parser.parse<T>(jsonText, length);
@@ -154,7 +154,7 @@ The document is parsed as default data types. Please check [this document](commo
 The document is parsed as the type of `prototype`, the result Variant can be converted to the type of `prototype`.  
 For example, assume we have a type `MyStruct`, then,  
 ```c++
-metapp::Variant doc = myJsonppParser.parse("What every json text", metapp::getMetaType<MyStruct>());
+metapp::Variant doc = myJsonppParser.parse("What ever json text", metapp::getMetaType<MyStruct>());
 ```
 // You may want to check error before calling below line.
 const MyStruct & myStruct = doc.get<>(const MyStruct &);
@@ -162,7 +162,7 @@ const MyStruct & myStruct = doc.get<>(const MyStruct &);
 **#3 templated version**  
 This form is the simplest way to use.  
 ```c++
-MyStruct myStruct = myJsonppParser.parse<MyStruct>("What every json text");
+MyStruct myStruct = myJsonppParser.parse<MyStruct>("What ever json text");
 ```
 Note: unlike #2, here `myStruct` must be value and not reference, because #2 has the Variant to hold the object, but in this form,
 there is no variable to hold the object.  
@@ -174,7 +174,7 @@ and you don't know the compile time type.
 #### Header
 
 ```c++
-#include "jsonpp/dumper.h"
+#include "jsonpp/parser.h"
 ```
 
 ```c++
@@ -246,6 +246,43 @@ ParserConfig & enableComment(const bool enable);
 
 Set whether C style comment should be parsed in the JSON document. Default is false.  
 Note not all backends support comment. Currently only ParserBackendType::cparser supports comment.  
+
+#### Set/get array type
+
+```c++
+const metapp::MetaType * getArrayType() const;
+
+template <typename T>
+ParserConfig & setArrayType();
+
+ParserConfig & setArrayType(const metapp::MetaType * arrayType);
+```
+
+Set the array type to represent JSON array. Default is nullptr. If it's nullptr, `jsonpp::JsonArray` is used.  
+If the argument `prototype` in `Parser::parse` is not nullptr, the array type is ignored. Otherwise, all arrays are parsed
+as the array type.  
+The array type can be `std::vector`, `std::deque`, `std::list`, `std::array` with enough elements, or any containers that
+implements meta interface `metapp::MetaIndexable`. The element type must be able to casted from the value in the JSON document.  
+
+#### Set/get object type
+
+```c++
+const metapp::MetaType * getObjectType() const;
+
+template <typename T>
+ParserConfig & setObjectType();
+
+ParserConfig & setObjectType(const metapp::MetaType * objectType);
+```
+
+Set the object type to represent JSON object. Default is nullptr. If it's nullptr, `jsonpp::JsonObject` is used.  
+If the argument `prototype` in `Parser::parse` is not nullptr, the object type is ignored. Otherwise, all objects are parsed
+as the object type.  
+The object type can be `std::map<std::string, T>`, `std::unordered_map<std::string, T>`, or any containers that
+implements meta interface `metapp::MetaMappable`. The type `T` must be able to casted from the value in the JSON document.  
+The object type can also be sequence containers such as `std::vector`, `std::deque`, `std::list`, `std::array` with enough elements,
+or any containers that implements meta interface `metapp::MetaIndexable`. The element type can be `std::pair<std::string, T>`, or
+any sequence containers which size can grow to at least 2.
 
 ## Example code
 

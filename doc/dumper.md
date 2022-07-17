@@ -8,6 +8,7 @@
   - [Construct with config](#mdtoc_e79a33a1)
   - [dump to string](#mdtoc_71d693d0)
   - [dump to customized output](#mdtoc_5f8dfe6a)
+- [How Dumper dumps array and object types](#mdtoc_f49c0253)
 - [Class DumperConfig](#mdtoc_eb29bf76)
   - [Header](#mdtoc_6e72a8c2)
   - [Default constructor](#mdtoc_56b1be23)
@@ -84,6 +85,19 @@ void dump(const metapp::Variant & value, const Output & output);
 ```
 
 Dump `value` to `output`.
+
+<a id="mdtoc_f49c0253"></a>
+## How Dumper dumps array and object types
+
+Dumper dumps belows types as JSON object,
+1. The meta type implements meta interface `MetaMappable`.  
+2. Or the meta type implements meta interface `MetaClass`.  
+Usually `std::map`, `std::unordered_map`, and customized classes are dumped as object.
+
+Dumper dumps belows types as JSON array,
+1. The meta type implements meta interface `MetaIndexable`.  
+2. Or the meta type implements meta interface `MetaIterable`.  
+Usually `std::vector`, `std::deque`, `std::list`, `std::array`, `std::pair`, and `std::tuple` are dumped as array.
 
 <a id="mdtoc_eb29bf76"></a>
 ## Class DumperConfig

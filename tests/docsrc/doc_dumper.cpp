@@ -83,6 +83,18 @@ void dump(const metapp::Variant & value, const Output & output);
 
 Dump `value` to `output`.
 
+## How Dumper dumps array and object types
+
+Dumper dumps belows types as JSON object,
+1. The meta type implements meta interface `MetaMappable`.  
+2. Or the meta type implements meta interface `MetaClass`.  
+Usually `std::map`, `std::unordered_map`, and customized classes are dumped as object.
+
+Dumper dumps belows types as JSON array,
+1. The meta type implements meta interface `MetaIndexable`.  
+2. Or the meta type implements meta interface `MetaIterable`.  
+Usually `std::vector`, `std::deque`, `std::list`, `std::array`, `std::pair`, and `std::tuple` are dumped as array.
+
 ## Class DumperConfig
 
 #### Header

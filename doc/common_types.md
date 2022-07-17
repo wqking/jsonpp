@@ -9,7 +9,7 @@ integral types can be used as JSON integers, `std::vector<std::string>`, `std::l
 can be used as JSON array.  
 
 When parsing JSON without specifying the `prototype` argument, the parser will use default data types to store the JSON data.
-This document discuss the default data types.
+This document discusses the default data types.
 
 #### Header
 

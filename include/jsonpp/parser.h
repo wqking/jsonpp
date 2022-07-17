@@ -99,6 +99,11 @@ public:
 		return arrayType;
 	}
 
+	template <typename T>
+	ParserConfig & setArrayType() {
+		return setArrayType(metapp::getMetaType<T>());
+	}
+
 	ParserConfig & setArrayType(const metapp::MetaType * arrayType_) {
 		assert(metapp::getNonReferenceMetaType(arrayType_)->hasMetaIndexable());
 
@@ -108,6 +113,11 @@ public:
 
 	const metapp::MetaType * getObjectType() const {
 		return objectType;
+	}
+
+	template <typename T>
+	ParserConfig & setObjectType() {
+		return setObjectType(metapp::getMetaType<T>());
 	}
 
 	ParserConfig & setObjectType(const metapp::MetaType * objectType_) {
