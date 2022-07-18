@@ -59,6 +59,8 @@ the high performance simdjson and well optimized metapp.
 std::string, std::array, std::vector, std::list, std::deque, std::map, std::unordered_map, etc.
 New containers can be added via metapp reflection system.
 
+- JSON object can be parsed as sequence containers such as std::vector, and vice versa on dumping.
+
 - Support stringify and parse classes and enumerators.
 
 - Enumerators can be stringified as string names and parsed back to enum values.

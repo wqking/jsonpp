@@ -181,6 +181,18 @@ private:
 
 class Parser
 {
+private:
+	template <typename T>
+	struct IsValidType
+	{
+		static constexpr bool value = 
+			! std::is_reference<T>::value
+			&& ! std::is_array<T>::value
+			&& ! std::is_const<T>::value
+			&& ! std::is_volatile<T>::value
+		;
+	};
+
 public:
 	Parser();
 	explicit Parser(const ParserConfig & config);
@@ -195,6 +207,8 @@ public:
 
 	template <typename T>
 	T parse(const char * jsonText, const std::size_t length) {
+		static_assert(IsValidType<T>::value, "Type must be raw type without CV, reference, and array");
+
 		const metapp::Variant result = parse(jsonText, length, metapp::getMetaType<T>());
 		if(hasError()) {
 			return T();
@@ -204,6 +218,8 @@ public:
 
 	template <typename T>
 	T parse(const std::string & jsonText) {
+		static_assert(IsValidType<T>::value, "Type must be raw type without CV, reference, and array");
+
 		const metapp::Variant result = parse(jsonText, metapp::getMetaType<T>());
 		if(hasError()) {
 			return T();
@@ -213,6 +229,8 @@ public:
 
 	template <typename T>
 	T parse(const ParserSource & source) {
+		static_assert(IsValidType<T>::value, "Type must be raw type without CV, reference, and array");
+
 		const metapp::Variant result = parse(source, metapp::getMetaType<T>());
 		if(hasError()) {
 			return T();

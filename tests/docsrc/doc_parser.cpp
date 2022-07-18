@@ -83,12 +83,12 @@ The second template form is same as,
 ```
 jsonpp::Parser parser;
 
-// template form
-T result = parser.parse<T>(jsonText, length);
+// template form, `object` must be value, it can't be reference.
+T object = parser.parse<T>(jsonText, length);
 
-// equals to
-metapp::Variant result = parser.parse(jsonText, length, metapp::getMetaType<T>());
-return result.get<const T &>();
+// equals to, `object` can be reference since `var` holds the object.
+metapp::Variant var = parser.parse(jsonText, length, metapp::getMetaType<T>());
+const T & object = var.get<const T &>();
 ```
 
 #### parse a std::string
@@ -100,7 +100,7 @@ template <typename T>
 T parse(const std::string & jsonText);
 ```
 
-Parse the document in `jsonText`.
+Parse JSON document in `jsonText`.
 
 #### parse ParserSource
 
@@ -111,7 +111,7 @@ template <typename T>
 T parse(const ParserSource & source);
 ```
 
-Parse the document in `source`.  
+Parse JSON document in `source`.  
 If you needs to repeat parsing the same document, using `ParserSource` may increase performance slightly,
 depending on the parse backend.
 
@@ -267,6 +267,14 @@ implements meta interface `metapp::MetaMappable`. The type `T` must be able to c
 The object type can also be sequence containers such as `std::vector`, `std::deque`, `std::list`, `std::array` with enough elements,
 or any containers that implements meta interface `metapp::MetaIndexable`. The element type can be `std::pair<std::string, T>`, or
 any sequence containers which size can grow to at least 2.
+
+#### Difference between array/object type in ParserConfig and argument `prototype` in function `Parser::parse`
+
+When the argument `prototype` is not nullptr in function `Parser::parse` (or the templated `parse` function), the whole
+JSON document is parsed as `prototype`. In such case, the array and object type in ParserConfig are ignored.  
+
+If array type in ParserConfig is not nullptr (set by `setArrayType`), all other data are parsed as the default data types,
+and all arrays are parsed as `getArrayType`. It's same for object type.
 
 ## ParserSource
 
@@ -555,6 +563,39 @@ ExampleFunc
 
 	ASSERT(array[0].get<const std::unordered_map<std::string, int> & >().at("a") == 1);
 	ASSERT(array[0].get<const std::unordered_map<std::string, int> & >().at("b") == 3);
+	//code
+}
+
+ExampleFunc
+{
+	//code
+	//desc ### Parse object as std::vector
+	
+	// Create the config, we want all JSON arrays parsed as std::deque<int> instead of JsonArray.
+	jsonpp::ParserConfig parserConfig;
+	parserConfig.setObjectType<std::vector<std::pair<std::string, int> > >();
+	// Create a parser with parserConfig
+	jsonpp::Parser parser(parserConfig);
+
+	// This is the JSON we are going to parse.
+	const std::string jsonText = R"(
+		{ "a" : 1.2, "b" : 3 }
+	)";
+	
+	// Parse the JSON
+	const metapp::Variant var = parser.parse(jsonText);
+	const std::vector<std::pair<std::string, int> > & array
+		= var.get<const std::vector<std::pair<std::string, int> > &>();
+
+	ASSERT(array[0].first == "a");
+	ASSERT(array[0].second == 1);
+	ASSERT(array[1].first == "b");
+	ASSERT(array[1].second == 3);
+
+	// Since the whole JSON document is an object, we can also parse it with `prototype`
+	const std::vector<std::pair<std::string, int> > array2
+		= parser.parse<std::vector<std::pair<std::string, int> > >(jsonText);
+	ASSERT(array2 == array);
 	//code
 }
 
