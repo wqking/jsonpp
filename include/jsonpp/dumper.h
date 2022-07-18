@@ -25,6 +25,7 @@
 #include <vector>
 #include <ostream>
 #include <sstream>
+#include <vector>
 
 namespace jsonpp {
 
@@ -42,7 +43,9 @@ public:
 		:
 			beautify(false),
 			indent("    "),
-			namedEnum(false)
+			namedEnum(false),
+			objectTypeList(),
+			arrayTypeList()
 	{
 	}
 
@@ -73,18 +76,50 @@ public:
 		return indent;
 	}
 
-	bool isObjectType(const metapp::MetaType *) const {
-		return false;
+	bool isObjectType(const metapp::MetaType * metaType) const {
+		return ! objectTypeList.empty()
+			&& std::binary_search(objectTypeList.begin(), objectTypeList.end(), metaType)
+		;
 	}
 
-	bool isArrayType(const metapp::MetaType *) const {
-		return false;
+	template <typename T>
+	DumperConfig & addObjectType() {
+		return addObjectType(metapp::getMetaType<T>());
+	}
+
+	DumperConfig & addObjectType(const metapp::MetaType * metaType) {
+		addToObjectArrayTypeList(objectTypeList, metaType);
+		return *this;
+	}
+
+	bool isArrayType(const metapp::MetaType * metaType) const {
+		return ! arrayTypeList.empty()
+			&& std::binary_search(arrayTypeList.begin(), arrayTypeList.end(), metaType)
+		;
+	}
+
+	template <typename T>
+	DumperConfig & addArrayType() {
+		return addArrayType(metapp::getMetaType<T>());
+	}
+
+	DumperConfig & addArrayType(const metapp::MetaType * metaType) {
+		addToObjectArrayTypeList(arrayTypeList, metaType);
+		return *this;
+	}
+
+private:
+	void addToObjectArrayTypeList(std::vector<const metapp::MetaType *> & typeList, const metapp::MetaType * metaType) {
+		typeList.push_back(metaType);
+		std::sort(typeList.begin(), typeList.end());
 	}
 
 private:
 	bool beautify;
 	std::string indent;
 	bool namedEnum;
+	std::vector<const metapp::MetaType *> objectTypeList;
+	std::vector<const metapp::MetaType *> arrayTypeList;
 };
 
 class Dumper

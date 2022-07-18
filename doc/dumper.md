@@ -15,6 +15,8 @@
   - [Set/get beautify](#mdtoc_3bf56ba2)
   - [Set/get named enum](#mdtoc_f77a6648)
   - [Set/get indent](#mdtoc_af8f8f5b)
+  - [Set/get object type](#mdtoc_c2f73b75)
+  - [Set/get array type](#mdtoc_cae09b2b)
 - [TextOutput](#mdtoc_1052425f)
   - [Header](#mdtoc_6e72a8c3)
   - [Constructor](#mdtoc_7dd91a39)
@@ -26,6 +28,12 @@
   - [StreamWriter](#mdtoc_52f0d175)
   - [Implement writer](#mdtoc_a75ebdd5)
 - [Example code](#mdtoc_3bb166c4)
+  - [Dump integer](#mdtoc_5df5999c)
+  - [Dump array](#mdtoc_855b62bc)
+  - [Dump beautified object](#mdtoc_ff8c0a51)
+  - [Dump to stream](#mdtoc_1f819f65)
+  - [Dump sequence containers as JSON object  ](#mdtoc_552ac264)
+  - [Dump associative containers as JSON array  ](#mdtoc_491aae0)
 <!--endtoc-->
 
 <a id="mdtoc_44468686"></a>
@@ -156,6 +164,42 @@ const std::string & getIndent() const;
 ```
 
 The default indent is 4 white spaces.
+
+<a id="mdtoc_c2f73b75"></a>
+#### Set/get object type
+
+```c++
+bool isObjectType(const metapp::MetaType * metaType) const;
+
+template <typename T>
+DumperConfig & addObjectType();
+
+DumperConfig & addObjectType(const metapp::MetaType * metaType);
+```
+
+More than one object types can be added using `addObjectType`.  
+During dumping, when the dumper meets a meta type that `isObjectType` returns true, the dumper will dump the type as JSON object.  
+It doesn't make sense to `addObjectType` for associative containers because `Dumper` will dump any associative containers
+as JSON object by default. `addObjectType` is useful to dump sequence containers such as `std::vector` or `std::deque`
+as object. To dump sequence containers as objects, the element type must be sequence container that can have minimum size of 2. 
+
+<a id="mdtoc_cae09b2b"></a>
+#### Set/get array type
+
+```c++
+bool isArrayType(const metapp::MetaType * metaType) const;
+
+template <typename T>
+DumperConfig & addArrayType();
+
+DumperConfig & addArrayType(const metapp::MetaType * metaType);
+```
+
+More than one array types can be added using `addArrayType`.  
+During dumping, when the dumper meets a meta type that `isArrayType` returns true, the dumper will dump the type as JSON array.  
+It doesn't make sense to `addArrayType` for sequence containers because `Dumper` will dump any sequence containers
+as JSON array by default. `addArrayType` is useful to dump associative containers such as `std::map` or `std::unordered_map`
+as array, by default `Dumper` dumps associative containers as JSON object.  
 
 <a id="mdtoc_1052425f"></a>
 ## TextOutput
@@ -316,7 +360,8 @@ private:
 ## Example code
 
 
-Dump integer.
+<a id="mdtoc_5df5999c"></a>
+### Dump integer
 
 ```c++
 jsonpp::Dumper dumper;
@@ -324,7 +369,8 @@ const std::string jsonText = dumper.dump(5);
 // jsonText is 5
 ```
 
-Dump array.
+<a id="mdtoc_855b62bc"></a>
+### Dump array
 
 ```c++
 jsonpp::Dumper dumper;
@@ -332,7 +378,8 @@ const std::string jsonText = dumper.dump(std::vector<std::string> { "Hello", "wo
 // jsonText is ["Hello","world"]
 ```
 
-Dump beautified object.
+<a id="mdtoc_ff8c0a51"></a>
+### Dump beautified object
 
 ```c++
 jsonpp::Dumper dumper(jsonpp::DumperConfig().enableBeautify(true));
@@ -348,7 +395,8 @@ jsonText is
 }
 ```
 
-Dump to stream.
+<a id="mdtoc_1f819f65"></a>
+### Dump to stream
 
 ```c++
 jsonpp::Dumper dumper;
@@ -356,4 +404,52 @@ jsonpp::StreamWriter writer(std::cout);
 jsonpp::TextOutput<jsonpp::StreamWriter> streamOutput(writer);
 dumper.dump(5, streamOutput);
 // output 5
+```
+
+<a id="mdtoc_552ac264"></a>
+### Dump sequence containers as JSON object  
+We call `addObjectType` to turn sequence containers into JSON object.  
+The container value must be another sequence container (in the document we treat std::pair and std::tuple
+as container) and has at least two elements. Extra elements beyond the two are ignored.
+The first element must be string which is the JSON object key.
+
+```c++
+  jsonpp::DumperConfig dumperConfig;
+  // std::pair<std::string, int> contains two elements, the first is string.
+  dumperConfig.addObjectType<std::vector<std::pair<std::string, int> > >();
+  // std::list<std::string> can contain any amount of elements, all are strings.
+  dumperConfig.addObjectType<std::deque<std::list<std::string> > >();
+  jsonpp::Dumper dumper(dumperConfig);
+  const std::string jsonText = dumper.dump(jsonpp::JsonArray {
+    std::vector<std::pair<std::string, int> > {
+      { "one", 1 },
+      { "two", 2 },
+    },
+    std::deque<std::list<std::string> > {
+      { "Hello", "good" },
+      // "day" is the third element, it will be ignored and it's lost in JSON
+      { "world", "nice", "day" },
+    },
+  });
+  //std::cout << jsonText;
+  // jsonText is [{"one":1,"two":2},{"Hello":"good","world":"nice"}]
+```
+
+<a id="mdtoc_491aae0"></a>
+### Dump associative containers as JSON array  
+We call `addArrayType` to turn associative containers into JSON array.  
+Each element in the container is dumped as nested array. The key is the first element, the value is the second element.
+
+```c++
+  jsonpp::DumperConfig dumperConfig;
+  dumperConfig.addArrayType<std::map<std::string, int> >();
+  jsonpp::Dumper dumper(dumperConfig);
+  const std::string jsonText = dumper.dump(jsonpp::JsonObject {
+    { "a", std::map<std::string, int> {
+      { "one", 1 },
+      { "two", 2 },
+    }}
+  });
+  //std::cout << jsonText;
+  // jsonText is {"a":[["one",1],["two",2]]}
 ```

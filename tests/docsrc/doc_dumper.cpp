@@ -147,6 +147,40 @@ const std::string & getIndent() const;
 
 The default indent is 4 white spaces.
 
+#### Set/get object type
+
+```c++
+bool isObjectType(const metapp::MetaType * metaType) const;
+
+template <typename T>
+DumperConfig & addObjectType();
+
+DumperConfig & addObjectType(const metapp::MetaType * metaType);
+```
+
+More than one object types can be added using `addObjectType`.  
+During dumping, when the dumper meets a meta type that `isObjectType` returns true, the dumper will dump the type as JSON object.  
+It doesn't make sense to `addObjectType` for associative containers because `Dumper` will dump any associative containers
+as JSON object by default. `addObjectType` is useful to dump sequence containers such as `std::vector` or `std::deque`
+as object. To dump sequence containers as objects, the element type must be sequence container that can have minimum size of 2. 
+
+#### Set/get array type
+
+```c++
+bool isArrayType(const metapp::MetaType * metaType) const;
+
+template <typename T>
+DumperConfig & addArrayType();
+
+DumperConfig & addArrayType(const metapp::MetaType * metaType);
+```
+
+More than one array types can be added using `addArrayType`.  
+During dumping, when the dumper meets a meta type that `isArrayType` returns true, the dumper will dump the type as JSON array.  
+It doesn't make sense to `addArrayType` for sequence containers because `Dumper` will dump any sequence containers
+as JSON array by default. `addArrayType` is useful to dump associative containers such as `std::map` or `std::unordered_map`
+as array, by default `Dumper` dumps associative containers as JSON object.  
+
 ## TextOutput
 
 `Dumper` supports to dump to customized `output`. `Dumper` doesn't assume anything on the output. The output
@@ -299,7 +333,7 @@ desc*/
 ExampleFunc
 {
 	//code
-	//desc Dump integer.
+	//desc ### Dump integer
 	jsonpp::Dumper dumper;
 	const std::string jsonText = dumper.dump(5);
 	// jsonText is 5
@@ -310,7 +344,7 @@ ExampleFunc
 ExampleFunc
 {
 	//code
-	//desc Dump array.
+	//desc ### Dump array
 	jsonpp::Dumper dumper;
 	const std::string jsonText = dumper.dump(std::vector<std::string> { "Hello", "world" });
 	// jsonText is ["Hello","world"]
@@ -321,7 +355,7 @@ ExampleFunc
 ExampleFunc
 {
 	//code
-	//desc Dump beautified object.
+	//desc ### Dump beautified object
 	jsonpp::Dumper dumper(jsonpp::DumperConfig().enableBeautify(true));
 	const std::string jsonText = dumper.dump(std::map<std::string, int> { { "one", 1}, { "two", 2 } });
 	//std::cout << jsonText << std::endl;
@@ -341,13 +375,70 @@ ExampleFunc
 ExampleFunc
 {
 	//code
-	//desc Dump to stream.
+	//desc ### Dump to stream
 	jsonpp::Dumper dumper;
 	jsonpp::StreamWriter writer(std::cout);
 	jsonpp::TextOutput<jsonpp::StreamWriter> streamOutput(writer);
+	#if 0 //nocode
 	dumper.dump(5, streamOutput);
+	#endif //nocode
 	// output 5
 	//code
-	std::cout << std::endl;
+}
+
+ExampleFunc
+{
+	//code
+	/*desc
+	### Dump sequence containers as JSON object  
+	We call `addObjectType` to turn sequence containers into JSON object.  
+	The container value must be another sequence container (in the document we treat std::pair and std::tuple
+	as container) and has at least two elements. Extra elements beyond the two are ignored.
+	The first element must be string which is the JSON object key.
+	desc*/
+	jsonpp::DumperConfig dumperConfig;
+	// std::pair<std::string, int> contains two elements, the first is string.
+	dumperConfig.addObjectType<std::vector<std::pair<std::string, int> > >();
+	// std::list<std::string> can contain any amount of elements, all are strings.
+	dumperConfig.addObjectType<std::deque<std::list<std::string> > >();
+	jsonpp::Dumper dumper(dumperConfig);
+	const std::string jsonText = dumper.dump(jsonpp::JsonArray {
+		std::vector<std::pair<std::string, int> > {
+			{ "one", 1 },
+			{ "two", 2 },
+		},
+		std::deque<std::list<std::string> > {
+			{ "Hello", "good" },
+			// "day" is the third element, it will be ignored and it's lost in JSON
+			{ "world", "nice", "day" },
+		},
+	});
+	//std::cout << jsonText;
+	// jsonText is [{"one":1,"two":2},{"Hello":"good","world":"nice"}]
+	//code
+	(void)jsonText;
+}
+
+ExampleFunc
+{
+	//code
+	/*desc
+	### Dump associative containers as JSON array  
+	We call `addArrayType` to turn associative containers into JSON array.  
+	Each element in the container is dumped as nested array. The key is the first element, the value is the second element.
+	desc*/
+	jsonpp::DumperConfig dumperConfig;
+	dumperConfig.addArrayType<std::map<std::string, int> >();
+	jsonpp::Dumper dumper(dumperConfig);
+	const std::string jsonText = dumper.dump(jsonpp::JsonObject {
+		{ "a", std::map<std::string, int> {
+			{ "one", 1 },
+			{ "two", 2 },
+		}}
+	});
+	//std::cout << jsonText;
+	// jsonText is {"a":[["one",1],["two",2]]}
+	//code
+	(void)jsonText;
 }
 

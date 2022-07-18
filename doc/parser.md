@@ -11,18 +11,21 @@
   - [parse ParserSource](#mdtoc_924c6482)
   - [Error handling](#mdtoc_e2f32606)
   - [Use the parsed result](#mdtoc_d51f7c39)
-- [ParserSource](#mdtoc_f8e315db)
-  - [Header](#mdtoc_6e72a8c2)
 - [ParserConfig](#mdtoc_73e345d4)
-  - [Header](#mdtoc_6e72a8c3)
+  - [Header](#mdtoc_6e72a8c2)
   - [Default constructor](#mdtoc_56b1be23)
   - [Set/get backendType](#mdtoc_3d8edcbc)
   - [Set/get comment](#mdtoc_628c8e14)
   - [Set/get array type](#mdtoc_cae09b2b)
   - [Set/get object type](#mdtoc_c2f73b75)
+- [ParserSource](#mdtoc_f8e315db)
+  - [Header](#mdtoc_6e72a8c3)
 - [Example code](#mdtoc_3bb166c4)
   - [Parse JSON document](#mdtoc_bdd95779)
+  - [Parse as prototype](#mdtoc_bd9123d4)
   - [Dump/parse class object](#mdtoc_9eda3b58)
+  - [Parse with specified array type](#mdtoc_31256c4e)
+  - [Parse with specified object type](#mdtoc_ffd46b55)
 <!--endtoc-->
 
 <a id="mdtoc_435d0ed9"></a>
@@ -153,6 +156,8 @@ T parse(const std::string & jsonText);
 
 **#1 prototype is nullptr**  
 The document is parsed as default data types. Please check [this document](common_types.md) for the default data types.  
+If the `arrayType` in ParserConfig is not nullptr, JSON array is parsed as `arrayType`.  
+If the `objectType` in ParserConfig is not nullptr, JSON object is parsed as `objectType`.  
 
 **#2 prototype is not nullptr**  
 The document is parsed as the type of `prototype`, the result Variant can be converted to the type of `prototype`.  
@@ -173,38 +178,14 @@ there is no variable to hold the object.
 Note: you should prefer this form to #2. You should only use #2 for advanced usage, such as the prototype is obtained at runtime
 and you don't know the compile time type.
 
-<a id="mdtoc_f8e315db"></a>
-## ParserSource
+<a id="mdtoc_73e345d4"></a>
+## ParserConfig
 
 <a id="mdtoc_6e72a8c2"></a>
 #### Header
 
 ```c++
 #include "jsonpp/parser.h"
-```
-
-```c++
-class ParserSource
-{
-public:
-  ParserSource();
-  ParserSource(const char * cstr, const std::size_t cstrLength);
-  explicit ParserSource(const std::string & str);
-  explicit ParserSource(std::string && str);
-};
-```
-
-`ParserSource` has constructors that accept `std::string` or C string which is the JSON document.  
-Note `ParserSource` refers to the string, so the content must be available untile the `ParserSource` is destroyed.
-
-<a id="mdtoc_73e345d4"></a>
-## ParserConfig
-
-<a id="mdtoc_6e72a8c3"></a>
-#### Header
-
-```c++
-#include "jsonpp/dumper.h"
 ```
 
 <a id="mdtoc_56b1be23"></a>
@@ -217,6 +198,8 @@ ParserConfig();
 Construct a `ParserConfig` with default settings with the default values of,  
 `backendType` - ParserBackendType::simdjson.  
 `comment` - false.  
+`arrayType` - nullptr.  
+`objectType` - nullptr.  
 
 <a id="mdtoc_3d8edcbc"></a>
 #### Set/get backendType
@@ -273,8 +256,10 @@ ParserConfig & setArrayType(const metapp::MetaType * arrayType);
 Set the array type to represent JSON array. Default is nullptr. If it's nullptr, `jsonpp::JsonArray` is used.  
 If the argument `prototype` in `Parser::parse` is not nullptr, the array type is ignored. Otherwise, all arrays are parsed
 as the array type.  
-The array type can be `std::vector`, `std::deque`, `std::list`, `std::array` with enough elements, or any containers that
-implements meta interface `metapp::MetaIndexable`. The element type must be able to casted from the value in the JSON document.  
+The array type can be `std::vector`, `std::deque`, `std::list`, `std::array`, `std::tuple`, `std::pair`, or any containers that
+implements meta interface `metapp::MetaIndexable`. For fixed size containers such as `std::array`, `std::tuple`, or `std::pair`,
+the capacity must be large enough to hold the parsed elements.  
+The element type must be able to casted from the value in the JSON document.  
 
 <a id="mdtoc_c2f73b75"></a>
 #### Set/get object type
@@ -297,47 +282,56 @@ The object type can also be sequence containers such as `std::vector`, `std::deq
 or any containers that implements meta interface `metapp::MetaIndexable`. The element type can be `std::pair<std::string, T>`, or
 any sequence containers which size can grow to at least 2.
 
+<a id="mdtoc_f8e315db"></a>
+## ParserSource
+
+<a id="mdtoc_6e72a8c3"></a>
+#### Header
+
+```c++
+#include "jsonpp/parser.h"
+```
+
+```c++
+class ParserSource
+{
+public:
+  ParserSource();
+  ParserSource(const char * cstr, const std::size_t cstrLength);
+  explicit ParserSource(const std::string & str);
+  explicit ParserSource(std::string && str);
+};
+```
+
+`ParserSource` has constructors that accept `std::string` or C string which is the JSON document.  
+Note `ParserSource` refers to the string, so the content must be available untile the `ParserSource` is destroyed.
+
 <a id="mdtoc_3bb166c4"></a>
 ## Example code
 
 
 <a id="mdtoc_bdd95779"></a>
 ### Parse JSON document
-Create a parser with default configuration and default backend which is simdjson.
 
 ```c++
+// Create a parser with default configuration and default backend which is simdjson.
 jsonpp::Parser parser;
-```
 
-This is the JSON we are going to parse.
-
-```c++
+// This is the JSON we are going to parse.
 const std::string jsonText = R"(
   [ 5, "abc", true, null, 3.14, [ 1, 2, 3 ], { "one": 1, "two": 2 } ]
 )";
-```
 
-Parse the JSON, the result is a `metapp::Variant`.
-
-```c++
+// Parse the JSON, the result is a `metapp::Variant`.
 const metapp::Variant var = parser.parse(jsonText);
-```
 
-The result is an array.
-
-```c++
+// The result is an array.
 ASSERT(jsonpp::getJsonType(var) == jsonpp::JsonType::jtArray);
-```
 
-Get the underlying array. jsonpp::JsonArray is alias of `std::vector<metapp::Variant>`
-
-```c++
+// Get the underlying array. jsonpp::JsonArray is alias of `std::vector<metapp::Variant>`
 const jsonpp::JsonArray & array = var.get<const jsonpp::JsonArray &>();
-```
 
-Now verify the elements.
-
-```c++
+// Now verify the elements.
 ASSERT(array[0].get<jsonpp::JsonInt>() == 5);
 ASSERT(array[1].get<const jsonpp::JsonString &>() == "abc");
 ASSERT(array[2].get<jsonpp::JsonBool>());
@@ -350,6 +344,29 @@ ASSERT(nestedArray[2].get<jsonpp::JsonInt>() == 3);
 jsonpp::JsonObject & nestedObject = array[6].get<jsonpp::JsonObject &>();
 ASSERT(nestedObject["one"].get<jsonpp::JsonInt>() == 1);
 ASSERT(nestedObject["two"].get<jsonpp::JsonInt>() == 2);
+```
+
+<a id="mdtoc_bd9123d4"></a>
+### Parse as prototype
+
+```c++
+// Create a parser.
+jsonpp::Parser parser;
+
+// This is the JSON we are going to parse.
+const std::string jsonText = R"(
+  { "a" : [ 3.1, 4, 15, 9 ], "b" : [ -1, -2, -3 ] }
+)";
+
+// Parse the JSON as `std::map<std::string, std::vector<int> >`
+const std::map<std::string, std::vector<int> > object = parser.parse<std::map<std::string, std::vector<int> > >(jsonText);
+// Above line equals to these two lines,
+//const metapp::Variant var = parser.parse(jsonText, metapp::getMetaType<std::map<std::string, std::vector<int> > >());
+//const std::map<std::string, std::vector<int> > & object = var.get<std::map<std::string, std::vector<int> > >();
+
+// Note: since the array is parsed as std::vector<int>, the float 3.1 is converted to 3
+ASSERT(object.at("a") == std::vector<int> { 3, 4, 15, 9 });
+ASSERT(object.at("b") == std::vector<int> { -1, -2, -3 });
 ```
 
 <a id="mdtoc_9eda3b58"></a>
@@ -480,4 +497,50 @@ jsonpp::Parser parser;
 const std::vector<Person> parsedPersons = parser.parse<std::vector<Person> >(jsonText);
 ASSERT(parsedPersons[0] == personAlice);
 ASSERT(parsedPersons[1] == personTom);
+```
+
+<a id="mdtoc_31256c4e"></a>
+### Parse with specified array type
+
+```c++
+// Create the config, we want all JSON arrays parsed as std::deque<int> instead of JsonArray.
+jsonpp::ParserConfig parserConfig;
+parserConfig.setArrayType<std::deque<int> >();
+// Create a parser with parserConfig
+jsonpp::Parser parser(parserConfig);
+
+// This is the JSON we are going to parse.
+const std::string jsonText = R"(
+  { "a" : [ 3.1, 4, 15, 9 ], "b" : [ -1, -2, -3 ] }
+)";
+
+// Parse the JSON
+const metapp::Variant var = parser.parse(jsonText);
+const jsonpp::JsonObject & object = var.get<const jsonpp::JsonObject &>();
+
+ASSERT(object.at("a").get<const std::deque<int> & >() == std::deque<int> { 3, 4, 15, 9 });
+ASSERT(object.at("b").get<const std::deque<int> & >() == std::deque<int> { -1, -2, -3 });
+```
+
+<a id="mdtoc_ffd46b55"></a>
+### Parse with specified object type
+
+```c++
+// Create the config, we want all JSON arrays parsed as std::deque<int> instead of JsonArray.
+jsonpp::ParserConfig parserConfig;
+parserConfig.setObjectType<std::unordered_map<std::string, int> >();
+// Create a parser with parserConfig
+jsonpp::Parser parser(parserConfig);
+
+// This is the JSON we are going to parse.
+const std::string jsonText = R"(
+  [ { "a" : 1.2, "b" : 3 } ]
+)";
+
+// Parse the JSON
+const metapp::Variant var = parser.parse(jsonText);
+const jsonpp::JsonArray & array = var.get<const jsonpp::JsonArray &>();
+
+ASSERT(array[0].get<const std::unordered_map<std::string, int> & >().at("a") == 1);
+ASSERT(array[0].get<const std::unordered_map<std::string, int> & >().at("b") == 3);
 ```

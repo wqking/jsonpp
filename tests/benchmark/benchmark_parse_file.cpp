@@ -19,8 +19,17 @@
 #include "jsonpp/parser.h"
 #include "jsonpp/dumper.h"
 
+#if defined(METAPP_COMPILER_VC)
+#pragma warning(push)
+#pragma warning(disable: 4100 4127 4244 4245 4267 4458 4459 4996 4706)
+#endif
+
 #include "../src/thirdparty/simdjson/simdjson.h"
 #include "thirdparty/metrics.hpp"
+
+#if defined(METAPP_COMPILER_VC)
+#pragma warning(pop)
+#endif
 
 // Uncomment it to enable benchmarking nlohmann json, the proper header must be included
 //#define NLOH
