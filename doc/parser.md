@@ -315,7 +315,7 @@ public:
 ```
 
 `ParserSource` has constructors that accept `std::string` or C string which is the JSON document.  
-Note `ParserSource` refers to the string, so the content must be available untile the `ParserSource` is destroyed.
+Note `ParserSource` refers to the string, so the content must be available until the `ParserSource` is destroyed.
 
 <a id="mdtoc_3bb166c4"></a>
 ## Example code
@@ -406,7 +406,7 @@ struct Person
 };
 ```
 
-Now make the enum and class information availabe to metapp. jsonpp uses the reflection information from metapp.
+Now make the enum and class information available to metapp. jsonpp uses the reflection information from metapp.
 The information is not special to jsonpp, it's general reflection and can be used for other purposes such
 as serialization, script binding, etc.
 

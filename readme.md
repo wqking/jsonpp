@@ -239,7 +239,7 @@ struct Person
 };
 ```
 
-Now make the enum and class information availabe to metapp. jsonpp uses the reflection information from metapp.
+Now make the enum and class information available to metapp. jsonpp uses the reflection information from metapp.
 The information is not special to jsonpp, it's general reflection and can be used for other purposes such
 as serialization, script binding, etc.
 

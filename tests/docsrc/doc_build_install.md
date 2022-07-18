@@ -101,9 +101,9 @@ All parts are in the `tests` folder.
 
 All parts require CMake to build, and there is a makefile to ease the building.  
 Go to folder `tests/build`, then run `make` with different target.
-- `make vc19` #generate solution files for Microsoft Visual Studio 2019, then open metapptest.sln in folder project_vc19
-- `make vc17` #generate solution files for Microsoft Visual Studio 2017, then open metapptest.sln in folder project_vc17
-- `make vc15` #generate solution files for Microsoft Visual Studio 2015, then open metapptest.sln in folder project_vc15
+- `make vc19` #generate solution files for Microsoft Visual Studio 2019, then open jsonpptest.sln in folder project_vc19
+- `make vc17` #generate solution files for Microsoft Visual Studio 2017, then open jsonpptest.sln in folder project_vc17
+- `make vc15` #generate solution files for Microsoft Visual Studio 2015, then open jsonpptest.sln in folder project_vc15
 - `make mingw` #build using MinGW
 - `make linux` #build on Linux
 - `make mingw_coverage` #build using MinGW and generate code coverage report

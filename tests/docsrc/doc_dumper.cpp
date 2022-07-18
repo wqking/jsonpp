@@ -131,7 +131,7 @@ bool allowNamedEnum() const;
 DumperConfig & enableNamedEnum(const bool enable);
 ```
 
-If `named enum` is true, for enumerator values that have names registed via metapp, the names are dumped. If the values
+If `named enum` is true, for enumerator values that have names registered via metapp, the names are dumped. If the values
 don't have registered names, the integral values are dumped.  
 If `named enum` is false, the integral values are dumped.  
 Using enumerator names in the dumped JSON has advantage that, if the enumerator values changed (such as reordered), the
@@ -286,7 +286,7 @@ A writer must implement two `operator()`.
 void operator() (const char c) const;
 ```
 
-Write a single charactor `c`.
+Write a single character `c`.
 
 ```c++
 void operator() (const char * s, const std::size_t length) const

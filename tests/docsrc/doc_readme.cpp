@@ -224,7 +224,7 @@ bool operator == (const Person & a, const Person & b)
 
 //code
 
-//desc Now make the enum and class information availabe to metapp. jsonpp uses the reflection information from metapp.
+//desc Now make the enum and class information available to metapp. jsonpp uses the reflection information from metapp.
 //desc The information is not special to jsonpp, it's general reflection and can be used for other purposes such
 //desc as serialization, script binding, etc.
 template <>
