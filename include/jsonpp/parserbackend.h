@@ -94,9 +94,9 @@ public:
 
 		case Implement::typeUnsignedInteger:
 			if(prototype != nullptr) {
-				return metapp::Variant((JsonInt)(implement.getUnsignedInteger(std::forward<T>(node)))).cast(prototype);
+				return metapp::Variant((JsonUnsignedInt)(implement.getUnsignedInteger(std::forward<T>(node)))).cast(prototype);
 			}
-			return (JsonInt)(implement.getUnsignedInteger(std::forward<T>(node)));
+			return (JsonUnsignedInt)(implement.getUnsignedInteger(std::forward<T>(node)));
 
 		case Implement::typeDouble:
 			if(prototype != nullptr) {

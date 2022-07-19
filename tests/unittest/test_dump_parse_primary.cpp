@@ -68,6 +68,19 @@ TEMPLATE_LIST_TEST_CASE("DumpAndParse, int", "", BackendTypes)
 	}
 }
 
+TEST_CASE("DumpAndParse, unsigned int")
+{
+	constexpr auto backendType = jsonpp::ParserBackendType::simdjson;
+	auto dumperConfig = DUMPER_CONFIGS();
+	// 18446744073709551615 is max of uint64_t
+	SECTION("18446744073709551615") {
+		const std::string jsonText = jsonpp::Dumper(dumperConfig).dump(18446744073709551615ULL);
+		metapp::Variant var = jsonpp::Parser(jsonpp::ParserConfig().setBackendType<backendType>()).parse(jsonText);
+		REQUIRE(jsonpp::getJsonType(var) == jsonpp::JsonType::jtUnsignedInt);
+		REQUIRE(var.get<jsonpp::JsonUnsignedInt>() == 18446744073709551615ULL);
+	}
+}
+
 TEMPLATE_LIST_TEST_CASE("DumpAndParse, double", "", BackendTypes)
 {
 	constexpr auto backendType = TestType::backendType;
