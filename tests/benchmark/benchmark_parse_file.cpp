@@ -296,8 +296,8 @@ void doBenchmarkDumpJson(const metapp::Variant & parsedObject, const FileInfo & 
 	}
 
 	std::string dumpedText;
-	const auto t = measureElapsedTime([&parsedObject, iterations, beautify, &dumpedText]() {
-		jsonpp::Dumper dumper(jsonpp::DumperConfig().enableBeautify(beautify));
+	jsonpp::Dumper dumper(jsonpp::DumperConfig().enableBeautify(beautify));
+	const auto t = measureElapsedTime([&parsedObject, iterations, &dumper, beautify, &dumpedText]() {
 		for(int i = 0; i < iterations; ++i) {
 			dumpedText = dumper.dump(parsedObject);
 		}

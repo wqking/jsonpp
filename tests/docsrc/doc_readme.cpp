@@ -394,12 +394,12 @@ Absolute data doesn't make sense, so the other library "JSON for Modern C++" (nl
 
 |File name           |    jsonpp (beautify)|      jsonpp (minify)|  nlohmann (beautify)|    nlohmann (minify)|
 |:-------------------|--------------------:|--------------------:|--------------------:|--------------------:|
-|canada.json         |   14.1 ms,  548 MB/s|     10 ms,  199 MB/s|     20 ms,  386 MB/s|   14.3 ms,  139 MB/s|
-|citm_catalog.json   |   4.14 ms,  457 MB/s|   2.67 ms,  178 MB/s|   5.04 ms,  326 MB/s|   4.09 ms,  116 MB/s|
-|twitter.json        |   2.44 ms,  306 MB/s|   2.13 ms,  209 MB/s|   4.17 ms,  175 MB/s|   3.21 ms,  138 MB/s|
-|airlines.json       |   22.6 ms,  257 MB/s|   18.7 ms,  179 MB/s|   22.8 ms,  254 MB/s|   20.1 ms,  167 MB/s|
-|tiny.json           | 0.0033 ms,  137 MB/s| 0.0029 ms,   86 MB/s| 0.0017 ms,  251 MB/s| 0.0016 ms,  152 MB/s|
-|Zurich_Building.json|   3923 ms,  327 MB/s|   2855 ms,   97 MB/s|   2747 ms,  467 MB/s|   1940 ms,  143 MB/s|
+|canada.json         |   14.2 ms,  544 MB/s|   10.1 ms,  197 MB/s|   20.4 ms,  379 MB/s|   14.9 ms,  133 MB/s|
+|citm_catalog.json   |   4.11 ms,  461 MB/s|   2.65 ms,  180 MB/s|   4.86 ms,  338 MB/s|   4.12 ms,  115 MB/s|
+|twitter.json        |   2.05 ms,  364 MB/s|   1.52 ms,  292 MB/s|   4.08 ms,  179 MB/s|   3.22 ms,  138 MB/s|
+|airlines.json       |   21.1 ms,  275 MB/s|   17.9 ms,  187 MB/s|   23.8 ms,  244 MB/s|   21.8 ms,  154 MB/s|
+|tiny.json           | 0.0034 ms,  130 MB/s|  0.003 ms,   80 MB/s| 0.0017 ms,  251 MB/s| 0.0016 ms,  152 MB/s|
+|Zurich_Building.json|   3724 ms,  345 MB/s|   2649 ms,  105 MB/s|   2665 ms,  482 MB/s|   1943 ms,  143 MB/s|
 
 ## Documentations
 Below are tutorials and documents. Don't feel upset if you find issues or missing stuff in the documents, I'm not

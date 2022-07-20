@@ -198,19 +198,19 @@ struct TextOutput
 		writer(result.start, result.length);
 	}
 
-	void writeString(const std::string & s) const {
+	void writeString(const char * const s, const std::size_t length) const {
 		writer('"');
 
 		std::size_t previousIndex = 0;
 		std::size_t index = 0;
-		auto flush = [this, &s, &previousIndex, &index]() {
+		auto flush = [this, s, &previousIndex, &index]() {
 			if(previousIndex < index) {
-				writer(s.c_str() + previousIndex, index - previousIndex);
+				writer(s + previousIndex, index - previousIndex);
 				previousIndex = index;
 			}
 		};
 
-		while(index < s.size()) {
+		while(index < length) {
 			const unsigned char c = static_cast<unsigned char>(s[index]);
 			if(encodeCharMap[c] != 0) {
 				const EscapeItem * escapeItem = &escapeItemList[encodeCharMap[c]];
@@ -273,7 +273,7 @@ struct TextOutput
 		checkWriteComma(index);
 		writeIndent();
 
-		writeString(key);
+		writeString(key.c_str(), key.size());
 		writer(':');
 		writeSpace();
 	}

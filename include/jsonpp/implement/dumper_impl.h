@@ -49,9 +49,16 @@ public:
 private:
 	void doDumpValue(const metapp::Variant & value) {
 		auto metaType = metapp::getNonReferenceMetaType(value);
-		if(metaType->isPointer() && value.get<void *>() == nullptr) {
-			output.writeNull();
-			return;
+		if(metaType->isPointer()) {
+			if(value.get<void *>() == nullptr) {
+				output.writeNull();
+				return;
+			}
+			if(metaType->getUpType()->getTypeKind() == metapp::tkChar) {
+				const char * s = value.get<const char *>();
+				output.writeString(s, strlen(s));
+				return;
+			}
 		}
 
 		auto typeKind = metaType->getTypeKind();
@@ -93,12 +100,14 @@ private:
 			output.writeNumber(enumValue);
 			return;
 		}
-		{
-			metapp::Variant casted = value.castSilently<std::string>();
-			if(! casted.isEmpty()) {
-				doDumpString(casted.get<std::string>());
-				return;
-			}
+		if(typeKind == metapp::tkStdString) {
+			doDumpString(value.get<const std::string &>());
+			return;
+		}
+		if(metaType->isArray() && metaType->getUpType()->getTypeKind() == metapp::tkChar) {
+			const char * s = value.get<char []>();
+			output.writeString(s, strlen(s));
+			return;
 		}
 		if(doDumpObject(value)) {
 			return;
@@ -107,7 +116,7 @@ private:
 	}
 
 	void doDumpString(const std::string & s) {
-		output.writeString(s);
+		output.writeString(s.c_str(), s.size());
 	}
 
 	bool doDumpObject(const metapp::Variant & value) {
