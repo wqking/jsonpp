@@ -13,7 +13,8 @@ include(FetchContent)
 FetchContent_Declare(
 	metapp
 	GIT_REPOSITORY https://github.com/wqking/metapp.git
-	#GIT_TAG        703bd9caab50b139428cea1aaff9974ebee5742e # release-1.10.0
+	GIT_REMOTE_NAME origin/master
+	GIT_TAG        4c3a0bcf2f016948049cc4b51858fe28b1acda19
 )
 FetchContent_MakeAvailable(metapp)
 
