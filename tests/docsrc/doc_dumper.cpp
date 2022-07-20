@@ -181,7 +181,7 @@ It doesn't make sense to `addArrayType` for sequence containers because `Dumper`
 as JSON array by default. `addArrayType` is useful to dump associative containers such as `std::map` or `std::unordered_map`
 as array, by default `Dumper` dumps associative containers as JSON object.  
 
-## TextOutput
+## Class TextOutput
 
 `Dumper` supports to dump to customized `output`. `Dumper` doesn't assume anything on the output. The output
 can be text format, or binary format. The output can write to `std::string`, write to stream, or even write to socket.  
@@ -225,6 +225,19 @@ There is no member functions for end users. The user only needs to construct a `
 All `TextOutput` member functions are to implement the `Output` protocol, which is not need by end users.  
 If you are going to implement new `Output` class, your can either read the `TextOutput` source code, or leave me
 a message so I can add document for it.
+
+#### How TextOutput stringifies data
+
+The dumped JSON text is always UTF-8 string.
+
+For intergers, `TextOutput` converts two digits to characters each time, instead of one digit, to improve performance.  
+
+For float pointer numbers, `TextOutput` uses [Dragonbox algorithm](https://github.com/abolz/Drachennest) which is
+not only very fast performance but also has good features, such as roundtrip guarantee, shortest output, and correctly rounded.  
+
+For strings, `TextOutput` can escape all special ASCII characters correctly. `TextOutput` doesn't escape any unicode characters
+to ASCII, so the output may contain non-ASCII data. I know the other JSON libraries can escape unicode characters to `\uxxxx`,
+though I don't know what's the use case to require such escaping. If you do need such escaping, please let me know.
 
 ## Writer classes for TextOutput
 

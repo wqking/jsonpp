@@ -26,9 +26,10 @@
 #include <sstream>
 
 /*desc
-# jsonpp -- easy to use C++ JSON parser and stringify library
+# jsonpp -- easy to use and reusable C++ JSON library
 
-jsonpp is a cross platform C++ json library, focusing on easy to use.  
+jsonpp is a cross platform C++ JSON library, focusing on easy to use and reusable technology.  
+jsonpp can parse and stringify JSON document.
 
 ![C++](https://img.shields.io/badge/C%2B%2B-11-blue)
 ![Compilers](https://img.shields.io/badge/Compilers-GCC%2FMSVC%2FClang-blue)
@@ -37,14 +38,17 @@ jsonpp is a cross platform C++ json library, focusing on easy to use.
 
 ## Features
 
-- **Easy to use, very easy to use, very very ... easy to use**. That means,
-  - You can parse and stringify any C++ data structures, include STL containers, classes, etc.
-  - For C++ native data types and STL containers, you don't need to provide any meta data to use them, because metapp already supports them.
-  - Reflecting meta data for class is very easy. 
+- **Reusable technology**. The core technology is from [C++ reflection library metapp](https://github.com/wqking/metapp) developed
+by the same developer (wqking) of jsonpp. The technology is not unique to jsonpp, it's reusable for other purposes such as
+runtime reflection system, serialization, script binding, etc.
 
-- **Reusable meta data**. jsonpp uses meta data from [C++ reflection library metapp](https://github.com/wqking/metapp) that's developed
-by the same developer (wqking) of jsonpp, which is not only not special to jsonpp, but also general enough to use for other purpose
-such as serialization, script binding, etc. 
+- **Very easy to use**. We can parse and stringify any C++ data structures, include STL containers, classes, etc.
+C++ native data types and STL containers are ready to use, no need extra work, because metapp already supports them.
+Reflecting meta data for class is very easy. 
+
+- **Very easy to learn**. jsonpp doesn't define any data types to represent JSON document, instead it uses native C++ data type
+and STL containers which you have already mastered. The only "new" data type is metapp::Variant, you only need to learn
+the very basic knowledge.
 
 - **Multiple parser backends**. jsonpp uses existing matured and well tested JSON parser libraries as the parser backend, such as
 [simdjson 2.2.0](https://github.com/simdjson/simdjson) and [json-parser](https://github.com/json-parser/json-parser).
@@ -56,7 +60,7 @@ simdjson. However, the performance is better than some existing popular JSON lib
 the high performance simdjson and well optimized metapp.
 
 - Support stringify and parse almost all C++ native types and STL containers, such as integers, float points, C string,
-std::string, std::array, std::vector, std::list, std::deque, std::map, std::unordered_map, etc.
+std::string, std::array, std::vector, std::list, std::deque, std::map, std::unordered_map, std::tuple, std::pair, etc.
 New containers can be added via metapp reflection system.
 
 - JSON object can be parsed as sequence containers such as std::vector, and vice versa on dumping.
@@ -71,20 +75,24 @@ New containers can be added via metapp reflection system.
 
 - Use CMake to build and install.
 
+## Why jsonpp when there are hundreds of JSON libraries?
+
+jsonpp is very easy to use and has good performance, and more important, the technology is reusable. For example, to parse/stringify
+customized classes, unlike the other libraries that require you to register read/write method to the JSON libraries, in jsonpp you
+only need to reflect meta data using metapp, then jsonpp can read and write the type for you. The meta data is reusable, your
+knowledge and experience is reusable too.
+
 ## Basic information
 
 ### License
 
 Apache License, Version 2.0  
 
-### Version 0.1.0-beta
+### Version 1.0.0-RC
 
-The project is under working in progress and near the first release.  
-The first stable release will be v1.0.0. 
-
-To put the library to first release, we need to,   
-1. Add more tests.
-2. Complete the documentations.
+The project is in release candidate stage and near the first release.  
+I will do more tests, code review, and gather feedbacks. After there is no critical bugs or serious design flaw, I will release
+the first version.
 
 You are welcome to try the project and give feedback. Your participation will help to make the development faster and better.
 
@@ -121,17 +129,23 @@ ExampleFunc
 	//code
 	//desc Create a parser with default configuration and default backend which is simdjson.
 	jsonpp::Parser parser;
+
 	//desc This is the JSON we are going to parse.
 	const std::string jsonText = R"(
 		[ 5, "abc", true, null, 3.14, [ 1, 2, 3 ], { "one": 1, "two": 2 } ]
 	)";
+
 	//desc Parse the JSON, the result is a `metapp::Variant`.
 	const metapp::Variant var = parser.parse(jsonText);
+
 	//desc The result is an array.
 	ASSERT(jsonpp::getJsonType(var) == jsonpp::JsonType::jtArray);
+
 	//desc Get the underlying array. jsonpp::JsonArray is alias of `std::vector<metapp::Variant>`
 	const jsonpp::JsonArray & array = var.get<const jsonpp::JsonArray &>();
-	//desc Now verify the elements.
+
+	//desc Now verify the elements. Don't feel strange on the types like JsonInt or JsonString, they are
+	//desc just aliases of C++ types. And we can parse JSON document as specified type, see next example.
 	ASSERT(array[0].get<jsonpp::JsonInt>() == 5);
 	ASSERT(array[1].get<const jsonpp::JsonString &>() == "abc");
 	ASSERT(array[2].get<jsonpp::JsonBool>());
@@ -144,6 +158,31 @@ ExampleFunc
 	jsonpp::JsonObject & nestedObject = array[6].get<jsonpp::JsonObject &>();
 	ASSERT(nestedObject["one"].get<jsonpp::JsonInt>() == 1);
 	ASSERT(nestedObject["two"].get<jsonpp::JsonInt>() == 2);
+	//code
+}
+
+//desc ### Parse JSON document as specified type
+
+ExampleFunc
+{
+	//code
+	//desc Create a parser.
+	jsonpp::Parser parser;
+
+	//desc This is the JSON we are going to parse. It's an array of integer, so we can use `std::vector<int>`
+	//desc to represent it. Note the float point 567.1 will be converted to `int` automatically.
+	const std::string jsonText = R"(
+		[ 1, -2, 3, 567.1 ]
+	)";
+
+	//desc Parse the JSON as std::vector<int>.
+	const std::vector<int> array = parser.parse<std::vector<int> >(jsonText);
+
+	//desc Verify the result.
+	REQUIRE(array[0] == 1);
+	REQUIRE(array[1] == -2);
+	REQUIRE(array[2] == 3);
+	REQUIRE(array[3] == 567);
 	//code
 }
 
@@ -179,7 +218,7 @@ ExampleFunc
 }
 
 //desc ### Dump/parse class object
-//desc Now let's dump and parse customized class objects. First let's define the enum and classes we will use later.
+//desc Now let's dump and parse customized class objects. First let's define the enum and classes that we will use later.
 
 namespace {
 
@@ -256,7 +295,7 @@ struct metapp::DeclareMetaType <Skill> : metapp::DeclareMetaTypeBase <Skill>
 };
 
 // I don't encourage to use macros and I don't provide macros in metapp library.
-// But for jsonpp users that don't want to dig into metapp and only want to the jsonpp features,
+// But for jsonpp users that don't want to dig into metapp and only want to use jsonpp features,
 // jsonpp provides macros to ease the meta type declaration.
 // Note: the macros are not required by jsonpp. The code can be rewritten without macros,
 // same as how Skill is declared above.

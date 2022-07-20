@@ -10,8 +10,9 @@
   - [parse a std::string](#mdtoc_c02f04a)
   - [parse ParserSource](#mdtoc_924c6482)
   - [Error handling](#mdtoc_e2f32606)
+  - [The input data](#mdtoc_838367f2)
   - [Use the parsed result](#mdtoc_d51f7c39)
-- [ParserConfig](#mdtoc_73e345d4)
+- [Class ParserConfig](#mdtoc_1530381c)
   - [Header](#mdtoc_6e72a8c2)
   - [Default constructor](#mdtoc_56b1be23)
   - [Set/get backendType](#mdtoc_3d8edcbc)
@@ -19,7 +20,7 @@
   - [Set/get array type](#mdtoc_cae09b2b)
   - [Set/get object type](#mdtoc_c2f73b75)
   - [Difference between array/object type in ParserConfig and argument `prototype` in function `Parser::parse`](#mdtoc_c7c50d42)
-- [ParserSource](#mdtoc_f8e315db)
+- [Class ParserSource](#mdtoc_9e306813)
   - [Header](#mdtoc_6e72a8c3)
 - [Example code](#mdtoc_3bb166c4)
   - [Parse JSON document](#mdtoc_bdd95779)
@@ -68,7 +69,7 @@ template <typename T>
 T parse(const char * jsonText, const std::size_t length);
 ```
 
-Parse JSON document at `jsonText` of `length` characters.  
+Parse JSON document at `jsonText` of `length` characters. `jsonText` doesn't need to be null terminated.  
 If `prototype` is nullptr, the document is parsed as default data types. Please check [this document](common_types.md) for the
 default data types.  
 If `prototype` is not nullptr, the document is parsed as `prototype`.  
@@ -120,7 +121,7 @@ T parse(const ParserSource & source);
 
 Parse JSON document in `source`.  
 If you needs to repeat parsing the same document, using `ParserSource` may increase performance slightly,
-depending on the parse backend.
+depending on the parser backend.
 
 <a id="mdtoc_e2f32606"></a>
 #### Error handling
@@ -132,9 +133,16 @@ std::string getError() const;
 
 `hasError()` returns true if there is any error occurred during previous `parse`, false if it succeeds.  
 `getError()` returns the error message if there is any error.  
-Both `metapp` and the parser backend may throw exceptions, all exceptions are captured and converted to error message.  
+Both `metapp` and the parser backend may throw exceptions, all exceptions are captured and converted to error message.
+So `parse` functions don't throw any exceptions.  
 `metapp` works if exceptions are disabled in compiler, for the parser backend, please check their document to see
 if exceptions can be disabled.
+
+<a id="mdtoc_838367f2"></a>
+#### The input data
+
+The input data must be UTF-8 text or plain ASCII text which is a subset of UTF-8. If the input is other unicode encoding,
+you need to convert it to UTF-8 beforehand. The input can't contain '\0'.
 
 <a id="mdtoc_d51f7c39"></a>
 #### Use the parsed result
@@ -161,14 +169,70 @@ The document is parsed as default data types. Please check [this document](commo
 If the `arrayType` in ParserConfig is not nullptr, JSON array is parsed as `arrayType`.  
 If the `objectType` in ParserConfig is not nullptr, JSON object is parsed as `objectType`.  
 
+If both the `arrayType` and `objectType` in ParserConfig are nullptr, then we can use below pseudo code to retrieve
+the native C++ types from the parsed result.  
+```c++
+metapp::Variant doc = myParser.parse(document);
+if(myParser.hasError()) {
+  // handle error here, and return
+}
+const auto type = jsonpp::getJsonType(doc);
+if(type == jsonpp::JsonType::jtNull) {
+  // process null
+}
+else if(type == jsonpp::JsonType::jtBool) {
+  jsonpp::JsonBool value = doc.get<jsonpp::JsonBool>();
+  // process value
+}
+else if(type == jsonpp::JsonType::jtInt) {
+  jsonpp::JsonInt value = doc.get<jsonpp::JsonInt>();
+  // process value
+}
+else if(type == jsonpp::JsonType::jtUnsignedInt) {
+  jsonpp::JsonUnsignedInt value = doc.get<jsonpp::JsonUnsignedInt>();
+  // process value
+}
+else if(type == jsonpp::JsonType::jtReal) {
+  jsonpp::JsonReal value = doc.get<jsonpp::JsonReal>();
+  // process value
+}
+else if(type == jsonpp::JsonType::jtString) {
+  // Get as reference to avoid copying
+  const jsonpp::JsonString & value = doc.get<const jsonpp::JsonString &>();
+  // process value
+}
+else if(type == jsonpp::JsonType::jtArray) {
+  // Get as reference to avoid copying
+  const jsonpp::JsonArray & value = doc.get<const jsonpp::JsonArray &>();
+  // process value
+}
+else if(type == jsonpp::JsonType::jtObject) {
+  // Get as reference to avoid copying
+  const jsonpp::JsonObject & value = doc.get<const jsonpp::JsonObject &>();
+  // process value
+}
+```
+
+If `arrayType` or `objectType` in ParserConfig is not nullptr, then you need to check if any Variant is the specified type
+of `arrayType` or `objectType`, or any other type. To check if a Variant is any type,  
+```c++
+// Assume the type we want to check is std::vector<int>
+metapp::Variant var = // get the var from either parser result, or a JSON node inside the result
+if(var.canGet<std::vector<int> >()) { // use the raw type, don't use reference such as `std::vector<int> &`
+  const std::vector<int> & myArray = var.get<std::vector<int> >();
+  // process myArray here
+}
+```
+
 **#2 prototype is not nullptr**  
 The document is parsed as the type of `prototype`, the result Variant can be converted to the type of `prototype`.  
 For example, assume we have a type `MyStruct`, then,  
 ```c++
 metapp::Variant doc = myJsonppParser.parse("What ever json text", metapp::getMetaType<MyStruct>());
-```
+
 // You may want to check error before calling below line.
 const MyStruct & myStruct = doc.get<>(const MyStruct &);
+```
 
 **#3 templated version**  
 This form is the simplest way to use.  
@@ -180,8 +244,8 @@ there is no variable to hold the object.
 Note: you should prefer this form to #2. You should only use #2 for advanced usage, such as the prototype is obtained at runtime
 and you don't know the compile time type.
 
-<a id="mdtoc_73e345d4"></a>
-## ParserConfig
+<a id="mdtoc_1530381c"></a>
+## Class ParserConfig
 
 <a id="mdtoc_6e72a8c2"></a>
 #### Header
@@ -241,7 +305,7 @@ ParserConfig & enableComment(const bool enable);
 ```
 
 Set whether C style comment should be parsed in the JSON document. Default is false.  
-Note not all backends support comment. Currently only ParserBackendType::cparser supports comment.  
+Note not all backends support comment. Currently only `ParserBackendType::cparser` supports comment.  
 
 <a id="mdtoc_cae09b2b"></a>
 #### Set/get array type
@@ -293,8 +357,8 @@ JSON document is parsed as `prototype`. In such case, the array and object type 
 If array type in ParserConfig is not nullptr (set by `setArrayType`), all other data are parsed as the default data types,
 and all arrays are parsed as `getArrayType`. It's same for object type.
 
-<a id="mdtoc_f8e315db"></a>
-## ParserSource
+<a id="mdtoc_9e306813"></a>
+## Class ParserSource
 
 <a id="mdtoc_6e72a8c3"></a>
 #### Header
