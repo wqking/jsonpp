@@ -275,8 +275,7 @@ enum class ParserBackendType
 };
 ```
 
-`simdjson` is [simdjson project](https://github.com/simdjson/simdjson). It's very high performance.  
-`cparser` is [json-parser project](https://github.com/json-parser/json-parser). It's said it has very low footprint.  
+Please see section "Parser backend comparison" for more details.
 
 Note `setBackendType` accepts the backend type as template argument because then the linker can eliminate the unused
 backend from the executable.
@@ -661,3 +660,22 @@ ExampleFunc
 	//code
 }
 
+/*desc
+## Parser backend comparison
+
+`ParserBackendType::simdjson` - [simdjson project](https://github.com/simdjson/simdjson).  
+`ParserBackendType::cparser` - [json-parser project](https://github.com/json-parser/json-parser).  
+
+| Feature            | simdjson    | cparser       |
+|--------------------|-------------|---------------|
+| Performance        | Very high   | Not very slow |
+| Input encoding     | UTF-8       | UTF-8         |
+| \0' in JSON string | Support     | Not support   |
+| Comment in JSON    | Not support | Support       |
+| Trailing comma     | Reject      | Pass          |
+| Memory usage       | High        | Low           |
+
+Note: simdjson has very high performance on computers with SIMD instructions. For computers without SIMD support, the performance
+is not that high.
+
+desc*/

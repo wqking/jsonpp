@@ -237,7 +237,9 @@ not only very fast performance but also has good features, such as roundtrip gua
 
 For strings, `TextOutput` can escape all special ASCII characters correctly. `TextOutput` doesn't escape any unicode characters
 to ASCII, so the output may contain non-ASCII data. I know the other JSON libraries can escape unicode characters to `\uxxxx`,
-though I don't know what's the use case to require such escaping. If you do need such escaping, please let me know.
+though I don't know what's the use case to require such escaping. If you do need such escaping, please let me know.  
+String can contain null character, such string should be stored in `std::string`. For C style strings, null character indicates
+the end of string.
 
 ## Writer classes for TextOutput
 

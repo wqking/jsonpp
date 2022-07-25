@@ -29,6 +29,7 @@
   - [Parse with specified array type](#mdtoc_31256c4e)
   - [Parse with specified object type](#mdtoc_ffd46b55)
   - [Parse object as std::vector](#mdtoc_c9640d5a)
+- [Parser backend comparison](#mdtoc_80f83aa3)
 <!--endtoc-->
 
 <a id="mdtoc_435d0ed9"></a>
@@ -290,8 +291,7 @@ enum class ParserBackendType
 };
 ```
 
-`simdjson` is [simdjson project](https://github.com/simdjson/simdjson). It's very high performance.  
-`cparser` is [json-parser project](https://github.com/json-parser/json-parser). It's said it has very low footprint.  
+Please see section "Parser backend comparison" for more details.
 
 Note `setBackendType` accepts the backend type as template argument because then the linker can eliminate the unused
 backend from the executable.
@@ -650,3 +650,22 @@ const std::vector<std::pair<std::string, int> > array2
   = parser.parse<std::vector<std::pair<std::string, int> > >(jsonText);
 ASSERT(array2 == array);
 ```
+
+<a id="mdtoc_80f83aa3"></a>
+## Parser backend comparison
+
+`ParserBackendType::simdjson` - [simdjson project](https://github.com/simdjson/simdjson).  
+`ParserBackendType::cparser` - [json-parser project](https://github.com/json-parser/json-parser).  
+
+| Feature            | simdjson    | cparser       |
+|--------------------|-------------|---------------|
+| Performance        | Very high   | Not very slow |
+| Input encoding     | UTF-8       | UTF-8         |
+| \0' in JSON string | Support     | Not support   |
+| Comment in JSON    | Not support | Support       |
+| Trailing comma     | Reject      | Pass          |
+| Memory usage       | High        | Low           |
+
+Note: simdjson has very high performance on computers with SIMD instructions. For computers without SIMD support, the performance
+is not that high.
+
