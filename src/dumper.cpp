@@ -47,7 +47,7 @@ char digitPairList[] = {
 
 const EscapeItem escapeItemList[] {
 	{},
-	{ "\\0", 2 }, // 0
+	{ "\\u0000", 6 }, // 0
 	{ "\\u0001", 6 }, // 1
 	{ "\\u0002", 6 }, // 2
 	{ "\\u0003", 6 }, // 3

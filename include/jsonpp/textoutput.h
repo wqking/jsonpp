@@ -25,6 +25,7 @@
 #include <ostream>
 #include <sstream>
 #include <cstring>
+#include <climits>
 
 namespace dragonbox {
 
@@ -198,6 +199,10 @@ struct TextOutput
 		writer(result.start, result.length);
 	}
 
+	void writeString(const char * const s) const {
+		writeString(s, noneLength);
+	}
+
 	void writeString(const char * const s, const std::size_t length) const {
 		writer('"');
 
@@ -213,28 +218,14 @@ struct TextOutput
 		while(index < length) {
 			const unsigned char c = static_cast<unsigned char>(s[index]);
 			if(encodeCharMap[c] != 0) {
+				if(c == 0 && length == noneLength) {
+					break;
+				}
 				const EscapeItem * escapeItem = &escapeItemList[encodeCharMap[c]];
 				flush();
 				writer(escapeItem->str, escapeItem->length);
 				++previousIndex;
 			}
-#if 0
-			const EscapeItem * escapeItem = nullptr;
-			if(c < escapeItemListSize) {
-				escapeItem = &escapeItemList[c];
-			}
-			else if(c == '"') {
-				escapeItem = &escapeItemQuoteMark;
-			}
-			else if(c == '\\') {
-				escapeItem = &escapeItemBackSlash;
-			}
-			if(escapeItem != nullptr) {
-				flush();
-				writer(escapeItem->str, escapeItem->length);
-				++previousIndex;
-			}
-#endif
 			++index;
 		}
 
@@ -290,6 +281,8 @@ struct TextOutput
 	}
 
 private:
+	static constexpr std::size_t noneLength = std::numeric_limits<std::size_t>::max();
+
 	void checkWriteComma(const std::size_t index) const {
 		if(index > 0) {
 			writer(',');

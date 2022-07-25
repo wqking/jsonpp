@@ -55,17 +55,26 @@ private:
 				return;
 			}
 			if(metaType->getUpType()->getTypeKind() == metapp::tkChar) {
-				const char * s = value.get<const char *>();
-				output.writeString(s, strlen(s));
+				output.writeString(value.get<const char *>());
 				return;
 			}
 		}
 
-		auto typeKind = metaType->getTypeKind();
+		const auto typeKind = metaType->getTypeKind();
+
 		if(typeKind == metapp::tkVariant) {
 			doDumpValue(value.get<metapp::Variant &>());
 			return;
 		}
+		if(typeKind == metapp::tkStdString) {
+			doDumpString(value.get<const std::string &>());
+			return;
+		}
+		if(metaType->isArray() && metaType->getUpType()->getTypeKind() == metapp::tkChar) {
+			output.writeString(value.get<char []>());
+			return;
+		}
+
 		if(typeKind == metapp::tkBool) {
 			output.writeBoolean(value.get<bool>());
 			return;
@@ -87,6 +96,12 @@ private:
 			output.writeNumber(value.cast<JsonReal>().template get<JsonReal>());
 			return;
 		}
+		if(doDumpObject(value)) {
+			return;
+		}
+		if(doDumpArray(value)) {
+			return;
+		}
 		if(metaType->isEnum()) {
 			const auto enumValue = value.cast<JsonInt>().template get<JsonInt>();
 			if(config.allowNamedEnum() && metaType->hasMetaEnum()) {
@@ -100,19 +115,6 @@ private:
 			output.writeNumber(enumValue);
 			return;
 		}
-		if(typeKind == metapp::tkStdString) {
-			doDumpString(value.get<const std::string &>());
-			return;
-		}
-		if(metaType->isArray() && metaType->getUpType()->getTypeKind() == metapp::tkChar) {
-			const char * s = value.get<char []>();
-			output.writeString(s, strlen(s));
-			return;
-		}
-		if(doDumpObject(value)) {
-			return;
-		}
-		doDumpArray(value);
 	}
 
 	void doDumpString(const std::string & s) {
