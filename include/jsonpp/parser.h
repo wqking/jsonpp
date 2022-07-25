@@ -61,6 +61,20 @@ struct BackendCreatorGetter <ParserBackendType::cparser>
 	}
 };
 
+struct ScopedInvoke
+{
+	using Callback = std::function<void ()>;
+
+	explicit ScopedInvoke(const Callback & callback) : callback(callback) {
+	}
+
+	~ScopedInvoke() {
+		callback();
+	}
+
+	Callback callback;
+};
+
 } // namespace internal_
 
 class ParserBackend;

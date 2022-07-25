@@ -127,11 +127,10 @@ private:
 	ParserConfig config;
 
 	json_settings settings;
-	json_value * root;
 };
 
 BackendCParser::BackendCParser(const ParserConfig & config)
-	: config(config), settings(), root(nullptr)
+	: config(config), settings()
 {
 	if(config.allowComment()) {
 		settings.settings |= json_enable_comments;
@@ -140,9 +139,6 @@ BackendCParser::BackendCParser(const ParserConfig & config)
 
 BackendCParser::~BackendCParser()
 {
-	if(root != nullptr) {
-		json_value_free(root);
-	}
 }
 
 ParserBackendResult BackendCParser::parse(const ParserSource & source, const metapp::MetaType * prototype)
@@ -150,7 +146,12 @@ ParserBackendResult BackendCParser::parse(const ParserSource & source, const met
 	std::array<char, json_error_max> error;
 	error[0] = 0;
 
-	root = json_parse_ex(&settings, source.getText(), source.getTextLength(), error.data());
+	json_value * root = json_parse_ex(&settings, source.getText(), source.getTextLength(), error.data());
+	ScopedInvoke scopedInvoke([root]() {
+		if(root != nullptr) {
+			json_value_free(root);
+		}
+	});
 	if(error[0] != 0) {
 		return { metapp::Variant(), error.data() };
 	}
