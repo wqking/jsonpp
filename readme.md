@@ -65,6 +65,8 @@ New containers can be added via metapp reflection system.
 
 - Enumerators can be stringified as string names and parsed back to enum values.
 
+- Support stringify to different storage, such as `std::string`, `std::vector<char>`, stream, or customized writer.
+
 - Cross platforms, cross compilers.
 
 - Written in standard and portable C++, only require C++11, and support later C++ standard.
